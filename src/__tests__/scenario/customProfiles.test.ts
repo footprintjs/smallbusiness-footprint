@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { defineModule, defineProfile } from '@footprint/features';
-import { createMemoryProfileStore } from '@footprint/platform';
+import { defineModule, defineProfile } from 'footprint-blueprint/features';
+import { createMemoryProfileStore } from 'footprint-blueprint/platform';
 import { createBusinessPlatform } from '../../businessPlatform.js';
 import { allBusinessModules } from '../../modules/index.js';
 import { allBusinessProfiles } from '../../profiles/index.js';

@@ -1,4 +1,4 @@
-import { defineModule } from "@footprint/features";
+import { defineModule } from "footprint-blueprint/features";
 import { getTermsForDomain } from "../terminology/businessTerms.js";
 
 export const subscribers = defineModule({

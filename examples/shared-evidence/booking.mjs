@@ -5,7 +5,7 @@
 import { DatabaseSync } from 'node:sqlite';
 import { randomUUID } from 'node:crypto';
 import { flowChart, FlowChartExecutor } from 'footprintjs';
-import { createEvidenceCollector } from '@footprint/actions/evidence';
+import { createEvidenceCollector } from 'footprint-blueprint/evidence';
 import { assert, checkEvidence, checkPrivacy, summarize } from './shared.mjs';
 
 const PRIVATE_OWNER = 'private-staff@example.test';

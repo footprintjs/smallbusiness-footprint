@@ -166,24 +166,9 @@ importers:
 
   .:
     dependencies:
-      '@footprint/actions':
+      footprint-blueprint:
         specifier: workspace:*
-        version: link:../footprint-blueprint/packages/actions
-      '@footprint/adapters':
-        specifier: workspace:*
-        version: link:../footprint-blueprint/packages/adapters
-      '@footprint/features':
-        specifier: workspace:*
-        version: link:../footprint-blueprint/packages/features
-      '@footprint/platform':
-        specifier: workspace:*
-        version: link:../footprint-blueprint/packages/platform
-      '@footprint/seed':
-        specifier: workspace:*
-        version: link:../footprint-blueprint/packages/seed
-      '@footprint/tenancy':
-        specifier: workspace:*
-        version: link:../footprint-blueprint/packages/tenancy
+        version: link:../footprint-blueprint
       footprintjs:
         specifier: 10.0.0
         version: 10.0.0(zod@4.6.5)
@@ -204,136 +189,14 @@ importers:
         specifier: 5.0.3
         version: 5.0.3(@types/node@24.19.2)(vite@8.3.4(@types/node@24.19.2))
 
-  ../footprint-blueprint/packages/actions:
+  ../footprint-blueprint:
     dependencies:
-      '@footprint/adapters':
-        specifier: workspace:*
-        version: link:../adapters
-      '@footprint/features':
-        specifier: workspace:*
-        version: link:../features
       ajv:
         specifier: 8.20.0
         version: 8.20.0
       ajv-formats:
         specifier: 3.0.1
         version: 3.0.1(ajv@8.20.0)
-      footprintjs:
-        specifier: 10.0.0
-        version: 10.0.0(zod@4.6.5)
-    devDependencies:
-      '@types/node':
-        specifier: 24.19.2
-        version: 24.19.2
-      fast-check:
-        specifier: 4.10.2
-        version: 4.10.2
-      typescript:
-        specifier: 7.0.2
-        version: 7.0.2
-      vitest:
-        specifier: 5.0.3
-        version: 5.0.3(@types/node@24.19.2)(vite@8.3.4(@types/node@24.19.2))
-
-  ../footprint-blueprint/packages/adapters:
-    dependencies:
-      footprintjs:
-        specifier: 10.0.0
-        version: 10.0.0(zod@4.6.5)
-    devDependencies:
-      '@types/node':
-        specifier: 24.19.2
-        version: 24.19.2
-      fast-check:
-        specifier: 4.10.2
-        version: 4.10.2
-      typescript:
-        specifier: 7.0.2
-        version: 7.0.2
-      vitest:
-        specifier: 5.0.3
-        version: 5.0.3(@types/node@24.19.2)(vite@8.3.4(@types/node@24.19.2))
-
-  ../footprint-blueprint/packages/features:
-    dependencies:
-      footprintjs:
-        specifier: 10.0.0
-        version: 10.0.0(zod@4.6.5)
-    devDependencies:
-      '@types/node':
-        specifier: 24.19.2
-        version: 24.19.2
-      fast-check:
-        specifier: 4.10.2
-        version: 4.10.2
-      typescript:
-        specifier: 7.0.2
-        version: 7.0.2
-      vitest:
-        specifier: 5.0.3
-        version: 5.0.3(@types/node@24.19.2)(vite@8.3.4(@types/node@24.19.2))
-
-  ../footprint-blueprint/packages/platform:
-    dependencies:
-      '@footprint/actions':
-        specifier: workspace:*
-        version: link:../actions
-      '@footprint/adapters':
-        specifier: workspace:*
-        version: link:../adapters
-      '@footprint/features':
-        specifier: workspace:*
-        version: link:../features
-      '@footprint/seed':
-        specifier: workspace:*
-        version: link:../seed
-      '@footprint/tenancy':
-        specifier: workspace:*
-        version: link:../tenancy
-      footprintjs:
-        specifier: 10.0.0
-        version: 10.0.0(zod@4.6.5)
-    devDependencies:
-      '@types/node':
-        specifier: 24.19.2
-        version: 24.19.2
-      fast-check:
-        specifier: 4.10.2
-        version: 4.10.2
-      typescript:
-        specifier: 7.0.2
-        version: 7.0.2
-      vitest:
-        specifier: 5.0.3
-        version: 5.0.3(@types/node@24.19.2)(vite@8.3.4(@types/node@24.19.2))
-
-  ../footprint-blueprint/packages/seed:
-    dependencies:
-      '@footprint/features':
-        specifier: workspace:*
-        version: link:../features
-      footprintjs:
-        specifier: 10.0.0
-        version: 10.0.0(zod@4.6.5)
-    devDependencies:
-      '@types/node':
-        specifier: 24.19.2
-        version: 24.19.2
-      fast-check:
-        specifier: 4.10.2
-        version: 4.10.2
-      typescript:
-        specifier: 7.0.2
-        version: 7.0.2
-      vitest:
-        specifier: 5.0.3
-        version: 5.0.3(@types/node@24.19.2)(vite@8.3.4(@types/node@24.19.2))
-
-  ../footprint-blueprint/packages/tenancy:
-    dependencies:
-      '@footprint/features':
-        specifier: workspace:*
-        version: link:../features
       footprintjs:
         specifier: 10.0.0
         version: 10.0.0(zod@4.6.5)

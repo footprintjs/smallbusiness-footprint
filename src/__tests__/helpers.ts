@@ -181,7 +181,7 @@ export function createMockRepository(): BusinessRepository {
   };
 }
 
-import { createMemoryProfileStore } from '@footprint/platform';
+import { createMemoryProfileStore } from 'footprint-blueprint/platform';
 import { createBusinessPlatform } from '../businessPlatform.js';
 import type { BusinessPlatformConfig } from '../businessPlatform.js';
 export const fixtureScope = { tenantId: 'tenant-fixture', unitId: 'shop-fixture' };

@@ -1,4 +1,4 @@
-import type { AdapterMapping } from "@footprint/adapters";
+import type { AdapterMapping } from "footprint-blueprint/adapters";
 
 /**
  * Maps capabilities to adapters per business type.

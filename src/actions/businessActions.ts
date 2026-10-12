@@ -1,4 +1,4 @@
-import type { ActionDefinition, ActionParameter } from '@footprint/actions';
+import type { ActionDefinition, ActionParameter } from 'footprint-blueprint/actions';
 const text = { type: 'string', minLength: 1, maxLength: 256, pattern: '\\S' };
 const strings = { type: 'array', maxItems: 100, items: { type: 'string', maxLength: 2048 } };
 function action(id: string, name: string, domain: string, capabilityId: string, requiredModules: readonly string[], requiredPermissions: readonly string[], properties: Record<string, Readonly<Record<string, unknown>>>, required: readonly string[]): ActionDefinition {

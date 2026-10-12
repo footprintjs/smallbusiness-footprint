@@ -10,9 +10,9 @@ import {
   type BusinessPlatform,
   type BusinessDefinitions,
 } from "./businessPlatform.js";
-import { createMemoryProfileStore, createTenantContext, createModuleRegistry } from "@footprint/platform";
-import type { TenantContext, ModuleRegistry } from "@footprint/platform";
-import type { ProfileDefinition } from '@footprint/features';
+import { createMemoryProfileStore, createTenantContext, createModuleRegistry } from "footprint-blueprint/platform";
+import type { TenantContext, ModuleRegistry } from "footprint-blueprint/platform";
+import type { ProfileDefinition } from 'footprint-blueprint/features';
 import type {
   BusinessType,
   BusinessTypeConfig,
@@ -20,7 +20,7 @@ import type {
   BusinessRepository,
 } from "./types.js";
 import type { BusinessServiceResult } from "./flows/businessServiceComposer.js";
-import type { ActionAuthorizer } from '@footprint/actions';
+import type { ActionAuthorizer } from 'footprint-blueprint/actions';
 import type { BusinessOperations, BusinessProviders } from './operations.js';
 
 // ---------------------------------------------------------------------------

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { createMemoryProfileStore } from '@footprint/platform';
+import { createMemoryProfileStore } from 'footprint-blueprint/platform';
 import { createBusinessPlatform } from '../../businessPlatform.js';
 import { createMemoryOverrideStore } from '../../overrides/unitOverrides.js';
 import { createFixturePlatform, createMockRepository, fixtureScope, fixtureContext } from '../helpers.js';

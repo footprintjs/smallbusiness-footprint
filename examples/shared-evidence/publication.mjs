@@ -5,7 +5,7 @@
 import {
   createPlatform, createActionRegistry, createModuleRegistry,
   defineModule, defineProfile, createMemoryProfileStore,
-} from '@footprint/platform';
+} from 'footprint-blueprint/platform';
 import { createPublicationOperation } from 'smallbusiness-footprint';
 import { assert, checkEvidence, checkPrivacy, summarize } from './shared.mjs';
 

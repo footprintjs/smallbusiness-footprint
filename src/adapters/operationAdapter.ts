@@ -1,8 +1,8 @@
-import type { Adapter } from '@footprint/adapters';
-import { validateActionInput } from '@footprint/actions';
+import type { Adapter } from 'footprint-blueprint/adapters';
+import { validateActionInput } from 'footprint-blueprint/actions';
 import { allBusinessActions } from '../actions/businessActions.js';
-import { defineProfile } from '@footprint/features';
-import type { ProfileDefinition } from '@footprint/features';
+import { defineProfile } from 'footprint-blueprint/features';
+import type { ProfileDefinition } from 'footprint-blueprint/features';
 import { allBusinessProfiles } from '../profiles/index.js';
 import { assertBusinessScope, BusinessOperationError, safeBusinessOutput, validateBusinessReceipt, safeBusinessFailure } from '../operations.js';
 import type { BusinessOperations, BusinessOperationContext, BusinessScope } from '../operations.js';

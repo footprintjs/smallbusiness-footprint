@@ -1,4 +1,4 @@
-import { validateActionInput } from '@footprint/actions';
+import { validateActionInput } from 'footprint-blueprint/actions';
 import { allBusinessActions } from './actions/businessActions.js';
 import { BusinessOperationError } from './operations.js';
 

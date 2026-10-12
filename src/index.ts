@@ -179,7 +179,7 @@ export {
   createTermResolver,
   resolveProfileConfig,
   createServiceBridge,
-} from "@footprint/platform";
+} from "footprint-blueprint/platform";
 export type {
   TenantContext,
   ProfileStore,
@@ -187,7 +187,7 @@ export type {
   ResolvedProfileConfig,
   MCPToolDefinition,
   ActionResult,
-} from "@footprint/platform";
+} from "footprint-blueprint/platform";
 
 export { createBusinessOperations, BusinessOperationError, assertBusinessScope, safeBusinessOutput } from './operations.js';
 export type { BusinessScope, BusinessOperations, BusinessProviders, BusinessOperation, BusinessOperationReceipt, BusinessOperationContext, BusinessAcknowledgement } from './operations.js';

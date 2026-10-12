@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { validateExecutionEvidence } from '@footprint/actions/evidence';
+import { validateExecutionEvidence } from 'footprint-blueprint/evidence';
 
 const [major, minor] = process.versions.node.split('.').map(Number);
 assert.ok(major === 24 && minor >= 15, 'Use Node 24.15 or newer in the 24 series.');

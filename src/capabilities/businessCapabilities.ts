@@ -1,4 +1,4 @@
-import type { Capability } from "@footprint/adapters";
+import type { Capability } from "footprint-blueprint/adapters";
 
 /**
  * Business-domain capability contracts.

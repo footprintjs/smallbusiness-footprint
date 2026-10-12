@@ -1,4 +1,4 @@
-import type { Adapter } from '@footprint/adapters';
+import type { Adapter } from 'footprint-blueprint/adapters';
 import type { BusinessRepository } from '../types.js';
 import type { BusinessOperations, BusinessScope } from '../operations.js';
 import { operationAdapter } from './operationAdapter.js';

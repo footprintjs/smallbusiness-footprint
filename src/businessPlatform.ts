@@ -1,8 +1,8 @@
-import { createModuleRegistry, createActionRegistry, createPlatform, createTenantContext } from '@footprint/platform';
-import type { Platform, ProfileStore, TenantContext } from '@footprint/platform';
-import { immutableValue, resolveProfileConfig } from '@footprint/features';
-import type { ModuleDefinition, ProfileDefinition } from '@footprint/features';
-import type { ActionAuthorizer, ActionHandler, TraceRecorder } from '@footprint/actions';
+import { createModuleRegistry, createActionRegistry, createPlatform, createTenantContext } from 'footprint-blueprint/platform';
+import type { Platform, ProfileStore, TenantContext } from 'footprint-blueprint/platform';
+import { immutableValue, resolveProfileConfig } from 'footprint-blueprint/features';
+import type { ModuleDefinition, ProfileDefinition } from 'footprint-blueprint/features';
+import type { ActionAuthorizer, ActionHandler, TraceRecorder } from 'footprint-blueprint/actions';
 import { allBusinessModules } from './modules/index.js';
 import { allBusinessProfiles, toBusinessTypeConfig } from './profiles/index.js';
 import { allBusinessActions } from './actions/index.js';

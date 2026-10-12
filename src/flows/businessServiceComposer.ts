@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
-import { createTenantContext } from '@footprint/tenancy';
-import { immutableValue } from '@footprint/features';
+import { createTenantContext } from 'footprint-blueprint/tenancy';
+import { immutableValue } from 'footprint-blueprint/features';
 import { FlowChartExecutor, ManifestFlowRecorder } from 'footprintjs';
 import { ScopeFacade } from 'footprintjs/advanced';
 import type { BusinessRepository, BusinessFlowContext, BusinessType } from '../types.js';

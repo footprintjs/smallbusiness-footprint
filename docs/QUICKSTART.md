@@ -2,7 +2,7 @@
 
 The release kit includes a small booking example and a Charming Cherubs publication example. They teach the application integration patterns with local fixtures, rather than requiring the full applications or their hosting infrastructure.
 
-These seven Footprint library packages are local release candidates and are not yet published to npm. Use Node 24.15–24.x and npm. Extract the release kit, then run from its root:
+The two local candidates, `footprint-blueprint@0.4.0` and optional `smallbusiness-footprint@0.3.0`, are prepared for review; publication is pending. Use Node 24.15–24.x and npm. Extract the release kit, then run from its root:
 
 ```sh
 cd quickstart
@@ -12,13 +12,17 @@ npm run publication
 npm test
 ```
 
-The Footprint packages install from included local tarballs. Initial installation needs npm access for pinned third-party dependencies unless cached. The examples use sample data and in-memory storage and require no cloud account, model or credentials. Both commands print JSON to standard output without writing files. Expected SDK error diagnostics for rejection cases go to standard error; exit status 0 and passed assertions indicate a successful run.
+Both library candidates install from included local tarballs. FootPrint.js stays separate as pinned `footprintjs@10.0.0`. Ordinary declared dependencies are installed regardless of later import choices. Initial installation needs npm access for pinned third-party dependencies unless cached. The examples use sample data and in-memory storage and require no cloud account, model or credentials. Both commands print JSON to standard output without writing files. Expected SDK error diagnostics for rejection cases go to standard error; exit status 0 and passed assertions indicate a successful run.
 
 The booking example runs actual FootPrint stages and in-memory SQLite, reporting acceptance, overlap rejection and cancellation through the pure evidence collector. Its `applied` effects describe actual row counts before the enclosing transaction commits. The overlap workflow completes normally while its business outcome is rejected.
 
 The publication example follows Charming's `createPlatform` boundary with two actual Platform actions and the SMB typed publication port. It checks authorization and schema, invokes an authoritative fixture publisher and reports a confirmed in-memory publication effect. Repeating the exact captured old guards fails without another commit; a stale source revision also fails, and an unauthorized caller is rejected before an inner action. Each `calls` link points to an actual recorded inner invocation. The receipt uses a generic execution-failure code for stale requests, while the action response retains the domain `PUBLICATION_CONFLICT` code.
 
 Inspect each receipt's `schemaVersion`, outcome, effects, run links and coverage. A related-run link is a correlation; a reported commit depends on what the host port actually confirms. Default shared capture omits private values. Shape validation does not establish receipt authenticity.
+
+## Framework imports
+
+The booking pattern imports `createEvidenceCollector` from `footprint-blueprint/evidence`. The publication boundary uses `footprint-blueprint/platform` and SMB's typed publication port. The root Blueprint entry loads all Platform layers; Features and Evidence have focused runtime graphs. Static imports load their graph immediately; use `await import('footprint-blueprint/actions')` when actions should load on demand. None of these choices changes npm's dependency downloads.
 
 ## Use SMB in an application
 
@@ -30,4 +34,4 @@ The reduced quickstart is not the complete booking app or Charming Cherubs deplo
 
 No agent is included. A future client can reuse an authenticated application action boundary and inspect recorded outcomes; the host remains responsible for transport, permissions, transactions and recovery.
 
-The sibling Blueprint repository contains the release runbook in `docs/RELEASE.md`; use its copy included in the release kit. The preparation branch is local until the reviewed source is published.
+The sibling Blueprint repository contains the release runbook in `docs/RELEASE.md`; use its copy included in the release kit. The preparation branch is local until the reviewed source is pushed and artifacts are published.

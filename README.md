@@ -1,8 +1,10 @@
-# smallbusiness-footprint 0.2.4
+# smallbusiness-footprint 0.3.0
 
-This is a prepared local release candidate, not a published npm release. It uses Actions / Platform 0.3.2 and Features / Tenancy / Seed / Adapters 0.2.1 with `footprintjs@10.0.0`, on Node 24.15–24.x. Runtime source is unchanged from local 0.2.3; this patch prepares documentation, package metadata and build-before-pack behavior.
+This prepared local candidate depends on the single `footprint-blueprint@0.4.0` framework package, plus the separate `footprintjs@10.0.0` engine and Zod. It uses Node 24.15–24.x. Publication is pending; the release kit contains two library tarballs. This release replaces the six former `@footprint/*` dependencies with one Blueprint dependency while retaining commerce execution, privacy and authoritative-port boundaries.
 
-Use the [release-kit quickstart](docs/QUICKSTART.md) to run reduced booking and Charming Cherubs publication examples from included tarballs. See the [changelog](CHANGELOG.md) for the prepared version matrix.
+SMB is optional. Framework-only applications use Blueprint directly; commerce consumers can install SMB and its declared dependencies are installed automatically. Within Blueprint, focused subpaths select runtime entry graphs and dynamic `import()` provides loading on demand. Ordinary dependency downloads still occur at package installation.
+
+Use the [release-kit quickstart](docs/QUICKSTART.md) to run reduced booking and Charming Cherubs publication examples from included tarballs. See the [changelog](CHANGELOG.md) for the packaging migration.
 
 A commerce configuration and operation library built on footprint-blueprint and FootprintJS 10. It supplies seven modules, two example business profiles, terminology, strict action schemas, scoped execution and recorded operation charts. Applications supply storage and authoritative business implementations.
 
@@ -11,7 +13,7 @@ Use `smallbusiness-footprint/metadata` in a browser to consume profiles, modules
 ## Safe execution
 
 ```ts
-import { createMemoryProfileStore } from '@footprint/platform';
+import { createMemoryProfileStore } from 'footprint-blueprint/platform';
 import { createBusinessPlatform, createPublicationOperation } from 'smallbusiness-footprint';
 
 const scope = { tenantId: 'brand-a', unitId: 'brand-a' };
@@ -59,7 +61,7 @@ A supplied repository is low-level, already bound to the declared store. `create
 - A real provider acknowledgement is required for success. A later observational failure preserves that acknowledgement, so it cannot be mistaken for an unperformed operation.
 - Footprint records the execution. The library does not provision distributed locks, payment providers, queues, durable checkpoints, scheduler jobs or email delivery.
 
-For migration and provider contracts, see [docs/INTEGRATION.md](docs/INTEGRATION.md). Build with `pnpm build` and run the fixture-only suite with `pnpm test` on Node 24.
+For migration and provider contracts, see [docs/INTEGRATION.md](docs/INTEGRATION.md). Build the sibling Blueprint root first, then run `pnpm build`, `pnpm typecheck` and `pnpm test` from the SMB repository root on Node 24.15–24.x. The inherited suite contains 217 fixture-only tests; the release validation record captures the actual candidate results.
 
 ## Shared receipt boundary
 

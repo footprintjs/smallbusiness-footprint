@@ -1,5 +1,5 @@
-import { defineProfile } from "@footprint/features";
-import type { ProfileDefinition } from "@footprint/features";
+import { defineProfile } from "footprint-blueprint/features";
+import type { ProfileDefinition } from "footprint-blueprint/features";
 import type { BusinessTypeConfig } from "../types.js";
 
 export const kidsBoutiqueProfile = defineProfile({
