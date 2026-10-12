@@ -1,117 +1,18 @@
-import { describe, it, expect } from "vitest";
-import { FlowChartExecutor } from "footprintjs";
-import { createProductCreateFlow } from "../../flows/catalog/productCreateFlow.js";
-import { createProductUpdateFlow } from "../../flows/catalog/productUpdateFlow.js";
-import { createMockRepository } from "../helpers.js";
-
-describe("product create flow", () => {
-  const repo = createMockRepository();
-
-  it("creates a product with required fields", async () => {
-    const flow = createProductCreateFlow(repo);
-    const executor = new FlowChartExecutor(flow, { initialContext: {
-      input: { name: "Summer Dress", basePrice: 2999 },
-    }});
-    executor.enableNarrative();
-
-    await executor.run();
-    const state = executor.getSnapshot().sharedState as Record<string, unknown>;
-
-    expect(state.createdProduct).toBeDefined();
-    expect((state.createdProduct as any).name).toBe("Summer Dress");
-    expect((state.createdProduct as any).basePrice).toBe(2999);
-    expect((state.output as any).productId).toBeTruthy();
+import { describe, expect, it, vi } from 'vitest';
+import { createFixturePlatform, createMockRepository, fixtureContext } from '../helpers.js';
+describe('protected product operations using real FootprintJS10', () => {
+  it('creates with typed arrays and returns safe IDs plus SDK execution evidence', async () => {
+    const repo = createMockRepository(); const create = vi.spyOn(repo, 'createProduct'); const platform = createFixturePlatform({ repository: repo });
+    const result = await platform.executeServiceFlow(fixtureContext, 'create-product', { name: 'Dress', basePrice: 2999, colors: ['Pink'], sizes: ['6'], images: ['https://example.test/dress.jpg'] });
+    expect(result.status).toBe('success'); expect(result.result).toMatchObject({ productId: 'product-1', status: 'ACTIVE' }); expect(result.executionSnapshot).toBeDefined(); expect(result.narrative.length).toBeGreaterThan(0); expect(create).toHaveBeenCalledOnce();
   });
-
-  it("creates a product with optional fields", async () => {
-    const flow = createProductCreateFlow(repo);
-    const executor = new FlowChartExecutor(flow, { initialContext: {
-      input: {
-        name: "Chocolate Box",
-        basePrice: 1499,
-        description: "Assorted truffles",
-        colors: ["dark", "milk", "white"],
-        tags: ["gift", "premium"],
-      },
-    }});
-
-    await executor.run();
-    const state = executor.getSnapshot().sharedState as Record<string, unknown>;
-    const product = state.createdProduct as any;
-
-    expect(product.description).toBe("Assorted truffles");
-    expect(product.colors).toEqual(["dark", "milk", "white"]);
-    expect(product.tags).toEqual(["gift", "premium"]);
+  it.each([{}, { name: 'Dress' }, { name: 'Dress', basePrice: -1 }, { name: 4, basePrice: 5 }, { name: 'Dress', basePrice: NaN }, { name: 'Dress', basePrice: 5, colors: 'pink' }])('rejects invalid input before a repository call %j', async input => {
+    const repo = createMockRepository(); const create = vi.spyOn(repo, 'createProduct'); const result = await createFixturePlatform({ repository: repo }).executeServiceFlow(fixtureContext, 'create-product', input);
+    expect(result.status).toBe('error'); expect(create).not.toHaveBeenCalled();
   });
-
-  it("rejects product without name", async () => {
-    const flow = createProductCreateFlow(repo);
-    const executor = new FlowChartExecutor(flow, { initialContext: {
-      input: { basePrice: 1000 },
-    }});
-
-    await expect(executor.run()).rejects.toThrow("Product name is required");
+  it('routes update-product to update rather than the create capability', async () => {
+    const repo = createMockRepository(); const create = vi.spyOn(repo, 'createProduct'); const update = vi.spyOn(repo, 'updateProduct');
+    expect((await createFixturePlatform({ repository: repo }).executeAction(fixtureContext, 'update-product', { id: 'product-1', name: 'Edited' })).status).toBe('success'); expect(update).toHaveBeenCalledOnce(); expect(create).not.toHaveBeenCalled();
   });
-
-  it("rejects product without base price", async () => {
-    const flow = createProductCreateFlow(repo);
-    const executor = new FlowChartExecutor(flow, { initialContext: {
-      input: { name: "Test" },
-    }});
-
-    await expect(executor.run()).rejects.toThrow("Base price is required");
-  });
-
-  it("rejects negative base price", async () => {
-    const flow = createProductCreateFlow(repo);
-    const executor = new FlowChartExecutor(flow, { initialContext: {
-      input: { name: "Test", basePrice: -100 },
-    }});
-
-    await expect(executor.run()).rejects.toThrow("Base price must be non-negative");
-  });
-
-  it("produces narrative entries", async () => {
-    const flow = createProductCreateFlow(repo);
-    const executor = new FlowChartExecutor(flow, { initialContext: {
-      input: { name: "Test Product", basePrice: 500 },
-    }});
-    executor.enableNarrative();
-
-    await executor.run();
-    const narrative = executor.getNarrative();
-    expect(narrative.length).toBeGreaterThan(0);
-  });
-
-  it("uses terminology in descriptions", () => {
-    const t = (key: string) => key === "product" ? "Treat" : key;
-    const flow = createProductCreateFlow(repo, t);
-    expect(flow.description).toContain("Treat");
-  });
-});
-
-describe("product update flow", () => {
-  const repo = createMockRepository();
-
-  it("updates a product with partial fields", async () => {
-    const flow = createProductUpdateFlow(repo);
-    const executor = new FlowChartExecutor(flow, { initialContext: {
-      input: { id: "product-1", name: "Updated Name", basePrice: 3999 },
-    }});
-
-    await executor.run();
-    const state = executor.getSnapshot().sharedState as Record<string, unknown>;
-
-    expect(state.updatedProduct).toBeDefined();
-    expect((state.output as any).productId).toBe("product-1");
-  });
-
-  it("rejects update without product ID", async () => {
-    const flow = createProductUpdateFlow(repo);
-    const executor = new FlowChartExecutor(flow, { initialContext: {
-      input: { name: "No ID" },
-    }});
-
-    await expect(executor.run()).rejects.toThrow("Product ID is required");
-  });
+  it('archives through its exact handler', async () => { const repo = createMockRepository(); const archive = vi.spyOn(repo, 'archiveProduct'); const result = await createFixturePlatform({ repository: repo }).executeServiceFlow(fixtureContext, 'archive-product', { id: 'product-1' }); expect(result.status).toBe('success'); expect(archive).toHaveBeenCalledOnce(); });
 });

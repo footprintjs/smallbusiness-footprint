@@ -1,104 +1,16 @@
-import { describe, it, expect } from "vitest";
-import { FlowChartExecutor } from "footprintjs";
-import { createOrderCreateFlow } from "../../flows/orders/orderCreateFlow.js";
-import { createMockRepository } from "../helpers.js";
-
-const validShipping = {
-  firstName: "Jane",
-  lastName: "Doe",
-  email: "jane@example.com",
-  address: "123 Main St",
-  city: "Anytown",
-  state: "CA",
-  zipCode: "90210",
-};
-
-describe("order create flow", () => {
-  const repo = createMockRepository();
-
-  it("creates an order with valid input", async () => {
-    const flow = createOrderCreateFlow(repo);
-    const executor = new FlowChartExecutor(flow, { initialContext: {
-      input: {
-        email: "jane@example.com",
-        items: [{ name: "Summer Dress", quantity: 1, price: 2999 }],
-        shipping: validShipping,
-      },
-    }});
-    executor.enableNarrative();
-
-    await executor.run();
-    const state = executor.getSnapshot().sharedState as Record<string, unknown>;
-
-    expect(state.createdOrder).toBeDefined();
-    const output = state.output as any;
-    expect(output.orderId).toBeTruthy();
-    expect(output.status).toBe("CREATED");
-    expect(output.currency).toBe("usd");
+import { describe, expect, it, vi } from 'vitest';
+import { createFixturePlatform, createMockRepository, fixtureContext, validCheckout } from '../helpers.js';
+import { createCheckoutOperation } from '../../checkoutPort.js';
+describe('authoritative checkout delegation', () => {
+  it('never substitutes CRUD order creation when checkout is unconfigured', async () => { const repo = createMockRepository(); const create = vi.spyOn(repo, 'createOrder'); const result = await createFixturePlatform({ repository: repo }).executeServiceFlow(fixtureContext, 'create-order', validCheckout); expect(result.status).toBe('error'); expect(create).not.toHaveBeenCalled(); });
+  it('delegates once and keeps shipping, emails and capability tokens out of all default results', async () => {
+    const reserve = vi.fn(async () => ({ orderId: 'order-safe', attemptId: 'attempt-safe', state: 'RESERVED', reservationState: 'HELD' as const, traceRunId: 'original-core-trace', checkoutToken: 'PRIVATE_TOKEN' }));
+    const platform = createFixturePlatform({ operations: { 'create-order': createCheckoutOperation({ reserve }) } }); const result = await platform.executeServiceFlow(fixtureContext, 'create-order', validCheckout);
+    expect(result.status).toBe('success'); expect(result.result).toMatchObject({ orderId: 'order-safe', traceRunId: 'original-core-trace', reservationState: 'HELD' }); expect(reserve).toHaveBeenCalledOnce(); expect(reserve.mock.calls[0][1]).toMatchObject({ ...fixtureContext, businessType: 'kids-boutique' });
+    for (const text of ['PRIVATE@example.test', 'PRIVATE STREET', 'PRIVATE_TOKEN']) expect(JSON.stringify(result)).not.toContain(text);
   });
-
-  it("rejects order without email", async () => {
-    const flow = createOrderCreateFlow(repo);
-    const executor = new FlowChartExecutor(flow, { initialContext: {
-      input: {
-        items: [{ name: "Test", quantity: 1, price: 100 }],
-        shipping: validShipping,
-      },
-    }});
-
-    await expect(executor.run()).rejects.toThrow("Customer email is required");
+  it.each([{ ...validCheckout, idempotencyKey: undefined }, { ...validCheckout, items: [] }, { ...validCheckout, items: [{ name: 'Dress', price: 1, quantity: 1 }] }, { ...validCheckout, items: [{ productId: 'x', quantity: -1 }] }])('rejects unpriced or non-idempotent cart commands %j', async input => {
+    const reserve = vi.fn(); const result = await createFixturePlatform({ providers: { checkout: { reserve } } }).executeServiceFlow(fixtureContext, 'create-order', input); expect(result.status).toBe('error'); expect(reserve).not.toHaveBeenCalled();
   });
-
-  it("rejects order without items", async () => {
-    const flow = createOrderCreateFlow(repo);
-    const executor = new FlowChartExecutor(flow, { initialContext: {
-      input: { email: "test@example.com", items: [], shipping: validShipping },
-    }});
-
-    await expect(executor.run()).rejects.toThrow("At least one item is required");
-  });
-
-  it("rejects order without shipping", async () => {
-    const flow = createOrderCreateFlow(repo);
-    const executor = new FlowChartExecutor(flow, { initialContext: {
-      input: {
-        email: "test@example.com",
-        items: [{ name: "Test", quantity: 1, price: 100 }],
-      },
-    }});
-
-    await expect(executor.run()).rejects.toThrow("Shipping information is required");
-  });
-
-  it("uses custom currency when provided", async () => {
-    const flow = createOrderCreateFlow(repo);
-    const executor = new FlowChartExecutor(flow, { initialContext: {
-      input: {
-        email: "test@example.com",
-        items: [{ name: "Test", quantity: 1, price: 100 }],
-        shipping: validShipping,
-        currency: "eur",
-      },
-    }});
-
-    await executor.run();
-    const state = executor.getSnapshot().sharedState as Record<string, unknown>;
-    expect((state.createdOrder as any).currency).toBe("eur");
-  });
-
-  it("produces narrative entries", async () => {
-    const flow = createOrderCreateFlow(repo);
-    const executor = new FlowChartExecutor(flow, { initialContext: {
-      input: {
-        email: "test@example.com",
-        items: [{ name: "Test", quantity: 1, price: 100 }],
-        shipping: validShipping,
-      },
-    }});
-    executor.enableNarrative();
-
-    await executor.run();
-    const narrative = executor.getNarrative();
-    expect(narrative.length).toBeGreaterThan(0);
-  });
+  it('does not report success when a provider returns no acknowledgement', async () => { const result = await createFixturePlatform({ operations: { 'create-order': async () => undefined as never } }).executeServiceFlow(fixtureContext, 'create-order', validCheckout); expect(result.status).toBe('error'); expect(result.code).toBe('BUSINESS_RECEIPT_INVALID'); });
 });

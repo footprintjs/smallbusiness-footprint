@@ -47,7 +47,17 @@ export const manageSubscribers: Capability = {
   description: "Subscribe, unsubscribe, and manage email list members",
 };
 
+
+
+export const updateProduct: Capability = { id: 'update-product', name: 'Update Product', domain: 'catalog', description: 'Update an existing product' };
+export const archiveProduct: Capability = { id: 'archive-product', name: 'Archive Product', domain: 'catalog', description: 'Archive a product' };
+export const unsubscribeSubscriber: Capability = { id: 'unsubscribe', name: 'Unsubscribe', domain: 'marketing', description: 'Validate an unsubscribe command' };
+export const createCampaignCapability: Capability = { id: 'create-campaign', name: 'Create Campaign', domain: 'marketing', description: 'Create a campaign draft' };
+export const scheduleCampaignCapability: Capability = { id: 'schedule-campaign', name: 'Schedule Campaign', domain: 'marketing', description: 'Delegate durable campaign scheduling' };
+export const publishStorefront: Capability = { id: 'publish-storefront', name: 'Publish Storefront', domain: 'operations', description: 'Delegate immutable version-checked publication' };
+
 export const allBusinessCapabilities: readonly Capability[] = [
+  updateProduct, archiveProduct, unsubscribeSubscriber, createCampaignCapability, scheduleCampaignCapability, publishStorefront,
   createProduct,
   createOrder,
   processPayment,

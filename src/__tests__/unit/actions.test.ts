@@ -2,8 +2,8 @@ import { describe, it, expect } from "vitest";
 import { allBusinessActions } from "../../actions/index.js";
 
 describe("business actions", () => {
-  it("defines 10 actions", () => {
-    expect(allBusinessActions).toHaveLength(10);
+  it("defines 12 actions", () => {
+    expect(allBusinessActions).toHaveLength(12);
   });
 
   it("all actions have valid IDs, names, and domains", () => {
@@ -35,7 +35,7 @@ describe("business actions", () => {
   });
 
   it("actions with capabilityId link to valid capabilities", () => {
-    const validCapabilities = ["create-product", "create-order", "process-payment", "send-campaign", "manage-subscribers", "manage-inventory"];
+    const validCapabilities = ["create-product", "update-product", "archive-product", "create-order", "process-payment", "send-campaign", "manage-subscribers", "unsubscribe", "create-campaign", "schedule-campaign", "manage-inventory", "publish-storefront"];
     const actionsWithCapability = allBusinessActions.filter((a) => a.capabilityId);
     expect(actionsWithCapability.length).toBeGreaterThanOrEqual(6);
     for (const action of actionsWithCapability) {

@@ -1,123 +1,38 @@
-import { describe, it, expect } from "vitest";
-import { FlowChartExecutor } from "footprintjs";
-import { createProductCreateFlow } from "../../flows/catalog/productCreateFlow.js";
-import { createOrderCreateFlow } from "../../flows/orders/orderCreateFlow.js";
-import { createSubscriberCreateFlow } from "../../flows/subscribers/subscriberCreateFlow.js";
-import { createCampaignCreateFlow } from "../../flows/campaigns/campaignCreateFlow.js";
-import { createMockRepository } from "../helpers.js";
-import { isValidBusinessType, getBusinessTypeConfig } from "../../helpers.js";
+import { describe, it, expect, vi } from 'vitest';
+import { BusinessOperationError } from '../../operations.js';
+import { isValidBusinessType, getBusinessTypeConfig } from '../../helpers.js';
+import { createFixturePlatform, fixtureContext, createMockRepository } from '../helpers.js';
 
-const repo = createMockRepository();
-
-const maliciousStrings = [
-  '<script>alert("xss")</script>',
-  "'; DROP TABLE products; --",
-  "{{constructor.constructor('return this')()}}",
-  "../../../etc/passwd",
-  "\\x00\\x01\\x02",
-  "a".repeat(10000),
-  "   ",
-  "\n\r\t",
-];
-
-describe("security: product create validation", () => {
-  it("handles malicious name strings without crashing", async () => {
-    for (const name of maliciousStrings) {
-      const flow = createProductCreateFlow(repo);
-      const executor = new FlowChartExecutor(flow, { initialContext: {
-        input: { name, basePrice: 100 },
-      }});
-
-      // Should not throw — the name is a valid string, just potentially malicious content.
-      // The repo stores it as-is; sanitization is the app layer's responsibility.
-      await executor.run();
-      const state = executor.getSnapshot().sharedState as Record<string, unknown>;
-      expect((state.createdProduct as any).name).toBe(name);
-    }
+describe('authorization, schema and private trace boundary', () => {
+  it.each([null, undefined, 123, {}, [], true, ' ', 'a'.repeat(201)])('rejects invalid product names before repository writes (%j)', async name => {
+    const repo = createMockRepository(); const create = vi.spyOn(repo, 'createProduct');
+    const result = await createFixturePlatform({ repository: repo }).executeServiceFlow(fixtureContext, 'create-product', { name, basePrice: 20 });
+    expect(result.status).toBe('error'); expect(create).not.toHaveBeenCalled();
   });
-
-  it("rejects non-string name types", async () => {
-    const invalidNames = [null, undefined, 123, {}, [], true];
-    for (const name of invalidNames) {
-      const flow = createProductCreateFlow(repo);
-      const executor = new FlowChartExecutor(flow, { initialContext: {
-        input: { name, basePrice: 100 },
-      }});
-      await expect(executor.run()).rejects.toThrow("Product name is required");
-    }
+  it.each([null, undefined, '100', {}, [], true, -1, Infinity, NaN])('rejects invalid prices (%j)', async basePrice => {
+    const operation = vi.fn(); const result = await createFixturePlatform({ operations: { 'create-product': operation } }).executeServiceFlow(fixtureContext, 'create-product', { name: 'Dress', basePrice });
+    expect(result.status).toBe('error'); expect(operation).not.toHaveBeenCalled();
   });
-
-  it("rejects non-number base price", async () => {
-    const invalidPrices = [null, undefined, "100", {}, [], true];
-    for (const basePrice of invalidPrices) {
-      const flow = createProductCreateFlow(repo);
-      const executor = new FlowChartExecutor(flow, { initialContext: {
-        input: { name: "Test", basePrice },
-      }});
-      await expect(executor.run()).rejects.toThrow("Base price is required");
-    }
+  it('does not accept authorization/module claims in command input', async () => {
+    const operation = vi.fn(); const result = await createFixturePlatform({ operations: { 'create-product': operation } }).executeServiceFlow(fixtureContext, 'create-product', { name: 'Dress', basePrice: 20, userId: 'admin', requiredModules: [] });
+    expect(result.status).toBe('error'); expect(operation).not.toHaveBeenCalled();
   });
-});
-
-describe("security: order create validation", () => {
-  it("rejects missing email", async () => {
-    const flow = createOrderCreateFlow(repo);
-    const executor = new FlowChartExecutor(flow, { initialContext: {
-      input: { items: [{ name: "Test", quantity: 1, price: 100 }], shipping: {} },
-    }});
-    await expect(executor.run()).rejects.toThrow("Customer email is required");
+  it.each([new Error('PRIVATE@example.test SECRET token'), new BusinessOperationError('BUSINESS_INPUT_INVALID', 'PRIVATE@example.test SECRET token')])('never records external failure details (%j)', async failure => {
+    const operation = vi.fn(async () => { throw failure; });
+    const result = await createFixturePlatform({ operations: { 'create-product': operation } }).executeServiceFlow(fixtureContext, 'create-product', { name: 'Private Name', basePrice: 20 });
+    expect(result.status).toBe('error'); expect(JSON.stringify(result)).not.toMatch(/PRIVATE|SECRET|Private Name/);
+    expect(result.executionSnapshot).toBeDefined();
   });
-
-  it("rejects non-array items", async () => {
-    const flow = createOrderCreateFlow(repo);
-    const executor = new FlowChartExecutor(flow, { initialContext: {
-      input: { email: "test@example.com", items: "not-an-array", shipping: {} },
-    }});
-    await expect(executor.run()).rejects.toThrow("At least one item is required");
+  it('keeps explicit private HTTP response outside default result and traces', async () => {
+    const operation = async () => ({ acknowledgement: 'pending' as const, output: { orderId: 'o1', checkoutToken: 'SECRET', email: 'PRIVATE@example.test', status: 'PENDING', url: 'https://private.test' }, response: { checkoutToken: 'SECRET', url: 'https://private.test' } });
+    const input = { orderId: 'o1', attemptId: 'a1', checkoutToken: 'SECRET' };
+    const ordinary = await createFixturePlatform({ providers: { payments: { start: operation } } }).executeServiceFlow(fixtureContext, 'process-payment', input);
+    expect(JSON.stringify(ordinary)).not.toMatch(/SECRET|private.test|PRIVATE/); expect(ordinary.response).toBeUndefined();
+    const privateResult = await createFixturePlatform({ includeResponse: true, providers: { payments: { start: operation } } }).executeServiceFlow(fixtureContext, 'process-payment', input);
+    expect(privateResult.response).toMatchObject({ checkoutToken: 'SECRET' });
+    const { response, ...recordable } = privateResult; expect(JSON.stringify(recordable)).not.toMatch(/SECRET|private.test|PRIVATE/);
   });
-});
-
-describe("security: subscriber validation", () => {
-  it("normalizes email to prevent case-based duplicates", async () => {
-    const flow = createSubscriberCreateFlow(repo);
-    const executor = new FlowChartExecutor(flow, { initialContext: {
-      input: { email: "Test@EXAMPLE.COM" },
-    }});
-    await executor.run();
-    const state = executor.getSnapshot().sharedState as Record<string, unknown>;
-    expect(state.email).toBe("test@example.com");
-  });
-
-  it("trims whitespace from email", async () => {
-    const flow = createSubscriberCreateFlow(repo);
-    const executor = new FlowChartExecutor(flow, { initialContext: {
-      input: { email: "  test@example.com  " },
-    }});
-    await executor.run();
-    const state = executor.getSnapshot().sharedState as Record<string, unknown>;
-    expect(state.email).toBe("test@example.com");
-  });
-});
-
-describe("security: campaign validation", () => {
-  it("rejects campaign with missing subject", async () => {
-    const flow = createCampaignCreateFlow(repo);
-    const executor = new FlowChartExecutor(flow, { initialContext: {
-      input: { label: "Test" },
-    }});
-    await expect(executor.run()).rejects.toThrow("Campaign subject is required");
-  });
-});
-
-describe("security: type guard boundary", () => {
-  it("rejects prototype pollution via isValidBusinessType", () => {
-    expect(isValidBusinessType("__proto__")).toBe(false);
-    expect(isValidBusinessType("constructor")).toBe(false);
-    expect(isValidBusinessType("toString")).toBe(false);
-  });
-
-  it("rejects prototype pollution via getBusinessTypeConfig", () => {
-    expect(getBusinessTypeConfig("__proto__")).toBeUndefined();
-    expect(getBusinessTypeConfig("constructor")).toBeUndefined();
+  it('ignores prototype names in profile lookup', () => {
+    for (const value of ['__proto__', 'constructor', 'toString']) { expect(isValidBusinessType(value)).toBe(false); expect(getBusinessTypeConfig(value)).toBeUndefined(); }
   });
 });

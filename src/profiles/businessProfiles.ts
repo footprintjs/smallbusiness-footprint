@@ -1,6 +1,6 @@
 import { defineProfile } from "@footprint/features";
 import type { ProfileDefinition } from "@footprint/features";
-import type { BusinessType, BusinessTypeConfig, FulfillmentPattern } from "../types.js";
+import type { BusinessTypeConfig } from "../types.js";
 
 export const kidsBoutiqueProfile = defineProfile({
   type: "kids-boutique",
@@ -44,17 +44,27 @@ export const chocolateShopProfile = defineProfile({
 
 export const allBusinessProfiles = [kidsBoutiqueProfile, chocolateShopProfile] as const;
 
-function toBusinessTypeConfig(profile: ProfileDefinition): BusinessTypeConfig {
-  const meta = profile.meta as {
-    services: BusinessTypeConfig["services"];
-    theme: BusinessTypeConfig["theme"];
-  };
+/** Derive metadata for any registered profile without imposing a built-in brand. */
+export function toBusinessTypeConfig(profile: ProfileDefinition): BusinessTypeConfig {
+  const services = Object.fromEntries(['catalog', 'orders', 'payments', 'campaigns', 'subscribers', 'inventory', 'storefront', ...profile.modules].map(id => [id, profile.modules.includes(id)]));
+  const configuredServices = profile.meta.services;
+  if (configuredServices !== undefined) {
+    if (!configuredServices || typeof configuredServices !== 'object' || Array.isArray(configuredServices)) throw new Error(`Profile "${profile.type}" has invalid services metadata`);
+    for (const [id, enabled] of Object.entries(configuredServices)) {
+      if (typeof enabled !== 'boolean') throw new Error(`Profile "${profile.type}" has invalid service "${id}"`);
+      Object.defineProperty(services, id, { value: enabled, enumerable: true, writable: true, configurable: true });
+    }
+  }
+  const theme = profile.meta.theme;
+  if (theme !== undefined && (!theme || typeof theme !== 'object' || Array.isArray(theme))) throw new Error(`Profile "${profile.type}" has invalid theme metadata`);
+  const configuredTheme = theme as Partial<BusinessTypeConfig['theme']> | undefined;
+  if (configuredTheme && ((configuredTheme.accent !== undefined && typeof configuredTheme.accent !== 'string') || (configuredTheme.label !== undefined && typeof configuredTheme.label !== 'string'))) throw new Error(`Profile "${profile.type}" has invalid theme metadata`);
   return {
-    type: profile.type as BusinessType,
+    type: profile.type,
     displayName: profile.displayName,
-    services: meta.services,
-    fulfillmentPattern: profile.schedulingPattern as FulfillmentPattern,
-    theme: meta.theme,
+    services: services as BusinessTypeConfig['services'],
+    fulfillmentPattern: profile.schedulingPattern,
+    theme: { accent: configuredTheme?.accent ?? '#64748b', label: configuredTheme?.label ?? profile.displayName },
   };
 }
 

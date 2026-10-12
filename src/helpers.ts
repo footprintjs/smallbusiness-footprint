@@ -2,15 +2,17 @@
  * Shared helper functions for consuming smallbusiness-footprint.
  * All config/terminology getters return deep copies to prevent mutation.
  */
-import { businessTypeConfigs, allBusinessProfiles } from "./profiles/index.js";
+import { allBusinessProfiles, toBusinessTypeConfig } from "./profiles/index.js";
 import { allBusinessModules } from "./modules/index.js";
 import { businessTerminologyFull } from "./terminology/businessTerms.js";
 import {
   createBusinessPlatform,
   type BusinessPlatform,
+  type BusinessDefinitions,
 } from "./businessPlatform.js";
 import { createMemoryProfileStore, createTenantContext, createModuleRegistry } from "@footprint/platform";
 import type { TenantContext, ModuleRegistry } from "@footprint/platform";
+import type { ProfileDefinition } from '@footprint/features';
 import type {
   BusinessType,
   BusinessTypeConfig,
@@ -18,6 +20,8 @@ import type {
   BusinessRepository,
 } from "./types.js";
 import type { BusinessServiceResult } from "./flows/businessServiceComposer.js";
+import type { ActionAuthorizer } from '@footprint/actions';
+import type { BusinessOperations, BusinessProviders } from './operations.js';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -33,7 +37,8 @@ export const BUSINESS_TYPES_LIST = Object.freeze(
 
 let _businessModuleRegistry: ModuleRegistry | null = null;
 
-export function getBusinessModuleRegistry(): ModuleRegistry {
+export function getBusinessModuleRegistry(definitions?: BusinessDefinitions): ModuleRegistry {
+  if (definitions) return createModuleRegistry({ modules: definitions.modules ?? allBusinessModules, profileTypes: definitions.profiles ?? allBusinessProfiles });
   if (!_businessModuleRegistry) {
     _businessModuleRegistry = createModuleRegistry({
       modules: [...allBusinessModules],
@@ -47,30 +52,25 @@ export function getBusinessModuleRegistry(): ModuleRegistry {
 // Validation
 // ---------------------------------------------------------------------------
 
-export function isValidBusinessType(type: string): type is BusinessType {
-  return (BUSINESS_TYPES_LIST as readonly string[]).includes(type);
+export function isValidBusinessType(type: string, profiles: readonly ProfileDefinition[] = allBusinessProfiles): type is BusinessType {
+  return profiles.some(profile => profile.type === type);
 }
 
 // ---------------------------------------------------------------------------
 // Config getters (deep copy)
 // ---------------------------------------------------------------------------
 
-export function getAllBusinessTypeConfigs(): Record<string, BusinessTypeConfig> {
-  const result: Record<string, BusinessTypeConfig> = {};
-  for (const [key, config] of Object.entries(businessTypeConfigs)) {
-    result[key] = { ...config, services: { ...config.services }, theme: { ...config.theme } };
-  }
-  return result;
+export function getAllBusinessTypeConfigs(profiles: readonly ProfileDefinition[] = allBusinessProfiles): Record<string, BusinessTypeConfig> {
+  return Object.fromEntries(profiles.map(profile => [profile.type, toBusinessTypeConfig(profile)]));
 }
 
-export function getBusinessTypeConfig(businessType: string): BusinessTypeConfig | undefined {
-  if (!Object.hasOwn(businessTypeConfigs, businessType)) return undefined;
-  const config = businessTypeConfigs[businessType as BusinessType];
-  return { ...config, services: { ...config.services }, theme: { ...config.theme } };
+export function getBusinessTypeConfig(businessType: string, profiles: readonly ProfileDefinition[] = allBusinessProfiles): BusinessTypeConfig | undefined {
+  const profile = profiles.find(profile => profile.type === businessType);
+  return profile ? toBusinessTypeConfig(profile) : undefined;
 }
 
-export function getAllBusinessProfiles() {
-  return allBusinessProfiles.map((p) => ({ ...p }));
+export function getAllBusinessProfiles(profiles: readonly ProfileDefinition[] = allBusinessProfiles) {
+  return structuredClone(profiles);
 }
 
 // ---------------------------------------------------------------------------
@@ -119,27 +119,27 @@ export function createStubRepository(serviceName: string = "this service"): Busi
     throw new Error(`${serviceName} does not execute data flows`);
   };
   return {
-    createProduct: stub as any,
-    updateProduct: stub as any,
-    getProduct: stub as any,
-    listProducts: stub as any,
-    archiveProduct: stub as any,
-    createOrder: stub as any,
-    getOrder: stub as any,
-    updateOrderStatus: stub as any,
-    listOrders: stub as any,
-    getSubscriber: stub as any,
-    upsertSubscriber: stub as any,
-    unsubscribeByToken: stub as any,
-    listSubscribers: stub as any,
-    createCampaign: stub as any,
-    updateCampaign: stub as any,
-    recordSendResult: stub as any,
-    deleteCampaign: stub as any,
-    getCampaign: stub as any,
-    listCampaigns: stub as any,
-    getInventory: stub as any,
-    updateStock: stub as any,
+    createProduct: stub,
+    updateProduct: stub,
+    getProduct: stub,
+    listProducts: stub,
+    archiveProduct: stub,
+    createOrder: stub,
+    getOrder: stub,
+    updateOrderStatus: stub,
+    listOrders: stub,
+    getSubscriber: stub,
+    upsertSubscriber: stub,
+    unsubscribeByToken: stub,
+    listSubscribers: stub,
+    createCampaign: stub,
+    updateCampaign: stub,
+    recordSendResult: stub,
+    deleteCampaign: stub,
+    getCampaign: stub,
+    listCampaigns: stub,
+    getInventory: stub,
+    updateStock: stub,
   };
 }
 
@@ -147,25 +147,29 @@ export function createStubRepository(serviceName: string = "this service"): Busi
 // Platform factories
 // ---------------------------------------------------------------------------
 
-export function createConfigPlatform(businessType: BusinessType, unitId: string): BusinessPlatform {
+export function createConfigPlatform(businessType: BusinessType, unitId: string, definitions: BusinessDefinitions = {}): BusinessPlatform {
   const profileStore = createMemoryProfileStore([
-    { unitId, profileType: businessType, createdAt: new Date().toISOString() },
+    { tenantId: unitId, unitId, revision: 1, profileType: businessType, createdAt: new Date().toISOString() },
   ]);
-  return createBusinessPlatform({ profileStore, repository: createStubRepository() });
+  return createBusinessPlatform({ ...definitions, profileStore, scope: { tenantId: unitId, unitId } });
 }
 
-export function createPlatformForRequest(opts: {
+export function createPlatformForRequest(opts: BusinessDefinitions & {
+  tenantId: string;
   businessType: BusinessType;
   unitId: string;
   repository: BusinessRepository;
   userId?: string;
+  authorizer?: ActionAuthorizer;
+  operations?: BusinessOperations;
+  providers?: BusinessProviders;
 }): { platform: BusinessPlatform; ctx: TenantContext } {
   const profileStore = createMemoryProfileStore([
-    { unitId: opts.unitId, profileType: opts.businessType, createdAt: new Date().toISOString() },
+    { tenantId: opts.tenantId, unitId: opts.unitId, revision: 1, profileType: opts.businessType, createdAt: new Date().toISOString() },
   ]);
-  const platform = createBusinessPlatform({ profileStore, repository: opts.repository });
+  const platform = createBusinessPlatform({ profileStore, repository: opts.repository, scope: { tenantId: opts.tenantId, unitId: opts.unitId }, authorizer: opts.authorizer, operations: opts.operations, providers: opts.providers, profiles: opts.profiles, modules: opts.modules });
   const ctx = createTenantContext({
-    tenantId: opts.unitId,
+    tenantId: opts.tenantId,
     unitId: opts.unitId,
     userId: opts.userId,
   });

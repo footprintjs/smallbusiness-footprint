@@ -1,10 +1,11 @@
 // Main entry point
 export { createBusinessPlatform } from "./businessPlatform.js";
-export type { BusinessPlatform, BusinessPlatformConfig } from "./businessPlatform.js";
+export type { BusinessPlatform, BusinessPlatformConfig, BusinessDefinitions } from "./businessPlatform.js";
 
 // Types
 export type {
   BusinessType,
+  DefaultBusinessType,
   BusinessServices,
   FulfillmentPattern,
   BusinessTypeConfig,
@@ -58,6 +59,7 @@ export {
   chocolateShopProfile,
   allBusinessProfiles,
   businessTypeConfigs,
+  toBusinessTypeConfig,
 } from "./profiles/index.js";
 
 // Capabilities
@@ -78,6 +80,7 @@ export {
   localDeliveryAdapter,
   allFulfillmentAdapters,
   createPaymentAdapters,
+  checkoutPaymentAdapter,
   stripeCheckoutAdapter,
   allPaymentAdapters,
   createCatalogAdapters,
@@ -106,6 +109,8 @@ export {
   createCampaignAction,
   scheduleCampaignAction,
   sendCampaignBatchAction,
+  updateStockAction,
+  publishStorefrontAction,
   allBusinessActions,
 } from "./actions/index.js";
 
@@ -137,6 +142,7 @@ export type {
   ActionDispatch,
   ActionBranch,
 } from "./flows/index.js";
+export type { BusinessAdapterOptions } from './adapters/index.js';
 
 // Terminology
 export {
@@ -182,3 +188,17 @@ export type {
   MCPToolDefinition,
   ActionResult,
 } from "@footprint/platform";
+
+export { createBusinessOperations, BusinessOperationError, assertBusinessScope, safeBusinessOutput } from './operations.js';
+export type { BusinessScope, BusinessOperations, BusinessProviders, BusinessOperation, BusinessOperationReceipt, BusinessOperationContext, BusinessAcknowledgement } from './operations.js';
+export type { BusinessServiceOptions, PreparedBusinessOperation, BusinessTermResolver } from './flows/businessServiceComposer.js';
+export { createBusinessOperationFlow } from './flows/shared/businessFlow.js';
+export type { BusinessFlowDependencies, BusinessFlowChart } from './flows/shared/businessFlow.js';
+
+
+export { createPublicationOperation, parseBusinessPublicationCommand } from './publicationPort.js';
+export type { BusinessPublicationPort, BusinessPublicationCommand, BusinessPublicationReceipt, BusinessPublicationSource, BusinessPublicationPatch, BusinessThemeSchedule } from './publicationPort.js';
+export { createInventoryOperation } from './inventoryPort.js';
+export type { BusinessInventoryPort, BusinessInventoryCommand, BusinessInventoryReceipt } from './inventoryPort.js';
+export { createCheckoutOperation } from './checkoutPort.js';
+export type { BusinessCheckoutPort, BusinessCheckoutCommand, BusinessCheckoutReceipt } from './checkoutPort.js';

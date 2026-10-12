@@ -11,3 +11,5 @@ export {
   sendCampaignBatchAction,
   allBusinessActions,
 } from "./businessActions.js";
+
+export { updateStockAction, publishStorefrontAction } from './businessActions.js';

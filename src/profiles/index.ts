@@ -3,4 +3,5 @@ export {
   chocolateShopProfile,
   allBusinessProfiles,
   businessTypeConfigs,
+  toBusinessTypeConfig,
 } from "./businessProfiles.js";

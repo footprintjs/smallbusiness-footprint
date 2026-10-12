@@ -1,0 +1,23 @@
+{
+  "name": "footprint-evidence-quickstart",
+  "version": "0.3.2",
+  "private": true,
+  "type": "module",
+  "description": "Reduced local booking and publication examples based on the FootPrint app integrations",
+  "engines": { "node": ">=24.15.0 <25" },
+  "scripts": {
+    "booking": "node booking.mjs",
+    "publication": "node publication.mjs",
+    "test": "node booking.mjs && node publication.mjs"
+  },
+  "dependencies": {
+    "@footprint/actions": "0.3.2",
+    "@footprint/adapters": "0.2.1",
+    "@footprint/features": "0.2.1",
+    "@footprint/platform": "0.3.2",
+    "@footprint/seed": "0.2.1",
+    "@footprint/tenancy": "0.2.1",
+    "smallbusiness-footprint": "0.2.4",
+    "footprintjs": "10.0.0"
+  }
+}

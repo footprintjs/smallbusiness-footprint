@@ -1,121 +1,32 @@
-import { describe, it, expect } from "vitest";
-import { FlowChartExecutor } from "footprintjs";
-import { createCampaignCreateFlow } from "../../flows/campaigns/campaignCreateFlow.js";
-import { createCampaignScheduleFlow } from "../../flows/campaigns/campaignScheduleFlow.js";
-import { createCampaignSendBatchFlow } from "../../flows/campaigns/campaignSendBatchFlow.js";
-import { createMockRepository } from "../helpers.js";
+import { describe, it, expect, vi } from 'vitest';
+import { createFixturePlatform, fixtureContext, createMockRepository } from '../helpers.js';
 
-describe("campaign create flow", () => {
-  const repo = createMockRepository();
-
-  it("creates a campaign draft", async () => {
-    const flow = createCampaignCreateFlow(repo);
-    const executor = new FlowChartExecutor(flow, { initialContext: {
-      input: { label: "Spring Sale", subject: "50% off everything!" },
-    }});
-
-    await executor.run();
-    const state = executor.getSnapshot().sharedState as Record<string, unknown>;
-
-    expect(state.createdCampaign).toBeDefined();
-    expect((state.output as any).status).toBe("DRAFT");
-    expect((state.output as any).campaignId).toBeTruthy();
+describe('campaign operations use real application acknowledgements', () => {
+  it('creates only a draft through CRUD, with a default label', async () => {
+    const repo = createMockRepository(); const create = vi.spyOn(repo, 'createCampaign');
+    const result = await createFixturePlatform({ repository: repo }).executeServiceFlow(fixtureContext, 'create-campaign', { subject: 'Private campaign subject', data: { email: 'PRIVATE@example.test' } });
+    expect(result.status).toBe('success'); expect(result.result).toMatchObject({ status: 'DRAFT' });
+    expect(create.mock.calls[0][0].label).toBe('Untitled Campaign');
+    expect(JSON.stringify(result)).not.toContain('PRIVATE@example.test'); expect(JSON.stringify(result)).not.toContain('Private campaign subject');
   });
-
-  it("rejects campaign without subject", async () => {
-    const flow = createCampaignCreateFlow(repo);
-    const executor = new FlowChartExecutor(flow, { initialContext: {
-      input: { label: "No Subject" },
-    }});
-
-    await expect(executor.run()).rejects.toThrow("Campaign subject is required");
+  it.each(['schedule-campaign', 'send-campaign-batch'])('does not invent acknowledgement for unconfigured %s', async action => {
+    const repo = createMockRepository(); const update = vi.spyOn(repo, 'updateCampaign'); const record = vi.spyOn(repo, 'recordSendResult');
+    const result = await createFixturePlatform({ repository: repo }).executeServiceFlow(fixtureContext, action, { campaignId: 'campaign-1', scheduleAt: '2030-01-01T00:00:00Z', idempotencyKey: 'batch-key' });
+    expect(result.status).toBe('error'); expect(update).not.toHaveBeenCalled(); expect(record).not.toHaveBeenCalled();
   });
-
-  it("defaults label to Untitled Campaign", async () => {
-    const flow = createCampaignCreateFlow(repo);
-    const executor = new FlowChartExecutor(flow, { initialContext: {
-      input: { subject: "Test Subject" },
-    }});
-
-    await executor.run();
-    const state = executor.getSnapshot().sharedState as Record<string, unknown>;
-    expect(state.label).toBe("Untitled Campaign");
+  it('reports only the sender receipt, including partial failures', async () => {
+    const schedule = vi.fn(async () => ({ acknowledgement: 'scheduled' as const, output: { campaignId: 'campaign-1', status: 'SCHEDULED' } }));
+    const sendBatch = vi.fn(async () => ({ acknowledgement: 'accepted' as const, output: { campaignId: 'campaign-1', status: 'SENDING', sentCount: 2, failedCount: 1, email: 'PRIVATE@example.test' } }));
+    const platform = createFixturePlatform({ providers: { campaigns: { schedule, sendBatch } } });
+    const result = await platform.executeServiceFlow(fixtureContext, 'send-campaign-batch', { campaignId: 'campaign-1', idempotencyKey: 'batch-key' });
+    expect(result.status).toBe('success'); expect(sendBatch).toHaveBeenCalledOnce(); expect(schedule).not.toHaveBeenCalled();
+    expect(result.result).toEqual({ campaignId: 'campaign-1', status: 'SENDING', sentCount: 2, failedCount: 1 });
+    expect(result.narrative.length).toBeGreaterThan(0); expect(JSON.stringify(result)).not.toContain('PRIVATE@example.test');
   });
-});
-
-describe("campaign schedule flow", () => {
-  const repo = createMockRepository();
-
-  it("schedules a campaign", async () => {
-    const flow = createCampaignScheduleFlow(repo);
-    const executor = new FlowChartExecutor(flow, { initialContext: {
-      input: { campaignId: "campaign-1", scheduleAt: "2026-04-15T10:00:00Z" },
-    }});
-
-    await executor.run();
-    const state = executor.getSnapshot().sharedState as Record<string, unknown>;
-
-    expect(state.scheduledCampaign).toBeDefined();
-    expect((state.output as any).status).toBe("SCHEDULED");
-  });
-
-  it("rejects without campaign ID", async () => {
-    const flow = createCampaignScheduleFlow(repo);
-    const executor = new FlowChartExecutor(flow, { initialContext: {
-      input: { scheduleAt: "2026-04-15T10:00:00Z" },
-    }});
-
-    await expect(executor.run()).rejects.toThrow("Campaign ID is required");
-  });
-
-  it("rejects without schedule time", async () => {
-    const flow = createCampaignScheduleFlow(repo);
-    const executor = new FlowChartExecutor(flow, { initialContext: {
-      input: { campaignId: "campaign-1" },
-    }});
-
-    await expect(executor.run()).rejects.toThrow("Schedule time is required");
-  });
-});
-
-describe("campaign send batch flow", () => {
-  const repo = createMockRepository();
-
-  it("sends a batch to active subscribers", async () => {
-    const flow = createCampaignSendBatchFlow(repo);
-    const executor = new FlowChartExecutor(flow, { initialContext: {
-      input: { campaignId: "campaign-1" },
-    }});
-    executor.enableNarrative();
-
-    await executor.run();
-    const state = executor.getSnapshot().sharedState as Record<string, unknown>;
-
-    expect(state.finalizedCampaign).toBeDefined();
-    const output = state.output as any;
-    expect(output.status).toBe("SENT");
-    expect(output.sentCount).toBeGreaterThanOrEqual(2);
-    expect(output.failedCount).toBe(0);
-  });
-
-  it("rejects without campaign ID", async () => {
-    const flow = createCampaignSendBatchFlow(repo);
-    const executor = new FlowChartExecutor(flow, { initialContext: {
-      input: {},
-    }});
-
-    await expect(executor.run()).rejects.toThrow("Campaign ID is required");
-  });
-
-  it("produces narrative entries", async () => {
-    const flow = createCampaignSendBatchFlow(repo);
-    const executor = new FlowChartExecutor(flow, { initialContext: {
-      input: { campaignId: "campaign-1" },
-    }});
-    executor.enableNarrative();
-
-    await executor.run();
-    const narrative = executor.getNarrative();
-    expect(narrative.length).toBeGreaterThan(0);
+  it('fails safely when scheduler rejects rather than marking SCHEDULED', async () => {
+    const schedule = vi.fn(async () => { throw new Error('provider leaked PRIVATE@example.test https://private.test/token'); });
+    const result = await createFixturePlatform({ providers: { campaigns: { schedule, sendBatch: vi.fn() } } }).executeServiceFlow(fixtureContext, 'schedule-campaign', { campaignId: 'campaign-1', scheduleAt: '2030-01-01T00:00:00Z', idempotencyKey: 'schedule-key' });
+    expect(result.status).toBe('error'); expect(result.result).toBeUndefined(); expect(result.code).toBe('BUSINESS_OPERATION_FAILED');
+    expect(JSON.stringify(result)).not.toMatch(/PRIVATE|private.test/);
   });
 });
