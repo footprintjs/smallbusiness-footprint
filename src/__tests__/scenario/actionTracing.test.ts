@@ -1,3 +1,4 @@
+import footprintPackage from 'footprintjs/package.json' with { type: 'json' };
 import { describe, expect, it, vi } from 'vitest';
 import { createFixturePlatform, fixtureContext, fixtureScope, createMockRepository } from '../helpers.js';
 import { createPaymentAdapters } from '../../adapters/paymentAdapters.js';
@@ -13,7 +14,7 @@ describe('configured Blueprint recorder through BusinessPlatform', () => {
     });
     expect(result.status).toBe('success'); expect(reserve).toHaveBeenCalledOnce(); expect(record).toHaveBeenCalledOnce();
     const [trace, context] = record.mock.calls[0];
-    expect(trace.runtime).toEqual({ library: 'footprintjs', version: '10.0.0' });
+    expect(trace.runtime).toEqual({ library: 'footprintjs', version: footprintPackage.version });
     expect(trace.stageMetrics.map(metric => metric.stageName)).toEqual(['AuthorizeAction', 'ValidateInput', 'ExecuteAction', 'AcknowledgeAction']);
     expect(trace.executionSnapshot.commitLog.map(commit => commit.stageId)).toEqual(['authorize-action', 'validate-input', 'execute-action', 'acknowledge-action']);
     expect(trace.executionSnapshot.sharedState).toEqual({}); expect(context.unitId).toBe(fixtureScope.unitId);
@@ -34,5 +35,11 @@ describe('configured Blueprint recorder through BusinessPlatform', () => {
     await expect(adapter.execute(command, { ...scope, profileType: 'kids-boutique' })).rejects.toThrow('requested store');
     await expect(adapter.execute(command, { ...fixtureScope, profileType: 'kids-boutique' })).resolves.toMatchObject({ acknowledgement: 'pending' });
     expect(start).toHaveBeenCalledOnce();
+  });
+  it('passes the host deadline to Blueprint and stops before its provider is invoked', async () => {
+    const operation = vi.fn(async () => ({ acknowledgement: 'committed' as const, output: { productId: 'p1' } }));
+    const options = vi.fn(() => ({ deadline: Date.now() - 1 }));
+    const result = await createFixturePlatform({ operations: { 'create-product': operation }, executionOptions: options }).executeAction(fixtureContext, 'create-product', { name: 'Dress', basePrice: 20 });
+    expect(result.status).toBe('error'); expect(operation).not.toHaveBeenCalled(); expect(options).toHaveBeenCalledOnce();
   });
 });

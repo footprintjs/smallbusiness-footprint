@@ -1,6 +1,6 @@
 {
   "name": "smallbusiness-footprint",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Small-business e-commerce domain wrapper for footprint-blueprint — configurable commerce engine for any shop type",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -14,15 +14,15 @@
     "quickstart:publication": "node examples/shared-evidence/publication.mjs"
   },
   "dependencies": {
-    "footprint-blueprint": "workspace:*",
-    "footprintjs": "10.0.0",
+    "footprint-blueprint": "0.4.1",
+    "footprintjs": "10.1.0",
     "zod": "4.6.5"
   },
   "devDependencies": {
+    "@types/node": "24.19.2",
     "fast-check": "4.10.2",
     "typescript": "7.0.2",
-    "vitest": "5.0.3",
-    "@types/node": "24.19.2"
+    "vitest": "5.0.3"
   },
   "license": "MIT",
   "type": "module",
@@ -49,6 +49,21 @@
       "types": "./dist/metadata.d.ts",
       "import": "./dist/metadata.js",
       "default": "./dist/metadata.js"
+    },
+    "./shipping": {
+      "types": "./dist/shipping.d.ts",
+      "import": "./dist/shipping.js",
+      "default": "./dist/shipping.js"
+    },
+    "./aftersales": {
+      "types": "./dist/aftersales.d.ts",
+      "import": "./dist/aftersales.js",
+      "default": "./dist/aftersales.js"
+    },
+    "./aftersales/runtime": {
+      "types": "./dist/aftersales/runtime.d.ts",
+      "import": "./dist/aftersales/runtime.js",
+      "default": "./dist/aftersales/runtime.js"
     }
   },
   "repository": {

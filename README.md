@@ -1,6 +1,6 @@
-# smallbusiness-footprint 0.3.0
+# smallbusiness-footprint 0.4.0
 
-This prepared local candidate depends on the single `footprint-blueprint@0.4.0` framework package, plus the separate `footprintjs@10.0.0` engine and Zod. It uses Node 24.15–24.x. Publication is pending; the release kit contains two library tarballs. This release replaces the six former `@footprint/*` dependencies with one Blueprint dependency while retaining commerce execution, privacy and authoritative-port boundaries.
+This prepared `smallbusiness-footprint@0.4.0` release depends on `footprint-blueprint@0.4.1`, `footprintjs@10.1.0` and Zod. It uses Node 24.15–24.x. Publication and final validation are pending. Existing commerce, shipping, after-sales, privacy and authoritative-provider boundaries remain in place.
 
 SMB is optional. Framework-only applications use Blueprint directly; commerce consumers can install SMB and its declared dependencies are installed automatically. Within Blueprint, focused subpaths select runtime entry graphs and dynamic `import()` provides loading on demand. Ordinary dependency downloads still occur at package installation.
 
@@ -66,3 +66,25 @@ For migration and provider contracts, see [docs/INTEGRATION.md](docs/INTEGRATION
 ## Shared receipt boundary
 
 Direct `executeAction` calls use Blueprint and can return shared execution evidence. Recorded `executeServiceFlow` calls retain their own SDK snapshot/manifest/narrative path and do not automatically supply common observation/effect receipts. Charming Cherubs reports explicit shared facts at its application `createPlatform` publication boundary while keeping its original publication workflow recording. Applications choose safe reported fields and remain responsible for authoritative transactions and receipt storage.
+
+## Shipping adapter extension candidate
+
+Version 0.4.0 adds a browser-safe `smallbusiness-footprint/shipping` API. See [bring-your-own shipping adapters](docs/SHIPPING_ADAPTERS.md).
+
+## Owner-approved after-sales
+
+`smallbusiness-footprint/aftersales` is a browser-safe contract/policy entry. `smallbusiness-footprint/aftersales/runtime` exports `createAfterSalesService` for backend execution. It uses real FootprintJS 10 charts, without a payment vendor or application import.
+
+The default policy allows cancellation before a shipping/label claim wins, and returns within 30 days of recorded delivery with unworn condition and tags confirmed. `validateAfterSalesPolicy()` validates configurable per-store windows, requirements and enabled flags. Every case snapshots its policy; changing shop settings does not rewrite existing cases. Owner approval is always required. Return approval authorizes return shipment only: receipt and accepted inspection must precede a refund.
+
+Inject `repository`, `payments`, a trusted `authorizer`, `storeId`, optional `policy`, `now`, `generateId`, and `onTrace`. Call `request(command, context)` or `action(command, context)`. Customer identity/order ownership and owner authentication come from the HTTP host, never the request body. Amounts are positive integer cents; selection uses stable saved-order line IDs and quantities.
+
+The repository adapter must atomically deduplicate requests, allocate quantities, race cancellation holds against shipping claims, CAS case/order versions, and reserve refund amounts against captured money minus previous refunds and every pending reservation. A durable refund intent and stable key are saved **before** a provider call. An unknown result retains its reservation and reconciles by the same provider key or refund ID; absence is not permission to create another refund. Provider adapters must refuse replay after their idempotency-retention window. Confirmed failure is separate from pending/unknown; no fresh key is automatically generated.
+
+Restock is a separate, exactly-once host transaction after confirmed refund and accepted return inspection. A full cancellation may mark the order cancelled. A partial cancellation retains a fulfillment hold for owner review: existing shipping snapshots must never send cancelled quantities. No hold is automatically released after cancellation refund/restock. Already-created labels require manual carrier review; the library does not claim it can atomically void one.
+
+`onTrace` receives real native snapshot, chart structure, narrative, fixed stage/decision metadata and safe errors. Customer reasons, owner notes, identity, addresses, tokens, provider payloads and payment IDs stay in request-local closures. Diagnostic failures cannot reverse a saved case or provider acknowledgement. Hosts own private trace persistence, retention, notifications, payment credentials and any return-label cost policy. No emails, network calls or cloud services are installed by the library.
+
+## Caller execution controls
+
+`BusinessPlatformConfig.executionOptions` forwards the trusted Blueprint callback for direct actions. `createAfterSalesService` accepts `executionOptions: ({flowId}) => controls` with the same payload-free engine options. A caller may supply a signal, timeout or absolute deadline and trace correlation; omitting the callback preserves existing behavior. The engine owns their validation and enforcement. This does not add retry rules or authorize refunds, restocking, labels or background work. After-sales native traces retain the caller correlation and report the actual running engine version. Recorded service-flow execution remains a separate API.

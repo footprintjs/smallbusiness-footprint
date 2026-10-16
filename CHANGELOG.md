@@ -1,3 +1,26 @@
+# 0.4.0 — 2026-10-16 (prepared; publication pending)
+
+- Pin Blueprint 0.4.1 and FootprintJS 10.1.0.
+- Preserve vendor-neutral shipping, owner-approved cancellations/returns/refunds and per-shop policy configuration.
+- Read trace runtime metadata from the public installed engine manifest and retain optional trusted execution controls.
+- Preserve checkout, publication, authorization and authoritative repository/provider decisions.
+
+Publication and final stable-package validation are pending.
+
+# 0.4.0-gamma.1 — private coordinated engine candidate
+
+- Preserve owner-approved cancellation, return and refund flows plus vendor-neutral shipping from the existing after-sales candidate.
+- Pin Blueprint 0.4.1-gamma.1 and FootprintJS 10.1.0-gamma.1.
+- Add optional trusted engine controls for direct actions and after-sales runs, preserving defaults and authoritative provider/repository decisions.
+- Record actual engine runtime version alongside native after-sales traces.
+
+Local Gamma artifacts only; no npm publication.
+
+# 0.3.1-shipping.1 (local candidate)
+
+- Add vendor-neutral shipping contracts, explicit adapter registry, and verified webhook boundary.
+- Retain all functionality from the published 0.3.0 release.
+
 # Changelog
 
 ## 0.3.0 — prepared single-Blueprint-package release

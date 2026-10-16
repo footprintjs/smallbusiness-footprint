@@ -13,8 +13,9 @@
     "test": "node booking.mjs && node publication.mjs"
   },
   "dependencies": {
-    "footprint-blueprint": "0.4.0",
-    "smallbusiness-footprint": "0.3.0",
-    "footprintjs": "10.0.0"
+    "footprint-blueprint": "0.4.1",
+    "smallbusiness-footprint": "0.4.0",
+    "footprintjs": "10.1.0",
+    "foottrace": "1.1.0"
   }
 }
