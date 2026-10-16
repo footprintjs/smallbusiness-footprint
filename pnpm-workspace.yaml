@@ -1,0 +1,8 @@
+packages:
+  - .
+# Development-only reviewed archive. Published package.json keeps exact numeric dependencies.
+minimumReleaseAgeExclude:
+  - footprintjs@10.1.0
+  - foottrace@1.1.0
+overrides:
+  footprint-blueprint: file:vendor/footprint-blueprint-0.4.1.tgz

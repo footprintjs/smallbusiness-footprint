@@ -1,10 +1,12 @@
-import type { AdapterMapping } from "@footprint/adapters";
+import type { AdapterMapping } from "footprint-blueprint/adapters";
 
 /**
  * Maps capabilities to adapters per business type.
  * Same operation routes to a different implementation per business type.
  */
 export const businessAdapterMappings: readonly AdapterMapping[] = [
+  { capabilityId: 'update-product', profileAdapters: { 'kids-boutique': 'catalog-update', 'chocolate-shop': 'catalog-update' } },
+  { capabilityId: 'archive-product', profileAdapters: { 'kids-boutique': 'catalog-archive', 'chocolate-shop': 'catalog-archive' } },
   {
     capabilityId: "create-order",
     profileAdapters: {
@@ -15,8 +17,8 @@ export const businessAdapterMappings: readonly AdapterMapping[] = [
   {
     capabilityId: "process-payment",
     profileAdapters: {
-      "kids-boutique": "stripe-checkout",
-      "chocolate-shop": "stripe-checkout",
+      "kids-boutique": "checkout-payment",
+      "chocolate-shop": "checkout-payment",
     },
   },
   {

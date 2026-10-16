@@ -1,6 +1,6 @@
 {
   "name": "smallbusiness-footprint",
-  "version": "0.1.0",
+  "version": "0.4.0",
   "description": "Small-business e-commerce domain wrapper for footprint-blueprint — configurable commerce engine for any shop type",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -8,22 +8,74 @@
     "build": "tsc",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepack": "npm run build",
+    "quickstart:booking": "node examples/shared-evidence/booking.mjs",
+    "quickstart:publication": "node examples/shared-evidence/publication.mjs"
   },
   "dependencies": {
-    "@footprint/actions": "file:../footprint-blueprint/packages/actions",
-    "@footprint/adapters": "file:../footprint-blueprint/packages/adapters",
-    "@footprint/features": "file:../footprint-blueprint/packages/features",
-    "@footprint/platform": "file:../footprint-blueprint/packages/platform",
-    "@footprint/seed": "file:../footprint-blueprint/packages/seed",
-    "@footprint/tenancy": "file:../footprint-blueprint/packages/tenancy",
-    "footprintjs": "^4.0.4",
-    "zod": "^4.3.6"
+    "footprint-blueprint": "0.4.1",
+    "footprintjs": "10.1.0",
+    "zod": "4.6.5"
   },
   "devDependencies": {
-    "fast-check": "^3.15.0",
-    "typescript": "^5.4.0",
-    "vitest": "^2.1.0"
+    "@types/node": "24.19.2",
+    "fast-check": "4.10.2",
+    "typescript": "7.0.2",
+    "vitest": "5.0.3"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=24.15.0 <25"
+  },
+  "packageManager": "pnpm@12.11.2",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "docs",
+    "CHANGELOG.md",
+    "examples/shared-evidence/*.mjs"
+  ],
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./metadata": {
+      "types": "./dist/metadata.d.ts",
+      "import": "./dist/metadata.js",
+      "default": "./dist/metadata.js"
+    },
+    "./shipping": {
+      "types": "./dist/shipping.d.ts",
+      "import": "./dist/shipping.js",
+      "default": "./dist/shipping.js"
+    },
+    "./aftersales": {
+      "types": "./dist/aftersales.d.ts",
+      "import": "./dist/aftersales.js",
+      "default": "./dist/aftersales.js"
+    },
+    "./aftersales/runtime": {
+      "types": "./dist/aftersales/runtime.d.ts",
+      "import": "./dist/aftersales/runtime.js",
+      "default": "./dist/aftersales/runtime.js"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/footprintjs/smallbusiness-footprint.git"
+  },
+  "homepage": "https://github.com/footprintjs/smallbusiness-footprint#readme",
+  "bugs": {
+    "url": "https://github.com/footprintjs/smallbusiness-footprint/issues"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  }
 }

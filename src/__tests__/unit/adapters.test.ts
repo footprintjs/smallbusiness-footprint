@@ -26,8 +26,8 @@ import {
 } from "../../adapters/index.js";
 
 describe("business capabilities", () => {
-  it("defines 6 capabilities", () => {
-    expect(allBusinessCapabilities).toHaveLength(6);
+  it("defines 12 capabilities", () => {
+    expect(allBusinessCapabilities).toHaveLength(12);
   });
 
   it("all capabilities have valid IDs, names, and domains", () => {
@@ -115,14 +115,14 @@ describe("static adapters", () => {
 
   it("static stubs throw when execute is called", async () => {
     for (const adapter of [...allFulfillmentAdapters, ...allPaymentAdapters, ...allCatalogAdapters, ...allMarketingAdapters, ...allInventoryAdapters]) {
-      await expect(adapter.execute({}, {} as any)).rejects.toThrow("Static adapter stub invoked");
+      await expect(adapter.execute({}, {} as any)).rejects.toThrow("This operation is not bound to the requested store");
     }
   });
 });
 
 describe("adapter mappings", () => {
-  it("defines 6 mappings (one per capability)", () => {
-    expect(businessAdapterMappings).toHaveLength(6);
+  it("defines 8 profile-routing mappings (other operations use exact handlers)", () => {
+    expect(businessAdapterMappings).toHaveLength(8);
   });
 
   it("each mapping covers both business types", () => {
@@ -144,9 +144,9 @@ describe("adapter mappings", () => {
     expect(mapping?.profileAdapters["chocolate-shop"]).toBe("box-catalog");
   });
 
-  it("process-payment routes to stripe for both types", () => {
+  it("process-payment routes to the configured payment operation for both types", () => {
     const mapping = businessAdapterMappings.find((m) => m.capabilityId === "process-payment");
-    expect(mapping?.profileAdapters["kids-boutique"]).toBe("stripe-checkout");
-    expect(mapping?.profileAdapters["chocolate-shop"]).toBe("stripe-checkout");
+    expect(mapping?.profileAdapters["kids-boutique"]).toBe("checkout-payment");
+    expect(mapping?.profileAdapters["chocolate-shop"]).toBe("checkout-payment");
   });
 });

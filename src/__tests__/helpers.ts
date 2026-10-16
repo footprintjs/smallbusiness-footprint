@@ -180,3 +180,14 @@ export function createMockRepository(): BusinessRepository {
     },
   };
 }
+
+import { createMemoryProfileStore } from 'footprint-blueprint/platform';
+import { createBusinessPlatform } from '../businessPlatform.js';
+import type { BusinessPlatformConfig } from '../businessPlatform.js';
+export const fixtureScope = { tenantId: 'tenant-fixture', unitId: 'shop-fixture' };
+export const fixtureContext = { ...fixtureScope, userId: 'admin-fixture' };
+export const validCheckout = { idempotencyKey: 'command-key', items: [{ productId: 'product-1', quantity: 1 }], shipping: { firstName: 'Private', lastName: 'Customer', email: 'PRIVATE@example.test', address: 'PRIVATE STREET', city: 'Town', state: 'CA', zipCode: '12345' } };
+export function createFixturePlatform(options: Partial<BusinessPlatformConfig> = {}, profileType = 'kids-boutique') {
+  const scope = options.scope ?? fixtureScope;
+  return createBusinessPlatform({ profileStore: createMemoryProfileStore([{ ...scope, profileType, revision: 1, createdAt: '2030-01-01T00:00:00Z' }]), repository: createMockRepository(), scope, authorizer: () => true, ...options });
+}

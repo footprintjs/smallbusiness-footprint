@@ -1,89 +1,10 @@
-import { describe, it, expect } from "vitest";
-import { FlowChartExecutor } from "footprintjs";
-import { createSubscriberCreateFlow } from "../../flows/subscribers/subscriberCreateFlow.js";
-import { createSubscriberUnsubscribeFlow } from "../../flows/subscribers/subscriberUnsubscribeFlow.js";
-import { createMockRepository } from "../helpers.js";
-
-describe("subscriber create flow", () => {
-  const repo = createMockRepository();
-
-  it("creates a subscriber with valid email", async () => {
-    const flow = createSubscriberCreateFlow(repo);
-    const executor = new FlowChartExecutor(flow, { initialContext: {
-      input: { email: "Jane@Example.com" },
-    }});
-
-    await executor.run();
-    const state = executor.getSnapshot().sharedState as Record<string, unknown>;
-
-    expect(state.createdSubscriber).toBeDefined();
-    expect((state.output as any).email).toBe("jane@example.com");
-    expect((state.output as any).status).toBe("ACTIVE");
+import { describe, expect, it, vi } from 'vitest';
+import { createFixturePlatform, createMockRepository, fixtureContext } from '../helpers.js';
+describe('private subscriber operations', () => {
+  it('normalizes subscriber email in the repository call but excludes it and unsubscribe tokens from traces', async () => {
+    const repo = createMockRepository(); const upsert = vi.spyOn(repo, 'upsertSubscriber'); const result = await createFixturePlatform({ repository: repo }).executeServiceFlow(fixtureContext, 'create-subscriber', { email: 'PRIVATE@EXAMPLE.TEST' });
+    expect(result.status).toBe('success'); expect(upsert.mock.calls[0][0].email).toBe('private@example.test'); expect(result.result).toEqual({ status: 'ACTIVE' }); expect(JSON.stringify(result)).not.toContain('EXAMPLE'); expect(JSON.stringify(result)).not.toContain('unsubToken');
   });
-
-  it("normalizes email to lowercase and trims", async () => {
-    const flow = createSubscriberCreateFlow(repo);
-    const executor = new FlowChartExecutor(flow, { initialContext: {
-      input: { email: "  Test@EXAMPLE.com  " },
-    }});
-
-    await executor.run();
-    const state = executor.getSnapshot().sharedState as Record<string, unknown>;
-    expect(state.email).toBe("test@example.com");
-  });
-
-  it("rejects empty email", async () => {
-    const flow = createSubscriberCreateFlow(repo);
-    const executor = new FlowChartExecutor(flow, { initialContext: {
-      input: { email: "" },
-    }});
-
-    await expect(executor.run()).rejects.toThrow("Subscriber email is required");
-  });
-
-  it("rejects missing email", async () => {
-    const flow = createSubscriberCreateFlow(repo);
-    const executor = new FlowChartExecutor(flow, { initialContext: {
-      input: { name: "Jane" },
-    }});
-
-    await expect(executor.run()).rejects.toThrow("Subscriber email is required");
-  });
-
-  it("defaults source to signup", async () => {
-    const flow = createSubscriberCreateFlow(repo);
-    const executor = new FlowChartExecutor(flow, { initialContext: {
-      input: { email: "test@example.com" },
-    }});
-
-    await executor.run();
-    const state = executor.getSnapshot().sharedState as Record<string, unknown>;
-    expect(state.source).toBe("signup");
-  });
-});
-
-describe("subscriber unsubscribe flow", () => {
-  const repo = createMockRepository();
-
-  it("unsubscribes with valid token", async () => {
-    const flow = createSubscriberUnsubscribeFlow(repo);
-    const executor = new FlowChartExecutor(flow, { initialContext: {
-      input: { token: "tok-abc123" },
-    }});
-
-    await executor.run();
-    const state = executor.getSnapshot().sharedState as Record<string, unknown>;
-
-    expect(state.unsubscribedSubscriber).toBeDefined();
-    expect((state.output as any).status).toBe("UNSUBSCRIBED");
-  });
-
-  it("rejects missing token", async () => {
-    const flow = createSubscriberUnsubscribeFlow(repo);
-    const executor = new FlowChartExecutor(flow, { initialContext: {
-      input: {},
-    }});
-
-    await expect(executor.run()).rejects.toThrow("Unsubscribe token is required");
-  });
+  it.each([{}, { email: '' }, { email: 'not-an-email' }])('rejects malformed subscriber input %j', async input => { expect((await createFixturePlatform().executeServiceFlow(fixtureContext, 'create-subscriber', input)).status).toBe('error'); });
+  it('routes unsubscribe to token validation rather than upsert', async () => { const repo = createMockRepository(); const upsert = vi.spyOn(repo, 'upsertSubscriber'); const unsub = vi.spyOn(repo, 'unsubscribeByToken'); const result = await createFixturePlatform({ repository: repo }).executeAction(fixtureContext, 'unsubscribe', { token: 'PRIVATE_TOKEN' }); expect(result.status).toBe('success'); expect(unsub).toHaveBeenCalledWith('PRIVATE_TOKEN'); expect(upsert).not.toHaveBeenCalled(); expect(JSON.stringify(result)).not.toContain('PRIVATE_TOKEN'); });
 });

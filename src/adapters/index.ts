@@ -7,6 +7,7 @@ export {
 
 export {
   createPaymentAdapters,
+  checkoutPaymentAdapter,
   stripeCheckoutAdapter,
   allPaymentAdapters,
 } from "./paymentAdapters.js";
@@ -32,3 +33,4 @@ export {
 } from "./inventoryAdapters.js";
 
 export { businessAdapterMappings } from "./adapterMappings.js";
+export type { BusinessAdapterOptions } from './operationAdapter.js';

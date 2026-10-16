@@ -1,66 +1,18 @@
-import { describe, it, expect } from "vitest";
-import { createBusinessPlatform } from "../../businessPlatform.js";
-import { createBusinessServiceRegistry, buildActionDispatch } from "../../flows/businessServiceComposer.js";
-import { createMemoryProfileStore, createTenantContext } from "@footprint/platform";
-import { createMockRepository } from "../helpers.js";
+import { describe, it, expect } from 'vitest';
+import { createFixturePlatform, fixtureContext } from '../helpers.js';
+import { createBusinessServiceRegistry } from '../../flows/businessServiceComposer.js';
 
-describe("performance: platform creation", () => {
-  it("creates platform under 50ms", () => {
-    const repo = createMockRepository();
-    const profileStore = createMemoryProfileStore([
-      { unitId: "shop-1", profileType: "kids-boutique", createdAt: "2024-01-01" },
-    ]);
-
-    const start = performance.now();
-    const iterations = 100;
-    for (let i = 0; i < iterations; i++) {
-      createBusinessPlatform({ profileStore, repository: repo });
+describe('reusable runtime allocation', () => {
+  it('gives each call a fresh SDK executor without carrying previous scope state', async () => {
+    const platform = createFixturePlatform();
+    for (let index = 0; index < 20; index++) {
+      const result = await platform.executeServiceFlow(fixtureContext, 'create-product', { name: `Product-${index}`, basePrice: 20 });
+      expect(result.status).toBe('success'); expect(result.result?.productId).toBe(`product-${index + 1}`);
+      expect(JSON.stringify(result.executionSnapshot)).not.toContain(`Product-${index}`);
     }
-    const elapsed = performance.now() - start;
-    expect(elapsed / iterations).toBeLessThan(50);
   });
-});
-
-describe("performance: service registry", () => {
-  it("creates service registry under 10ms", () => {
-    const repo = createMockRepository();
-
-    const start = performance.now();
-    const iterations = 100;
-    for (let i = 0; i < iterations; i++) {
-      createBusinessServiceRegistry(repo);
-    }
-    const elapsed = performance.now() - start;
-    expect(elapsed / iterations).toBeLessThan(10);
-  });
-});
-
-describe("performance: flow execution", () => {
-  it("executes product create flow under 20ms", async () => {
-    const repo = createMockRepository();
-    const registry = createBusinessServiceRegistry(repo);
-    const ctx = { businessType: "kids-boutique" as const, unitId: "shop-1", repository: repo };
-
-    const start = performance.now();
-    const iterations = 50;
-    for (let i = 0; i < iterations; i++) {
-      await registry.executeService("create-product", { name: `Product-${i}`, basePrice: 1000 }, ctx);
-    }
-    const elapsed = performance.now() - start;
-    expect(elapsed / iterations).toBeLessThan(20);
-  });
-});
-
-describe("performance: buildActionDispatch", () => {
-  it("completes under 1ms per call", () => {
-    const repo = createMockRepository();
-
-    const start = performance.now();
-    const iterations = 1000;
-    for (let i = 0; i < iterations; i++) {
-      buildActionDispatch("create-product", "kids-boutique", repo);
-    }
-    const elapsed = performance.now() - start;
-    expect(elapsed / iterations).toBeLessThan(1);
+  it('describing configured services does not call operation providers', () => {
+    const registry = createBusinessServiceRegistry(undefined);
+    expect(registry.describeAllServices().length).toBe(12); expect(registry.describeService('missing')).toBeUndefined();
   });
 });

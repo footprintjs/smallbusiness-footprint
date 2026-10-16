@@ -3,14 +3,16 @@
  */
 
 /**
- * The supported business types.
+ * Built-in presets remain available; each platform admits only its registered profiles.
  */
-export type BusinessType = "kids-boutique" | "chocolate-shop";
+export type DefaultBusinessType = "kids-boutique" | "chocolate-shop";
+export type BusinessType = DefaultBusinessType | (string & {});
 
 /**
  * Service enablement per business type.
  */
 export type BusinessServices = {
+  readonly [moduleId: string]: boolean;
   readonly catalog: boolean;
   readonly orders: boolean;
   readonly payments: boolean;
@@ -23,7 +25,7 @@ export type BusinessServices = {
 /**
  * Fulfillment pattern for a business type.
  */
-export type FulfillmentPattern = "standard-shipping" | "local-delivery";
+export type FulfillmentPattern = "standard-shipping" | "local-delivery" | (string & {});
 
 /**
  * Business type metadata — enriches the generic ProfileDefinition.
@@ -175,6 +177,8 @@ export type ShippingInfo = {
   readonly city: string;
   readonly state: string;
   readonly zipCode: string;
+  /** Optional ISO 3166-1 alpha-2 code; the application owns allowed-country policy. */
+  readonly country?: string;
 };
 
 export type Order = {
@@ -187,6 +191,10 @@ export type Order = {
   readonly shippingCost: number;
   readonly total: number;
   readonly currency: string;
+  readonly provider?: string;
+  readonly providerSessionId?: string;
+  readonly providerPaymentId?: string;
+  /** Legacy Stripe field retained for existing stored records. */
   readonly stripeSessionId?: string;
   readonly stripePaymentIntentId?: string;
   readonly trackingNumber?: string;
@@ -338,7 +346,9 @@ export type BusinessRepository = {
  * Individual shops can override terminology, module toggles, and theme.
  */
 export type UnitOverrides = {
-  readonly terminologyOverrides?: Partial<Readonly<Record<BusinessTermKey, string>>>;
+  /** Monotonic source version; keep a higher-revision tombstone on deletion. */
+  readonly revision: number;
+  readonly terminologyOverrides?: Partial<Readonly<Record<string, string>>>;
   readonly moduleToggles?: Partial<Readonly<Record<string, boolean>>>;
   readonly themeOverrides?: {
     readonly accent?: string;
@@ -347,7 +357,7 @@ export type UnitOverrides = {
 };
 
 export type UnitOverrideStore = {
-  readonly getOverrides: (unitId: string) => Promise<UnitOverrides | undefined>;
+  readonly getOverrides: (scope: import('./operations.js').BusinessScope) => Promise<UnitOverrides | undefined>;
 };
 
 // ---------------------------------------------------------------------------
@@ -358,8 +368,13 @@ export type UnitOverrideStore = {
  * Context passed through business flows.
  */
 export type BusinessFlowContext = {
+  readonly tenantId: string;
+  readonly campusId?: string;
   readonly businessType: BusinessType;
   readonly unitId: string;
   readonly userId?: string;
-  readonly repository: BusinessRepository;
+  readonly repository?: BusinessRepository;
 };
+
+/** A repository instance is consumed only under a matching, explicit store scope. */
+export type { BusinessScope, BusinessOperations, BusinessProviders, BusinessOperation, BusinessOperationReceipt, BusinessOperationContext } from './operations.js';

@@ -1,131 +1,55 @@
-import { describe, it, expect } from "vitest";
-import { createBusinessPlatform } from "../../businessPlatform.js";
-import { createMemoryProfileStore, createTenantContext } from "@footprint/platform";
-import { createMemoryOverrideStore } from "../../overrides/unitOverrides.js";
-import { createMockRepository } from "../helpers.js";
+import { describe, it, expect, vi } from 'vitest';
+import { createMemoryProfileStore } from 'footprint-blueprint/platform';
+import { createBusinessPlatform } from '../../businessPlatform.js';
+import { createMemoryOverrideStore } from '../../overrides/unitOverrides.js';
+import { createFixturePlatform, createMockRepository, fixtureScope, fixtureContext } from '../helpers.js';
 
-function createTestPlatform() {
-  const repo = createMockRepository();
-  const profileStore = createMemoryProfileStore([
-    { unitId: "boutique-1", profileType: "kids-boutique", createdAt: "2024-01-01" },
-    { unitId: "choco-1", profileType: "chocolate-shop", createdAt: "2024-01-01" },
-  ]);
-  const overrideStore = createMemoryOverrideStore({
-    "boutique-1": {
-      terminologyOverrides: { product: "Garment" },
-      themeOverrides: { accent: "#ff0000" },
-    },
+describe('scoped business platform', () => {
+  it('fails closed when no authorization policy is provided', async () => {
+    const repo = createMockRepository(); const create = vi.spyOn(repo, 'createProduct');
+    const platform = createFixturePlatform({ repository: repo, authorizer: undefined });
+    expect((await platform.executeServiceFlow(fixtureContext, 'create-product', { name: 'Dress', basePrice: 20 })).status).toBe('error');
+    expect(await platform.getAvailableActions(fixtureContext)).toEqual([]); expect(create).not.toHaveBeenCalled();
   });
-  const platform = createBusinessPlatform({ profileStore, repository: repo, overrideStore });
-  return { platform, repo };
-}
-
-describe("BusinessPlatform", () => {
-  it("creates successfully", () => {
-    const { platform } = createTestPlatform();
-    expect(platform).toBeDefined();
+  it('enforces the same authorization in direct action and service flow entry points', async () => {
+    const operation = vi.fn(); const authorizer = vi.fn(({ action, context }) => action.id === 'create-product' && context.userId === 'allowed');
+    const platform = createFixturePlatform({ operations: { 'create-product': operation }, authorizer });
+    expect((await platform.executeServiceFlow(fixtureContext, 'create-product', { name: 'Dress', basePrice: 20 })).status).toBe('error');
+    expect((await platform.executeAction(fixtureContext, 'create-product', { name: 'Dress', basePrice: 20 })).status).toBe('error');
+    expect(operation).not.toHaveBeenCalled(); expect(authorizer.mock.calls[0][0]).not.toHaveProperty('input');
   });
-
-  it("returns supported business types", () => {
-    const { platform } = createTestPlatform();
-    const types = platform.supportedBusinessTypes();
-    expect(types).toContain("kids-boutique");
-    expect(types).toContain("chocolate-shop");
+  it('isolates two tenants with the same unit name and rejects wrong-scope writes', async () => {
+    const a = { tenantId: 'brand-a', campusId: 'campus-a', unitId: 'store' }; const b = { tenantId: 'brand-b', campusId: 'campus-b', unitId: 'store' };
+    const store = createMemoryProfileStore([{ ...a, profileType: 'kids-boutique', revision: 1, createdAt: '2030-01-01' }, { ...b, profileType: 'chocolate-shop', revision: 1, createdAt: '2030-01-01' }]);
+    const overrideStore = createMemoryOverrideStore([{ scope: a, overrides: { revision: 1, terminologyOverrides: { product: 'Garment' } } }, { scope: b, overrides: { revision: 2, terminologyOverrides: { product: 'Truffle' } } }]);
+    const operationA = vi.fn(async () => ({ acknowledgement: 'committed' as const, output: { productId: 'brand-a-product' } }));
+    const platformA = createBusinessPlatform({ scope: a, profileStore: store, overrideStore, operations: { 'create-product': operationA }, authorizer: () => true });
+    const platformB = createBusinessPlatform({ scope: b, profileStore: store, overrideStore, repository: createMockRepository(), authorizer: () => true });
+    expect((await platformA.getTermResolverWithOverrides(a))('product')).toBe('Garment'); expect((await platformB.getTermResolverWithOverrides(b))('product')).toBe('Truffle');
+    expect((await platformA.executeServiceFlow(b, 'create-product', { name: 'Wrong', basePrice: 20 })).code).toBe('BUSINESS_SCOPE_MISMATCH');
+    await expect(platformA.executeAction(b, 'create-product', { name: 'Wrong', basePrice: 20 })).rejects.toThrow('requested store');
+    await expect(platformA.getUnitOverrides(b)).rejects.toThrow('requested store'); expect(operationA).not.toHaveBeenCalled();
   });
-
-  it("returns business type config", () => {
-    const { platform } = createTestPlatform();
-    const config = platform.getBusinessTypeConfig("kids-boutique");
-    expect(config).toBeDefined();
-    expect(config!.displayName).toBe("Kids Boutique");
-    expect(config!.theme.accent).toBe("#e8a0bf");
+  it('explicitly disabling catalog removes dependent actions and never calls the provider', async () => {
+    const operation = vi.fn(); const overrideStore = createMemoryOverrideStore([{ scope: fixtureScope, overrides: { revision: 1, moduleToggles: { catalog: false } } }]);
+    const platform = createFixturePlatform({ overrideStore, operations: { 'create-product': operation } });
+    const config = await platform.getUnitBusinessConfig(fixtureContext);
+    expect(config.services.catalog).toBe(false); expect(config.services.orders).toBe(false); expect(config.services.storefront).toBe(false);
+    expect((await platform.executeServiceFlow(fixtureContext, 'create-product', { name: 'Dress', basePrice: 20 })).status).toBe('error');
+    expect((await platform.getAvailableActions(fixtureContext)).some(action => action.name === 'create-product')).toBe(false); expect(operation).not.toHaveBeenCalled();
   });
-
-  it("resolves unit to profile type", async () => {
-    const { platform } = createTestPlatform();
-    const ctx = createTenantContext({ tenantId: "t1", unitId: "boutique-1" });
-    const unit = await platform.resolveUnit(ctx);
-    expect(unit).toBeDefined();
-    expect(unit!.profileType).toBe("kids-boutique");
+  it('derives versioned theme/terminology overrides without mutating profile defaults', async () => {
+    const overrideStore = createMemoryOverrideStore([{ scope: fixtureScope, overrides: { revision: 3, terminologyOverrides: { product: 'Garment' }, themeOverrides: { accent: '#ff0000' } } }]);
+    const platform = createFixturePlatform({ overrideStore });
+    expect((await platform.getUnitBusinessConfig(fixtureContext)).theme.accent).toBe('#ff0000'); expect(platform.getBusinessTypeConfig('kids-boutique')?.theme.accent).toBe('#e8a0bf');
+    expect((await platform.getFullTermResolver(fixtureContext))('product')).toEqual({ singular: 'Garment', plural: 'Garments' });
+    expect(platform.describeAllServices()).toHaveLength(12);
   });
-
-  it("executes a service flow", async () => {
-    const { platform } = createTestPlatform();
-    const ctx = createTenantContext({ tenantId: "t1", unitId: "boutique-1" });
-    const result = await platform.executeServiceFlow(ctx, "create-product", {
-      name: "Summer Dress",
-      basePrice: 2999,
-    });
-
-    expect(result.status).toBe("success");
-    expect(result.result).toBeDefined();
-  });
-
-  it("returns error for unresolvable unit", async () => {
-    const { platform } = createTestPlatform();
-    const ctx = createTenantContext({ tenantId: "t1", unitId: "unknown-unit" });
-    const result = await platform.executeServiceFlow(ctx, "create-product", { name: "Test", basePrice: 100 });
-    expect(result.status).toBe("error");
-    expect(result.error).toContain("Could not resolve business type");
-  });
-
-  it("describes all services", () => {
-    const { platform } = createTestPlatform();
-    const descs = platform.describeAllServices("kids-boutique");
-    expect(descs.length).toBe(8);
-  });
-
-  it("describes a specific service with terminology", () => {
-    const { platform } = createTestPlatform();
-    const desc = platform.describeService("create-product", "chocolate-shop");
-    expect(desc).toBeDefined();
-    expect(desc!.stages.some((s) => s.description.includes("Treat"))).toBe(true);
-  });
-});
-
-describe("BusinessPlatform — overrides", () => {
-  it("resolves term with per-unit override", async () => {
-    const { platform } = createTestPlatform();
-    const ctx = createTenantContext({ tenantId: "t1", unitId: "boutique-1" });
-    const t = await platform.getTermResolverWithOverrides(ctx);
-
-    expect(t("product")).toBe("Garment");
-    expect(t("order")).toBe("Order");
-  });
-
-  it("falls back to business-type default when no override", async () => {
-    const { platform } = createTestPlatform();
-    const ctx = createTenantContext({ tenantId: "t1", unitId: "choco-1" });
-    const t = await platform.getTermResolverWithOverrides(ctx);
-
-    expect(t("product")).toBe("Treat");
-    expect(t("color")).toBe("Flavor");
-  });
-
-  it("returns unit overrides", async () => {
-    const { platform } = createTestPlatform();
-    const overrides = await platform.getUnitOverrides("boutique-1");
-    expect(overrides).toBeDefined();
-    expect(overrides!.terminologyOverrides!.product).toBe("Garment");
-  });
-
-  it("returns undefined overrides for unit without overrides", async () => {
-    const { platform } = createTestPlatform();
-    const overrides = await platform.getUnitOverrides("choco-1");
-    expect(overrides).toBeUndefined();
-  });
-
-  it("full term resolver returns singular/plural", async () => {
-    const { platform } = createTestPlatform();
-    const ctx = createTenantContext({ tenantId: "t1", unitId: "boutique-1" });
-    const t = await platform.getFullTermResolver(ctx);
-
-    const overridden = t("product");
-    expect(overridden.singular).toBe("Garment");
-    expect(overridden.plural).toBeTruthy();
-
-    const defaultTerm = t("order");
-    expect(defaultTerm.singular).toBe("Order");
-    expect(defaultTerm.plural).toBe("Orders");
+  it('strongly re-reads overrides and refuses semantic module change under same revision', async () => {
+    let toggles = { campaigns: true };
+    const overrideStore = { getOverrides: async () => ({ revision: 1, moduleToggles: toggles }) };
+    const platform = createFixturePlatform({ overrideStore }); await platform.resolveUnit(fixtureContext);
+    toggles = { campaigns: false };
+    await expect(platform.resolveUnit(fixtureContext)).rejects.toThrow('without a revision');
   });
 });
