@@ -1,10 +1,10 @@
-# Integrating smallbusiness-footprint 0.3.0
+# Integrating smallbusiness-footprint 0.5.0
 
 ## Package migration
 
-Version 0.3.0 uses one `footprint-blueprint@0.4.0` dependency instead of the former six `@footprint/*` packages. Replace modern framework imports with `footprint-blueprint/features`, `/tenancy`, `/adapters`, `/seed`, `/actions` or `/platform`; use `/evidence` for the pure receipt collector. The root convenience entry loads Platform's framework graph. Static subpaths select entry graphs, while dynamic imports defer loading until called. Installation still downloads all declared dependencies.
+This 0.5.0 candidate uses one exact `footprint-blueprint@0.5.0` dependency instead of the former six `@footprint/*` packages. Replace modern framework imports with `footprint-blueprint/features`, `/tenancy`, `/adapters`, `/seed`, `/actions` or `/platform`; use `/evidence` for the pure receipt collector. The root convenience entry loads Platform's framework graph. Static subpaths select entry graphs, while dynamic imports defer loading until called. Installation still downloads all declared dependencies.
 
-The commerce main entry remains backend-oriented. The `/metadata` entry supplies browser declarations without loading the execution runtime. `footprintjs@10.0.0` remains separate and pinned. Use Node 24.15–24.x. This prepared candidate has not yet been published; install the reviewed tarballs using [the quickstart](QUICKSTART.md). These import changes do not automatically migrate the older Node 22 school/booking APIs.
+The commerce main entry remains backend-oriented. The `/metadata` entry supplies browser declarations without loading the execution runtime. `footprintjs@10.1.0` remains separate and pinned. Use Node 24.15–24.x. This prepared candidate has not yet been published; install the reviewed tarballs using [the quickstart](QUICKSTART.md). These import changes do not automatically migrate the older Node 22 school/booking APIs.
 
 ## Configuration and brands
 

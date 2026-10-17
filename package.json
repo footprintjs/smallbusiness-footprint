@@ -1,7 +1,7 @@
 {
   "name": "smallbusiness-footprint",
-  "version": "0.4.0",
-  "description": "Small-business e-commerce domain wrapper for footprint-blueprint — configurable commerce engine for any shop type",
+  "version": "0.5.0",
+  "description": "Small-business e-commerce domain wrapper for footprint-blueprint \u2014 configurable commerce engine for any shop type",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -14,7 +14,7 @@
     "quickstart:publication": "node examples/shared-evidence/publication.mjs"
   },
   "dependencies": {
-    "footprint-blueprint": "0.4.1",
+    "footprint-blueprint": "0.5.0",
     "footprintjs": "10.1.0",
     "zod": "4.6.5"
   },
@@ -64,6 +64,16 @@
       "types": "./dist/aftersales/runtime.d.ts",
       "import": "./dist/aftersales/runtime.js",
       "default": "./dist/aftersales/runtime.js"
+    },
+    "./diagnostics": {
+      "types": "./dist/diagnostics.d.ts",
+      "import": "./dist/diagnostics.js",
+      "default": "./dist/diagnostics.js"
+    },
+    "./testing": {
+      "types": "./dist/testing.d.ts",
+      "import": "./dist/testing.js",
+      "default": "./dist/testing.js"
     }
   },
   "repository": {

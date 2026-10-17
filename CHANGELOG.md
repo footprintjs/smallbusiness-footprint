@@ -1,3 +1,12 @@
+# 0.5.0 — local candidate; not published
+
+- Extract 27 local real-FootprintJS commerce failure scenarios into the explicit `smallbusiness-footprint/testing` entry, with typed paired storage ports and immutable scenario metadata.
+- Add the vendor-SDK-free `smallbusiness-footprint/diagnostics` commerce adapter normalization wrapper over Blueprint 0.5 diagnostics.
+- Keep private fault scripts, provider ledgers and test counters outside diagnostic evidence; preserve actual native attempt bindings, unknown write effects and separate diagnostic failures.
+- Keep application UI, translations, runtime provider wiring and durable storage outside this library. Existing checkout, shipping, publication and after-sales entry points remain unchanged.
+
+Local candidate only; npm publication and Gamma deployment are not part of this change.
+
 # 0.4.0 — 2026-10-16 (prepared; publication pending)
 
 - Pin Blueprint 0.4.1 and FootprintJS 10.1.0.

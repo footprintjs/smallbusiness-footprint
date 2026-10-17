@@ -1,6 +1,6 @@
-# smallbusiness-footprint 0.4.0
+# smallbusiness-footprint 0.5.0
 
-This prepared `smallbusiness-footprint@0.4.0` release depends on `footprint-blueprint@0.4.1`, `footprintjs@10.1.0` and Zod. It uses Node 24.15–24.x. Publication and final validation are pending. Existing commerce, shipping, after-sales, privacy and authoritative-provider boundaries remain in place.
+This local `smallbusiness-footprint@0.5.0` candidate depends on `footprint-blueprint@0.5.0`, `footprintjs@10.1.0` and Zod. It uses Node 24.15–24.x. It adds opt-in commerce diagnostics and testing entries and has not been published. Existing commerce, shipping, after-sales, privacy and authoritative-provider boundaries remain in place.
 
 SMB is optional. Framework-only applications use Blueprint directly; commerce consumers can install SMB and its declared dependencies are installed automatically. Within Blueprint, focused subpaths select runtime entry graphs and dynamic `import()` provides loading on demand. Ordinary dependency downloads still occur at package installation.
 
@@ -88,3 +88,28 @@ Restock is a separate, exactly-once host transaction after confirmed refund and 
 ## Caller execution controls
 
 `BusinessPlatformConfig.executionOptions` forwards the trusted Blueprint callback for direct actions. `createAfterSalesService` accepts `executionOptions: ({flowId}) => controls` with the same payload-free engine options. A caller may supply a signal, timeout or absolute deadline and trace correlation; omitting the callback preserves existing behavior. The engine owns their validation and enforcement. This does not add retry rules or authorize refunds, restocking, labels or background work. After-sales native traces retain the caller correlation and report the actual running engine version. Recorded service-flow execution remains a separate API.
+
+### Local commerce failure testing (0.5 candidate)
+
+Use the explicit `smallbusiness-footprint/testing` entry in developer tooling to exercise 27 local commerce scenarios. It runs real FootprintJS attempts with local database, payment and shipping doubles: request rejection, authorization, throttling, retry recovery/exhaustion, timeout/cancellation, circuit admission, budget admission, idempotency protection, unknown payment effects, independent reconciliation reads and separate trace-storage/observer failures. It has no vendor SDK, cloud, model, email or filesystem dependency.
+
+```js
+import { listFailureScenarios, runFailureScenario } from 'smallbusiness-footprint/testing';
+import { diagnoseFailureRecording } from 'footprint-blueprint/diagnostics';
+
+const { record, observed } = await runFailureScenario('payment-timeout-unknown');
+const diagnosis = diagnoseFailureRecording(record);
+// The recorded payment outcome is unknown. Reconcile; do not blindly resend a charge.
+```
+
+`record` is the stored/reloaded evidence envelope. `observed` contains separate test counters; it is never an input to diagnosis. The scenario plan and simulated provider ledger stay private. No scenario name or expected answer appears in the record. The catalog is immutable.
+
+The default recording store is private in-memory JSON. Hosts can provide **both** `persist(record)` and `load({storeId, runId, flowId})`; exact read-back identity/content is checked. Storage failure returns a visibly missing native record and no unsaved sidecar evidence. Host storage implementations own tenant isolation, durable writes and retention. Importing this entry does not enable fault injection anywhere: do not mount it as a production or public HTTP route.
+
+`smallbusiness-footprint/diagnostics` exports `normalizeCommerceBoundaryError`. It recognizes AWS-shaped **database** auth/throttle names with actual numeric HTTP metadata without importing an AWS SDK or changing the status. Other vendor classifications can use Blueprint's bounded `classify(fields)` callback. An explicit valid host classification takes priority over the optional database compatibility map; undefined, invalid or throwing classifiers retain safe built-in/default behavior. Classification is evidence, not a retry policy or proof that a provider is down. Public findings never expose provider messages or private payloads. Customer wording, translations and admin previews belong to the consuming application.
+
+These are reusable test workflows, not a generic production circuit breaker, payment reconciler or shipping provider implementation. Runtime commerce continues to use the existing provider interfaces and authoritative receipts.
+
+The commerce normalizer is opt-in. A host that uses a different provider can import Blueprint's `normalizeBoundaryError` directly and supply its own classifier; choosing this testing entry does not register or replace any production provider adapter.
+
+The separate test counters distinguish `admittedCalls` (all local-port admission attempts, including circuit refusals and authoritative reconciliation reads), `physicalCalls` (local sends that reached the provider double), and `physicalWriteAttempts` (attempted write sends, never proof of commitment). Host-loaded records undergo Blueprint's bounded getter-safe validation before identity checks or serialization.
