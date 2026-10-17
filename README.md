@@ -1,6 +1,6 @@
-# smallbusiness-footprint 0.5.0
+# smallbusiness-footprint 0.6.0
 
-This local `smallbusiness-footprint@0.5.0` candidate depends on `footprint-blueprint@0.5.0`, `footprintjs@10.1.0` and Zod. It uses Node 24.15–24.x. It adds opt-in commerce diagnostics and testing entries and has not been published. Existing commerce, shipping, after-sales, privacy and authoritative-provider boundaries remain in place.
+This local `smallbusiness-footprint@0.6.0` candidate adds a thin commerce boundary recorder over Blueprint 0.6.0, with FootprintJS 10.1.0 and Zod. It uses Node 24.15–24.x. It is not published. Existing checkout, shipping, after-sales, privacy and authoritative-provider boundaries remain in place.
 
 SMB is optional. Framework-only applications use Blueprint directly; commerce consumers can install SMB and its declared dependencies are installed automatically. Within Blueprint, focused subpaths select runtime entry graphs and dynamic `import()` provides loading on demand. Ordinary dependency downloads still occur at package installation.
 
@@ -89,7 +89,7 @@ Restock is a separate, exactly-once host transaction after confirmed refund and 
 
 `BusinessPlatformConfig.executionOptions` forwards the trusted Blueprint callback for direct actions. `createAfterSalesService` accepts `executionOptions: ({flowId}) => controls` with the same payload-free engine options. A caller may supply a signal, timeout or absolute deadline and trace correlation; omitting the callback preserves existing behavior. The engine owns their validation and enforcement. This does not add retry rules or authorize refunds, restocking, labels or background work. After-sales native traces retain the caller correlation and report the actual running engine version. Recorded service-flow execution remains a separate API.
 
-### Local commerce failure testing (0.5 candidate)
+### Local commerce failure testing
 
 Use the explicit `smallbusiness-footprint/testing` entry in developer tooling to exercise 27 local commerce scenarios. It runs real FootprintJS attempts with local database, payment and shipping doubles: request rejection, authorization, throttling, retry recovery/exhaustion, timeout/cancellation, circuit admission, budget admission, idempotency protection, unknown payment effects, independent reconciliation reads and separate trace-storage/observer failures. It has no vendor SDK, cloud, model, email or filesystem dependency.
 
@@ -111,5 +111,13 @@ The default recording store is private in-memory JSON. Hosts can provide **both*
 These are reusable test workflows, not a generic production circuit breaker, payment reconciler or shipping provider implementation. Runtime commerce continues to use the existing provider interfaces and authoritative receipts.
 
 The commerce normalizer is opt-in. A host that uses a different provider can import Blueprint's `normalizeBoundaryError` directly and supply its own classifier; choosing this testing entry does not register or replace any production provider adapter.
+
+### Native provider-boundary recording (0.6 candidate)
+
+`smallbusiness-footprint/diagnostics/runtime` exports `createCommerceBoundaryRecorder`. It delegates to Blueprint's recorder and supplies commerce normalization by default; custom vendors can pass their own `normalizeError`. It does not load a provider SDK, create a retry loop, persist a record or decide whether a payment succeeded. The existing `/diagnostics` normalization entry stays separate from this runtime entry.
+
+Attach `recorder.flowRecorder` to the request's actual executor and wrap the raw provider call with `recorder.run(scope, operation, work)`. Pass the supplied abort signal/deadline to the provider adapter. Where the adapter can observe each real transport attempt, report it with `context.observePhysical`; those observations bind actual native records to their logical SDK call. A single SDK call with three SDK-internal attempts is one logical call and three reported transport attempts, never four sends. Missing transport reports leave that count unknown. A native observed-record retry interpretation does not establish the SDK's own retry decision.
+
+The explicit testing entry also exports `BOUNDARY_EVIDENCE_SCENARIOS` and `runBoundaryEvidenceScenario` for 12 local SDK-double scenarios using this public recorder. They supplement the original 27 scenarios. Faults, timing and dispatch counters stay outside diagnosis; provider SDK and cloud/model calls remain absent. See [provider evidence](docs/PROVIDER-EVIDENCE.md) for storage assembly, classification precedence, reconciliation and partial evidence.
 
 The separate test counters distinguish `admittedCalls` (all local-port admission attempts, including circuit refusals and authoritative reconciliation reads), `physicalCalls` (local sends that reached the provider double), and `physicalWriteAttempts` (attempted write sends, never proof of commitment). Host-loaded records undergo Blueprint's bounded getter-safe validation before identity checks or serialization.

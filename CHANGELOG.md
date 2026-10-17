@@ -1,11 +1,21 @@
-# 0.5.0 — local candidate; not published
+# 0.6.0 — local provider-evidence candidate; not published
+
+- Add the explicit `smallbusiness-footprint/diagnostics/runtime` entry with `createCommerceBoundaryRecorder`, a thin wrapper over Blueprint's native recorder. Hosts retain their own vendors, storage, retries and reconciliation decisions.
+- Classify bounded database/transport and payment SDK metadata without copying raw errors, inventing HTTP statuses or claiming an upstream outage. Actual numeric status and explicit trusted host policy take precedence.
+- Add 12 opt-in local SDK-double scenarios using the actual runtime collector; preserve all 27 existing commerce scenarios. Distinguish logical SDK calls from observed transport attempts, retain unknown write outcomes, and disclose late/partial evidence.
+- Add the optional after-sales `withBoundaryScope` host hook and `boundaryDiagnostics` trace sidecar, with isolated per-run collectors and unchanged default behavior.
+- Keep private payloads, provider operation keys and test counters outside stored diagnosis inputs. No model, vendor SDK or network dependency is added.
+
+Local candidate only; no npm publication or deployment is performed by this change.
+
+# 0.5.0 — published 2026-10-16
 
 - Extract 27 local real-FootprintJS commerce failure scenarios into the explicit `smallbusiness-footprint/testing` entry, with typed paired storage ports and immutable scenario metadata.
 - Add the vendor-SDK-free `smallbusiness-footprint/diagnostics` commerce adapter normalization wrapper over Blueprint 0.5 diagnostics.
 - Keep private fault scripts, provider ledgers and test counters outside diagnostic evidence; preserve actual native attempt bindings, unknown write effects and separate diagnostic failures.
 - Keep application UI, translations, runtime provider wiring and durable storage outside this library. Existing checkout, shipping, publication and after-sales entry points remain unchanged.
 
-Local candidate only; npm publication and Gamma deployment are not part of this change.
+Published archives were verified against the reviewed release bytes and integrated into Gamma.
 
 # 0.4.0 — 2026-10-16 (prepared; publication pending)
 

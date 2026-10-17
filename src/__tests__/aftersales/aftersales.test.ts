@@ -1,6 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createAfterSalesService } from '../../aftersales/runtime.js';
 import footprintPackage from 'footprintjs/package.json' with { type: 'json' };
+import { AsyncLocalStorage } from 'node:async_hooks';
+import { diagnoseFailureRecording, type FailureRecording } from 'footprint-blueprint/diagnostics';
+import type { AfterSalesBoundaryPort, AfterSalesDependencies } from '../../aftersales/runtime.js';
 import { AfterSalesError, DEFAULT_AFTER_SALES_POLICY, validateAfterSalesPolicy,
   type AfterSalesCase, type AfterSalesOrder, type AfterSalesPayments, type AfterSalesRepository,
   type AfterSalesRefundEvidence, type AfterSalesTrace } from '../../aftersales.js';
@@ -94,6 +97,97 @@ function fixture(overrides: Partial<AfterSalesOrder> = {}) {
     failNextRestock() { failRestock = true; }, changeOrder };
 }
 const refund = (f: ReturnType<typeof fixture>, record: AfterSalesCase, amountCents = 10000, restock = true) => f.service.action({ caseId: record.caseId, expectedVersion: record.version, action: 'refund', amountCents, restock }, OWNER);
+
+function instrumentedFixture(f: ReturnType<typeof fixture>, executionOptions?: AfterSalesDependencies['executionOptions']) {
+  const context = new AsyncLocalStorage<AfterSalesBoundaryPort>(), traces: AfterSalesTrace[] = [];
+  const wrap = <T extends object>(target: T, system: 'database' | 'payment'): T => new Proxy(target, {
+    get(object, key) {
+      const method = Reflect.get(object, key);
+      if (typeof method !== 'function' || typeof key !== 'string') return method;
+      return async (...args: unknown[]) => {
+        const port = context.getStore(); expect(port).toBeDefined();
+        const write = !['getOrder', 'getCase', 'findCase', 'getPayment', 'findRefund', 'retrieveRefund'].includes(key);
+        const command = args[0] as { idempotencyKey?: string } | undefined;
+        return port!.run({ system, operation: key.replace(/[A-Z]/g, letter => '-' + letter.toLowerCase()),
+          target: `${system}.${key.toLowerCase()}`, effect: write ? 'write' : 'read',
+          ...(write && command?.idempotencyKey ? { idempotencyKey: command.idempotencyKey } : {}) }, async boundary => {
+          const startedAt = Date.now();
+          try {
+            const result = await Reflect.apply(method, object, args);
+            boundary.observePhysical({ source: 'local-provider-adapter', phase: 'response-complete', outcome: 'ok', startedAt, durationMs: Date.now() - startedAt });
+            return result;
+          } catch (error) {
+            boundary.observePhysical({ source: 'local-provider-adapter', phase: 'response-complete', outcome: 'failed', startedAt, durationMs: Date.now() - startedAt, error });
+            throw error;
+          }
+        });
+      };
+    },
+  });
+  const service = createAfterSalesService({ storeId: 'brand-a', repository: wrap(f.repo, 'database'), payments: wrap(f.payments, 'payment'),
+    authorizer: () => true, generateId: (() => { let id = 0; return () => `instrumented-case-${++id}`; })(),
+    now: () => '2026-10-16T12:00:00.000Z', executionOptions,
+    withBoundaryScope(port, work) { return context.run(port, work); }, onTrace(trace) { traces.push(trace); } });
+  return { service, traces };
+}
+const recordedAfterSales = (trace: AfterSalesTrace): FailureRecording => {
+  const sidecar = trace.boundaryDiagnostics!;
+  return JSON.parse(JSON.stringify({ schemaVersion: 1, storeId: 'brand-a', runId: trace.runId, flowId: trace.flowId,
+    nativeSnapshot: trace.nativeSnapshot, boundaryEvidence: sidecar.boundaryEvidence,
+    physicalEvidence: sidecar.physicalEvidence, coverage: sidecar.coverage, diagnostics: { persistence: 'stored', ...sidecar.diagnostics } }));
+};
+
+describe('optional after-sales native boundary scope', () => {
+  it('keeps default traces unchanged when no host instrumentation hook is installed', async () => {
+    const f = fixture(); await f.request();
+    expect(f.traces[0].boundaryDiagnostics).toBeUndefined();
+  });
+  it('records an uncertain refund against the actual after-sales run without repeating the write', async () => {
+    const f = fixture(), instrumented = instrumentedFixture(f), service = instrumented.service;
+    const requested = await service.request({ orderId: 'order-1', requestId: 'request-1', kind: 'cancellation', items: [{ lineId: 'line-0', quantity: 1 }] }, CUSTOMER);
+    const approved = await service.action({ caseId: requested.caseId, expectedVersion: requested.version, action: 'approve' }, OWNER);
+    f.failRefund = true;
+    const unknown = await service.action({ caseId: approved.caseId, expectedVersion: approved.version, action: 'refund', amountCents: 5000 }, OWNER);
+    expect(unknown.refund?.status).toBe('UNKNOWN'); expect(f.refundCalls).toBe(1);
+    const trace = instrumented.traces.at(-1)!;
+    expect(trace.boundaryDiagnostics?.runId).toBe(trace.runId);
+    const record = recordedAfterSales(trace), report = diagnoseFailureRecording(record);
+    expect(record.boundaryEvidence.some(row => row.target === 'payment' && row.operation === 'refund' && row.effect === 'unknown')).toBe(true);
+    expect(report.status).toBe('unknown'); expect(report.coverage.externalEffect).toBe('unknown');
+    expect(report.coverage.logicalSDKCalls).toBeGreaterThan(0); expect(report.coverage.physicalTransportAttempts).toBeGreaterThan(0);
+    expect(JSON.stringify(trace)).not.toContain(PRIVATE);
+    const providerKey = unknown.refund!.idempotencyKey;
+    expect(providerKey.length).toBeGreaterThan(0);
+    expect(JSON.stringify(trace.nativeSnapshot)).not.toContain(providerKey);
+    expect(JSON.stringify(trace.boundaryDiagnostics)).not.toContain(providerKey);
+    expect(JSON.stringify(trace)).not.toContain(providerKey);
+    await service.action({ caseId: unknown.caseId, expectedVersion: unknown.version, action: 'reconcile' }, OWNER);
+    expect(f.refundCalls).toBe(1); expect(f.order.refundReservedCents).toBe(5000);
+  });
+  it('honors cancellation before any boundary provider call and makes no false transport coverage claim', async () => {
+    const f = fixture(), instrumented = instrumentedFixture(f, () => ({ signal: AbortSignal.abort() }));
+    await expect(instrumented.service.request({ orderId: 'order-1', requestId: 'request-1', kind: 'cancellation', items: [{ lineId: 'line-0', quantity: 1 }] }, CUSTOMER)).rejects.toBeInstanceOf(AfterSalesError);
+    const trace = instrumented.traces[0];
+    expect(trace.boundaryDiagnostics?.boundaryEvidence).toHaveLength(0);
+    expect(trace.boundaryDiagnostics?.physicalEvidence).toHaveLength(0);
+    expect(f.refundCalls).toBe(0); expect(f.cases.size).toBe(0);
+  });
+  it('keeps simultaneous request collectors and host contexts bound to their own actual native runs', async () => {
+    const f = fixture(), instrumented = instrumentedFixture(f);
+    const command = { orderId: 'order-1', requestId: 'same-request', kind: 'cancellation' as const, items: [{ lineId: 'line-0', quantity: 1 }] };
+    const results = await Promise.all([instrumented.service.request(command, CUSTOMER), instrumented.service.request(command, CUSTOMER)]);
+    expect(results[0].caseId).toBe(results[1].caseId); expect(f.cases.size).toBe(1);
+    expect(instrumented.traces).toHaveLength(2);
+    expect(new Set(instrumented.traces.map(trace => trace.runId)).size).toBe(2);
+    for (const trace of instrumented.traces) {
+      expect(trace.boundaryDiagnostics?.runId).toBe(trace.runId);
+      expect(trace.boundaryDiagnostics?.coverage.unboundObservations).toBe(0);
+      expect(recordedAfterSales(trace).boundaryEvidence.length).toBeGreaterThan(0);
+      expect(() => diagnoseFailureRecording(recordedAfterSales(trace))).not.toThrow();
+      expect(JSON.stringify(trace)).not.toContain(PRIVATE);
+    }
+  });
+});
 
 describe('after-sales trusted engine controls', () => {
   it('honors caller cancellation before repository access or payment effects', async () => {
