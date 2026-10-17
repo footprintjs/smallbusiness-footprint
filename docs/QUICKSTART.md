@@ -2,7 +2,7 @@
 
 The release kit includes a small booking example and a Charming Cherubs publication example. They teach the application integration patterns with local fixtures, rather than requiring the full applications or their hosting infrastructure.
 
-The two local candidates, `footprint-blueprint@0.4.0` and optional `smallbusiness-footprint@0.3.0`, are prepared for review; publication is pending. Use Node 24.15–24.x and npm. Extract the release kit, then run from its root:
+The two local candidates, `footprint-blueprint@0.5.0` and optional `smallbusiness-footprint@0.5.0`, are prepared for review; publication is pending. Use Node 24.15–24.x and npm. Extract the release kit, then run from its root:
 
 ```sh
 cd quickstart
@@ -12,7 +12,7 @@ npm run publication
 npm test
 ```
 
-Both library candidates install from included local tarballs. FootPrint.js stays separate as pinned `footprintjs@10.0.0`. Ordinary declared dependencies are installed regardless of later import choices. Initial installation needs npm access for pinned third-party dependencies unless cached. The examples use sample data and in-memory storage and require no cloud account, model or credentials. Both commands print JSON to standard output without writing files. Expected SDK error diagnostics for rejection cases go to standard error; exit status 0 and passed assertions indicate a successful run.
+Both library candidates install from included local tarballs. FootPrint.js stays separate as pinned `footprintjs@10.1.0`. Ordinary declared dependencies are installed regardless of later import choices. Initial installation needs npm access for pinned third-party dependencies unless cached. The examples use sample data and in-memory storage and require no cloud account, model or credentials. Both commands print JSON to standard output without writing files. Expected SDK error diagnostics for rejection cases go to standard error; exit status 0 and passed assertions indicate a successful run.
 
 The booking example runs actual FootPrint stages and in-memory SQLite, reporting acceptance, overlap rejection and cancellation through the pure evidence collector. Its `applied` effects describe actual row counts before the enclosing transaction commits. The overlap workflow completes normally while its business outcome is rejected.
 

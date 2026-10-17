@@ -5,4 +5,4 @@ minimumReleaseAgeExclude:
   - footprintjs@10.1.0
   - foottrace@1.1.0
 overrides:
-  footprint-blueprint: file:vendor/footprint-blueprint-0.4.1.tgz
+  footprint-blueprint: file:vendor/footprint-blueprint-0.5.0.tgz

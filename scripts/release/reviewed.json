@@ -1,10 +1,10 @@
 {
   "name": "smallbusiness-footprint",
-  "version": "0.4.0",
-  "sha256": "e08443231d9f1922b834f3e96e83de900ff04b377022f16ef2e8a8d98bb95f60",
-  "integrity": "sha512-lAbUuxMjwTBd1frZMZ0ZXcW2IbcQwLSb2coAgn3bHoAXgsBFcBsqxb+9BkWtrp69T0Jjq61XGL9rRRmmaJ5cpw==",
+  "version": "0.5.0",
+  "sha256": "2be067180c17a73fe9ab910bc8fe3094d574a5b566539ad12e8200f290714103",
+  "integrity": "sha512-gepqJw81glGpJofmikzLndDyBJ09Wt22bj2gRxGqpX4qgeQk13H6h5RqPr8A6MFKDIZrDS3M1CsY8v1+EhMaEw==",
   "dependencies": {
-    "footprint-blueprint": "0.4.1",
+    "footprint-blueprint": "0.5.0",
     "footprintjs": "10.1.0",
     "zod": "4.6.5"
   },
@@ -21,8 +21,8 @@
     },
     {
       "name": "footprint-blueprint",
-      "version": "0.4.1",
-      "integrity": "sha512-lQjZEB5+HlqwjQUEntgyvP9nonh7A+VkYhb5fYhr0hRtvdAXd36C2YFJ5lQalOCRftV7ScDX2YreK4ezlLZZ7w=="
+      "version": "0.5.0",
+      "integrity": "sha512-XYCHzJurB5Wi8B8fAkJ1oqvff3eqdgi1rBL4gruAP1zEzFpuSA8sDeUQlreC4Oj0M96iIQ2fkHsgsEBocwQbMA=="
     }
   ],
   "githubRepository": "footprintjs/smallbusiness-footprint",
