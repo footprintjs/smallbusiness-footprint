@@ -1,3 +1,12 @@
+# 0.7.0 — local connected-record candidate; not published
+
+- Add optional per-execution `recordSink` and bounded `recordSinkFlushTimeoutMs` host hooks to after-sales, using the native Foottrace port with no storage/provider dependency.
+- Generate an independent diagnostic UUID per execution; return an optional trace locator and factual flush result without replacing native addresses or claiming durable storage.
+- Use report/manual native recording and bounded final drain so a diagnostic factory, entry write or flush failure cannot reverse or retry an acknowledged refund.
+- Keep raw diagnostic adapter error text redacted and preserve actual native sink loss accounting. An interrupted stored prefix stays visibly incomplete.
+
+Local candidate only; no npm publication or deployment is performed by this change.
+
 # 0.6.0 — local provider-evidence candidate; not published
 
 - Add the explicit `smallbusiness-footprint/diagnostics/runtime` entry with `createCommerceBoundaryRecorder`, a thin wrapper over Blueprint's native recorder. Hosts retain their own vendors, storage, retries and reconciliation decisions.

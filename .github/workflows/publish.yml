@@ -52,7 +52,7 @@ jobs:
         run: |
           mkdir -p release
           npm pack --ignore-scripts --pack-destination release
-          mv release/smallbusiness-footprint-0.6.0.tgz release/package.tgz
+          mv release/smallbusiness-footprint-0.7.0.tgz release/package.tgz
           node scripts/release/run.mjs archive release/package.tgz
           git diff --exit-code
       - name: Check the registry immediately before an explicit publication

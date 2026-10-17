@@ -78,3 +78,28 @@ const diagnosis = diagnoseFailureRecording(JSON.parse(JSON.stringify(record)));
 
 The 12 boundary scenarios use actual Blueprint/FootprintJS execution and local SDK doubles. They cover database auth, throttling and server responses; multiple transport attempts inside one call; ambiguous payment writes and separate reads; caller cancellation and read timeout; late callbacks and partial evidence. `observed` is an independent test harness result and is never a diagnosis input. All original 27 local scenarios remain available. These local results do not claim a live provider or cloud was exercised.
 
+
+
+## Optional after-sales native record storage
+
+After-sales accepts a host-owned Foottrace sink factory. Each execution gets a fresh diagnostic `recordId`; this is separate from the native run ID and every order, case, payment and idempotency key. The immutable factory request contains only `flowId` and `recordId`.
+
+```ts
+const service = createAfterSalesService({
+  // Existing repository, payments, authorizer and store configuration.
+  recordSink: ({ flowId, recordId }) => hostRecordStore.sink({ flowId, recordId }),
+  recordSinkFlushTimeoutMs: 250,
+  onTrace: trace => hostTraceStore.save(trace),
+});
+```
+
+The factory returns the native `RecordSink` interface from `foottrace/write`, or `undefined` to disable recording for that execution. An undefined sink leaves the trace shape unchanged. A throwing factory or malformed adapter produces `trace.recording.status: 'unavailable'`; it does not fail the business action. A valid sink produces `trace.recording` with its `recordId`, status `attached` and the factual final `{done, failed, pending}` flush result. `nativeSnapshot.sink` retains the engine's entry/loss counters. The locator and an attached sink do not prove durable delivery.
+
+The real executor hands the sink each redacted opened/commit/note/closed entry as it lands, including actual native log addresses. After-sales always sets native `onFailure: 'report'` and `flush: 'manual'`, then waits at most `recordSinkFlushTimeoutMs` for the final drain (default 250 ms, accepted range 0–2000). Diagnostics never create a business retry or change an acknowledged refund. The host supplies storage adapters, queue limits and durable acknowledgements; no cloud SDK is imported here. A pending drain keeps running after the wait ends and does not prove that its remaining entries were stored before a hard process kill. Later asynchronous entry failures may settle after the final snapshot.
+
+To read a recovered prefix, use Foottrace's existing `readStoredRecord(entries)`. A root with no covering close is `complete: false`, whether the process crashed or is still running. Missing entries remain gaps. After-sales does not synthesize a successful close, a provider outcome or a retry decision. The app must authorize record reads and bind the locator to its store and native run; customer requests must never choose a storage key.
+
+Raw sink exception text is selected by the native `recordSinkError` redaction policy before it can enter loss diagnostics. Business inputs and provider payloads remain in private request closures as before.
+
+
+`BusinessPlatformConfig` and `createPlatformForRequest` also forward `recordSink` and `recordSinkFlushTimeoutMs` for direct `executeAction` calls to Blueprint. That factory receives `{actionId, recordId}` and has the same native report/manual behavior. It does not automatically instrument the separate `executeServiceFlow` executor; hosts must not claim durable prefixes for that mode from this direct-action setting. For remote storage, set the native final drain longer than the adapter's own I/O/flush deadline so its cancellation can settle first.

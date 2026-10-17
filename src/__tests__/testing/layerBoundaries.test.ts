@@ -18,6 +18,6 @@ describe('diagnostics and local testing ownership', () => {
     expect(metadata.exports['./diagnostics'].types).toBe('./dist/diagnostics.d.ts');
     expect(metadata.exports['./diagnostics/runtime'].types).toBe('./dist/diagnostics/runtime.d.ts');
     expect(source('diagnostics.ts')).not.toContain('diagnostics/runtime');
-    expect(metadata.dependencies['footprint-blueprint']).toBe('0.6.0');
+    expect(metadata.dependencies['footprint-blueprint']).toBe('0.7.0');
   });
 });

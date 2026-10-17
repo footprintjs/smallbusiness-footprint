@@ -2,7 +2,7 @@
 
 The release kit includes a small booking example and a Charming Cherubs publication example. They teach the application integration patterns with local fixtures, rather than requiring the full applications or their hosting infrastructure.
 
-The two local candidates, `footprint-blueprint@0.6.0` and optional `smallbusiness-footprint@0.6.0`, are prepared for review; publication is pending. Use Node 24.15–24.x and npm. Extract the release kit, then run from its root:
+The two local candidates, `footprint-blueprint@0.7.0` and optional `smallbusiness-footprint@0.7.0`, are prepared for review; publication is pending. Use Node 24.15–24.x and npm. Extract the release kit, then run from its root:
 
 ```sh
 cd quickstart

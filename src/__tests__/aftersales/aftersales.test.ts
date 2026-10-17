@@ -2,6 +2,8 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createAfterSalesService } from '../../aftersales/runtime.js';
 import footprintPackage from 'footprintjs/package.json' with { type: 'json' };
 import { AsyncLocalStorage } from 'node:async_hooks';
+import { memorySink, type RecordSink } from 'foottrace/write';
+import { readStoredRecord } from 'foottrace';
 import { diagnoseFailureRecording, type FailureRecording } from 'footprint-blueprint/diagnostics';
 import type { AfterSalesBoundaryPort, AfterSalesDependencies } from '../../aftersales/runtime.js';
 import { AfterSalesError, DEFAULT_AFTER_SALES_POLICY, validateAfterSalesPolicy,
@@ -98,7 +100,8 @@ function fixture(overrides: Partial<AfterSalesOrder> = {}) {
 }
 const refund = (f: ReturnType<typeof fixture>, record: AfterSalesCase, amountCents = 10000, restock = true) => f.service.action({ caseId: record.caseId, expectedVersion: record.version, action: 'refund', amountCents, restock }, OWNER);
 
-function instrumentedFixture(f: ReturnType<typeof fixture>, executionOptions?: AfterSalesDependencies['executionOptions']) {
+function instrumentedFixture(f: ReturnType<typeof fixture>, executionOptions?: AfterSalesDependencies['executionOptions'],
+  recordingOptions: Pick<AfterSalesDependencies, 'recordSink' | 'recordSinkFlushTimeoutMs'> = {}) {
   const context = new AsyncLocalStorage<AfterSalesBoundaryPort>(), traces: AfterSalesTrace[] = [];
   const wrap = <T extends object>(target: T, system: 'database' | 'payment'): T => new Proxy(target, {
     get(object, key) {
@@ -126,7 +129,7 @@ function instrumentedFixture(f: ReturnType<typeof fixture>, executionOptions?: A
   });
   const service = createAfterSalesService({ storeId: 'brand-a', repository: wrap(f.repo, 'database'), payments: wrap(f.payments, 'payment'),
     authorizer: () => true, generateId: (() => { let id = 0; return () => `instrumented-case-${++id}`; })(),
-    now: () => '2026-10-16T12:00:00.000Z', executionOptions,
+    now: () => '2026-10-16T12:00:00.000Z', executionOptions, ...recordingOptions,
     withBoundaryScope(port, work) { return context.run(port, work); }, onTrace(trace) { traces.push(trace); } });
   return { service, traces };
 }
@@ -186,6 +189,120 @@ describe('optional after-sales native boundary scope', () => {
       expect(() => diagnoseFailureRecording(recordedAfterSales(trace))).not.toThrow();
       expect(JSON.stringify(trace)).not.toContain(PRIVATE);
     }
+  });
+});
+
+function recordedFixture(f: ReturnType<typeof fixture>, options: Pick<AfterSalesDependencies, 'recordSink' | 'recordSinkFlushTimeoutMs' | 'executionOptions'>) {
+  const traces: AfterSalesTrace[] = [];
+  const service = createAfterSalesService({ storeId: 'brand-a', repository: f.repo, payments: f.payments, authorizer: () => true,
+    generateId: (() => { let id = 0; return () => `recorded-case-${++id}`; })(), now: () => '2026-10-16T12:00:00.000Z',
+    ...options, onTrace(trace) { traces.push(trace); } });
+  const request = () => service.request({ orderId: 'order-1', requestId: 'recorded-request', kind: 'cancellation',
+    items: [{ lineId: 'line-0', quantity: 2 }], reason: PRIVATE }, CUSTOMER);
+  return { service, request, traces };
+}
+
+describe('optional after-sales native durable record port', () => {
+  it('hands real native entries to host storage before a suspended workflow finishes', async () => {
+    const f = fixture(), sink = memorySink(), factory = vi.fn<NonNullable<AfterSalesDependencies['recordSink']>>(() => sink);
+    const originalCreate = f.repo.createCase;
+    let release!: () => void, entered!: () => void;
+    const gate = new Promise<void>(resolve => { release = resolve; });
+    const atWrite = new Promise<void>(resolve => { entered = resolve; });
+    vi.spyOn(f.repo, 'createCase').mockImplementation(async input => { entered(); await gate; return originalCreate(input); });
+    const recorded = recordedFixture(f, { recordSink: factory });
+    const pending = recorded.request(); await atWrite;
+    expect(factory).toHaveBeenCalledOnce();
+    const request = factory.mock.calls[0][0] as Parameters<NonNullable<AfterSalesDependencies['recordSink']>>[0];
+    expect(Object.isFrozen(request)).toBe(true); expect(Object.keys(request).sort()).toEqual(['flowId', 'recordId']);
+    expect(request.flowId).toBe('aftersales-request');
+    expect(request.recordId).toMatch(/^[a-f0-9-]{36}$/);
+    expect(sink.entries.some(entry => entry.kind === 'opened')).toBe(true);
+    expect(sink.entries.some(entry => entry.kind === 'commit')).toBe(true);
+    expect(sink.entries.some(entry => entry.kind === 'closed')).toBe(false);
+    const opened = sink.entries.find(entry => entry.kind === 'opened')!;
+    const interrupted = readStoredRecord(sink.entries).root(opened.address.logRunId)!;
+    expect(interrupted.complete).toBe(false);
+    expect(recorded.traces).toHaveLength(0);
+    release(); const result = await pending;
+    const trace = recorded.traces[0];
+    expect(trace.recording).toEqual({ recordId: request.recordId, status: 'attached', flush: { done: true, failed: false, pending: false } });
+    expect(trace.recording?.recordId).not.toBe(result.caseId); expect(trace.recording?.recordId).not.toBe(trace.runId);
+    expect(trace.nativeSnapshot.sink?.entries).toBe(sink.entries.length); expect(trace.nativeSnapshot.sink?.failed).toBe(0);
+    expect(readStoredRecord(sink.entries).root(opened.address.logRunId)?.complete).toBe(true);
+    expect(JSON.stringify(sink.entries)).not.toContain(PRIVATE);
+  });
+  it('keeps acknowledged refund and inventory outcomes when every native write and final flush fail', async () => {
+    const f = fixture(), approved = await f.act(await f.request(), 'approve');
+    const broken: RecordSink = { opened() { throw new Error(PRIVATE); }, commit() { throw new Error(PRIVATE); },
+      note() { throw new Error(PRIVATE); }, closed() { throw new Error(PRIVATE); }, async flush() { throw new Error(PRIVATE); } };
+    const recorded = recordedFixture(f, { recordSink: () => broken });
+    const result = await recorded.service.action({ caseId: approved.caseId, expectedVersion: approved.version, action: 'refund', amountCents: 10000, restock: true }, OWNER);
+    expect(result.state).toBe('REFUNDED'); expect(f.refundCalls).toBe(1); expect(f.restockCount).toBe(2);
+    expect(f.order.payment.refundedCents).toBe(10000);
+    const trace = recorded.traces[0];
+    expect(trace.outcome).toBe('ok'); expect(trace.nativeSnapshot.sink!.failed).toBeGreaterThan(0);
+    expect(trace.recording).toMatchObject({ status: 'attached', flush: { done: false, failed: true, pending: false } });
+    expect(JSON.stringify(trace)).not.toContain(PRIVATE);
+    const replay = await recorded.service.action({ caseId: result.caseId, expectedVersion: result.version, action: 'refund', amountCents: 10000, restock: true }, OWNER);
+    expect(replay.state).toBe('REFUNDED'); expect(f.refundCalls).toBe(1); expect(f.restockCount).toBe(2);
+    expect(recorded.traces[1].recording?.recordId).not.toBe(trace.recording?.recordId);
+  });
+  it('stores the same real boundary attempt notes and redaction as the final uncertain-refund trace', async () => {
+    const f = fixture(), sinks = new Map<string, ReturnType<typeof memorySink>>();
+    const recorded = instrumentedFixture(f, undefined, { recordSink: ({ recordId }) => { const sink = memorySink(); sinks.set(recordId, sink); return sink; } });
+    const request = await recorded.service.request({ orderId: 'order-1', requestId: 'recorded-boundary-request', kind: 'cancellation', items: [{ lineId: 'line-0', quantity: 1 }] }, CUSTOMER);
+    const approved = await recorded.service.action({ caseId: request.caseId, expectedVersion: request.version, action: 'approve' }, OWNER);
+    f.failRefund = true;
+    const result = await recorded.service.action({ caseId: approved.caseId, expectedVersion: approved.version, action: 'refund', amountCents: 5000 }, OWNER);
+    expect(result.state).toBe('REFUND_UNKNOWN'); expect(f.refundCalls).toBe(1);
+    const trace = recorded.traces.at(-1)!, sink = sinks.get(trace.recording!.recordId)!;
+    const stored = readStoredRecord(sink.entries).root(trace.runId)!;
+    expect(stored.complete).toBe(true); expect(stored.notes.length).toBeGreaterThan(0);
+    expect(sink.entries.every(entry => entry.address.logRunId === trace.runId)).toBe(true);
+    expect(JSON.stringify(sink.entries)).not.toContain(result.refund!.idempotencyKey);
+    expect(JSON.stringify(sink.entries)).not.toContain(PRIVATE);
+    expect(diagnoseFailureRecording(recordedAfterSales(trace)).coverage.externalEffect).toBe('unknown');
+  });
+  it('bounds a never-settling final drain without retrying the acknowledged refund', async () => {
+    const f = fixture(), approved = await f.act(await f.request(), 'approve'), sink = memorySink();
+    const recorded = recordedFixture(f, { recordSinkFlushTimeoutMs: 10, recordSink: () => ({ ...sink, flush: () => new Promise<void>(() => {}) }) });
+    const result = await recorded.service.action({ caseId: approved.caseId, expectedVersion: approved.version, action: 'refund', amountCents: 10000 }, OWNER);
+    expect(result.state).toBe('REFUNDED'); expect(f.refundCalls).toBe(1);
+    expect(recorded.traces[0].recording?.flush).toEqual({ done: false, failed: false, pending: true });
+  });
+  it('reports asynchronous entry rejection while preserving successful business completion', async () => {
+    const f = fixture(), recorded = recordedFixture(f, { recordSink: () => ({ opened: async () => { throw new Error(PRIVATE); },
+      commit() {}, note() {}, closed() {}, async flush() { await Promise.resolve(); } }) });
+    expect((await recorded.request()).state).toBe('REQUESTED');
+    expect(recorded.traces[0].nativeSnapshot.sink!.failed).toBeGreaterThan(0);
+    expect(JSON.stringify(recorded.traces[0])).not.toContain(PRIVATE);
+  });
+  it.each(['throw', 'malformed', 'async'] as const)('isolates a %s factory from a successful durable case', async mode => {
+    const f = fixture(), recorded = recordedFixture(f, { recordSink: (() => { if (mode === 'throw') throw new Error(PRIVATE); if (mode === 'async') return Promise.reject(new Error(PRIVATE)); return {}; }) as NonNullable<AfterSalesDependencies['recordSink']> });
+    expect((await recorded.request()).state).toBe('REQUESTED');
+    expect(recorded.traces[0].recording).toMatchObject({ status: 'unavailable' });
+    expect(recorded.traces[0].nativeSnapshot.sink).toBeUndefined();
+    expect(JSON.stringify(recorded.traces[0])).not.toContain(PRIVATE);
+  });
+  it('omits recording when the host disables it and allocates independent execution IDs for concurrent replay', async () => {
+    const f = fixture(), disabled = recordedFixture(f, { recordSink: () => undefined });
+    await disabled.request(); expect(disabled.traces[0].recording).toBeUndefined();
+    const ids: string[] = [], sinks: ReturnType<typeof memorySink>[] = [];
+    const recorded = recordedFixture(f, { recordSink: request => { ids.push(request.recordId); const sink = memorySink(); sinks.push(sink); return sink; } });
+    const results = await Promise.all([recorded.request(), recorded.request()]);
+    expect(results[0].caseId).toBe(results[1].caseId); expect(new Set(ids).size).toBe(2);
+    expect(new Set(recorded.traces.map(trace => trace.runId)).size).toBe(2);
+    for (let i = 0; i < sinks.length; i++) {
+      const roots = sinks[i].entries.filter(entry => entry.kind === 'opened').map(entry => entry.address.logRunId);
+      expect(new Set(roots).size).toBe(1);
+      expect(recorded.traces.find(trace => trace.recording?.recordId === ids[i])).toBeDefined();
+      expect(JSON.stringify(sinks[i].entries)).not.toContain(PRIVATE);
+    }
+  });
+  it.each([-1, 2001, 1.5, Infinity])('rejects invalid diagnostic drain configuration %s before business execution', timeout => {
+    const f = fixture(); expect(() => recordedFixture(f, { recordSinkFlushTimeoutMs: timeout })).toThrow(AfterSalesError);
+    expect(f.refundCalls).toBe(0); expect(f.cases.size).toBe(0);
   });
 });
 

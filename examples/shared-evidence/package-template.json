@@ -1,6 +1,6 @@
 {
   "name": "footprint-evidence-quickstart",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "private": true,
   "type": "module",
   "description": "Reduced local booking and publication examples based on the FootPrint app integrations",
@@ -13,8 +13,8 @@
     "test": "node booking.mjs && node publication.mjs"
   },
   "dependencies": {
-    "footprint-blueprint": "0.6.0",
-    "smallbusiness-footprint": "0.6.0",
+    "footprint-blueprint": "0.7.0",
+    "smallbusiness-footprint": "0.7.0",
     "footprintjs": "10.1.0",
     "foottrace": "1.1.0"
   }

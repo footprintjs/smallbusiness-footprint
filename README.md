@@ -1,6 +1,6 @@
-# smallbusiness-footprint 0.6.0
+# smallbusiness-footprint 0.7.0
 
-This local `smallbusiness-footprint@0.6.0` candidate adds a thin commerce boundary recorder over Blueprint 0.6.0, with FootprintJS 10.1.0 and Zod. It uses Node 24.15–24.x. It is not published. Existing checkout, shipping, after-sales, privacy and authoritative-provider boundaries remain in place.
+This local `smallbusiness-footprint@0.7.0` candidate adds a thin commerce boundary recorder over Blueprint 0.7.0, with FootprintJS 10.1.0 and Zod. It uses Node 24.15–24.x. It adds optional host-owned native record sinks for after-sales. It is not published. Existing checkout, shipping, after-sales, privacy and authoritative-provider boundaries remain in place.
 
 SMB is optional. Framework-only applications use Blueprint directly; commerce consumers can install SMB and its declared dependencies are installed automatically. Within Blueprint, focused subpaths select runtime entry graphs and dynamic `import()` provides loading on demand. Ordinary dependency downloads still occur at package installation.
 
