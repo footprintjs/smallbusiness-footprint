@@ -1,3 +1,11 @@
+# 0.9.0 — expected-execution evidence
+
+- Adopt the reviewed Blueprint 0.9 compatibility range for expected-execution coverage alongside recorded cause evidence.
+- Document how a host describes expected commerce work and reports missing execution proof without claiming a cancellation, refund or shipment succeeded or failed.
+- Keep checkout, after-sales, stock and publication decisions unchanged. This release adds no provider calls, retries, LLM requests or automatic actions.
+
+Prepared 2026-10-18. Publication, registry-byte verification and application deployment are separate release steps.
+
 # 0.8.0 — local connected-cause candidate; not published
 
 - Use exact Foottrace 1.4.0 and the reviewed Blueprint 0.8 compatibility range.
