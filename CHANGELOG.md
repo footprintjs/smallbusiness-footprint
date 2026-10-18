@@ -1,3 +1,11 @@
+# 0.8.0 — local connected-cause candidate; not published
+
+- Use exact Foottrace 1.4.0 and the reviewed Blueprint 0.8 compatibility range.
+- Capture real per-write read provenance and optional Blueprint control/attention facts beside redacted after-sales and composed-service snapshots.
+- Isolate missing diagnostic capture from authoritative acknowledgements; preserve payment, stock and publication decisions.
+
+Local immutable artifacts only; public npm release tooling and publication are separate.
+
 # 0.7.0 — local connected-record candidate; not published
 
 - Add optional per-execution `recordSink` and bounded `recordSinkFlushTimeoutMs` host hooks to after-sales, using the native Foottrace port with no storage/provider dependency.

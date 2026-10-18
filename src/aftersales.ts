@@ -59,6 +59,8 @@ export interface AfterSalesPayments {
   findRefund(input: { orderId: string; paymentId: string; idempotencyKey: string }): Promise<AfterSalesRefundEvidence | undefined>;
 }
 export type AfterSalesTrace = { readonly flowId: 'aftersales-request' | 'aftersales-action'; readonly runId: string; readonly startedAt: string; readonly finishedAt: string; readonly outcome: 'ok' | 'error'; readonly stages: readonly string[]; readonly decisions: readonly string[]; readonly code?: AfterSalesErrorCode; readonly nativeSnapshot: import('footprintjs').RuntimeSnapshot; readonly flowSpec: import('footprintjs/advanced').SerializedPipelineStructure; readonly narrative: readonly import('footprintjs').CombinedNarrativeEntry[]; readonly runtime?: { readonly library: 'footprintjs'; readonly version: string }; readonly boundaryDiagnostics?: import('footprint-blueprint/diagnostics/runtime').BoundaryRecorderSnapshot;
+  /** Reference-only evidence captured by the shared reader's recorder, never inferred business causation. */
+  readonly causeCapture?: import('footprint-blueprint/diagnostics/cause').CauseCapture;
   /** Diagnostic storage locator, never a business id or a durability claim. Native snapshot.sink counts losses. */
   readonly recording?: { readonly recordId: string; readonly status: 'attached' | 'unavailable'; readonly flush?: import('footprintjs').RecordFlushResult };
 };

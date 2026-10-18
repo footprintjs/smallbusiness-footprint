@@ -1,5 +1,6 @@
 import { flowChart, FlowChartExecutor, decide, type TypedScope, type RecordFlushResult } from 'footprintjs';
 import type { RecordSink } from 'foottrace/write';
+import { createCauseCapture } from 'footprint-blueprint/diagnostics/cause';
 import { footprintRuntimeVersion } from '../runtimeVersion.js';
 import { captureExecutionRunOptions, type ExecutionRunOptions } from 'footprint-blueprint/actions';
 import type { BoundaryOperation, BoundaryCallContext } from 'footprint-blueprint/diagnostics/runtime';
@@ -162,6 +163,7 @@ export function createAfterSalesService(deps: AfterSalesDependencies) {
       builder = branch.end();
     }
     const chart = builder.build();
+    const causeCapture = createCauseCapture();
     // A diagnostic factory gets no command, case, payment or customer data. A separate UUID also prevents
     // retries of the same business command from accidentally overwriting an earlier execution's prefix.
     let recording: AfterSalesTrace['recording'];
@@ -171,19 +173,20 @@ export function createAfterSalesService(deps: AfterSalesDependencies) {
       try {
         const adapter = recordSink(Object.freeze({ flowId, recordId }));
         if (consumeNativePromise(adapter)) throw new TypeError('recordSink must return a native sink synchronously');
-        executor = new FlowChartExecutor(chart, adapter === undefined ? undefined : {
-          sink: { adapter, onFailure: 'report', flush: 'manual' },
+        executor = new FlowChartExecutor(chart, { writeProvenance: 'reads-prefix',
+          ...(adapter === undefined ? {} : { sink: { adapter, onFailure: 'report', flush: 'manual' } as const }),
         });
         if (adapter !== undefined) recording = { recordId, status: 'attached' };
       } catch {
         // Optional observability must not turn a durable refund acknowledgement into a retryable failure.
-        executor = new FlowChartExecutor(chart);
+        executor = new FlowChartExecutor(chart, { writeProvenance: 'reads-prefix' });
         recording = { recordId, status: 'unavailable' };
       }
-    } else executor = new FlowChartExecutor(chart);
+    } else executor = new FlowChartExecutor(chart, { writeProvenance: 'reads-prefix' });
     executor.setRedactionPolicy({ keys: ['idempotencyKey', 'authorization', 'token', 'secret', 'password', 'recordSinkError'],
       diagnostics: { keys: ['errors.recordSinkError'] } });
     executor.enableNarrative();
+    executor.attachFlowRecorder(causeCapture.recorder);
     executor.attachFlowRecorder({ id: 'aftersales-metadata', onStageExecuted(event) { stages.push(event.stageName); } });
     if (boundaries) executor.attachFlowRecorder(boundaries.flowRecorder);
     let failure: AfterSalesError | undefined;
@@ -196,9 +199,12 @@ export function createAfterSalesService(deps: AfterSalesDependencies) {
       catch { flush = { done: false, failed: true, pending: false }; }
       recording = { ...recording, flush };
     }
+    const nativeSnapshot = executor.getSnapshot({ redact: true });
+    let recordedCause: AfterSalesTrace['causeCapture'];
+    try { recordedCause = causeCapture.snapshot(nativeSnapshot); } catch { /* Missing diagnostic coverage stays unknown; never retry acknowledged commerce. */ }
     const trace: AfterSalesTrace = { flowId, runId: executor.getSnapshot({ redact: true }).runId, startedAt, finishedAt, outcome: failure ? 'error' : 'ok',
       stages: [...stages], decisions: [...decisions], ...(failure ? { code: failure.code } : {}),
-      nativeSnapshot: executor.getSnapshot({ redact: true }), flowSpec: chart.buildTimeStructure!, narrative: executor.getNarrativeEntries(),
+      nativeSnapshot, ...(recordedCause ? { causeCapture: recordedCause } : {}), flowSpec: chart.buildTimeStructure!, narrative: executor.getNarrativeEntries(),
       runtime: { library: 'footprintjs', version: footprintRuntimeVersion },
       ...(boundaries ? { boundaryDiagnostics: boundaries.snapshot() } : {}), ...(recording ? { recording } : {}) };
     try { await deps.onTrace?.(trace); } catch { /* A diagnostic failure cannot reverse a refund or durable case. */ }

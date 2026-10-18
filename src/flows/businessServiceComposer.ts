@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { createTenantContext } from 'footprint-blueprint/tenancy';
 import { immutableValue } from 'footprint-blueprint/features';
+import { createCauseCapture, type CauseCapture } from 'footprint-blueprint/diagnostics/cause';
 import { FlowChartExecutor, ManifestFlowRecorder } from 'footprintjs';
 import { ScopeFacade } from 'footprintjs/advanced';
 import type { BusinessRepository, BusinessFlowContext, BusinessType } from '../types.js';
@@ -45,7 +46,7 @@ export function buildActionDispatch(actionId: string, type: BusinessType, depend
 }
 export type ServiceDescription = { readonly actionId: string; readonly description: string; readonly stages: readonly { name: string; id: string; description: string }[] };
 export type BuiltServiceFlow = { readonly flow: BusinessFlowChart; readonly flowMeta: { flowId: string; description: string; stageDescriptions: Record<string, string>; buildTimeStructure: unknown } };
-export type BusinessServiceResult = { readonly status: 'success' | 'error'; readonly acknowledgement?: BusinessAcknowledgement; readonly observationError?: string; readonly result?: Record<string, unknown>; readonly error?: string; readonly code?: string; readonly manifest: ReturnType<ManifestFlowRecorder['getManifest']>; readonly narrative: readonly string[]; readonly flowMeta?: BuiltServiceFlow['flowMeta'] & { snapshot?: Record<string, unknown> }; readonly executionSnapshot?: unknown; readonly response?: unknown };
+export type BusinessServiceResult = { readonly status: 'success' | 'error'; readonly acknowledgement?: BusinessAcknowledgement; readonly observationError?: string; readonly result?: Record<string, unknown>; readonly error?: string; readonly code?: string; readonly manifest: ReturnType<ManifestFlowRecorder['getManifest']>; readonly narrative: readonly string[]; readonly flowMeta?: BuiltServiceFlow['flowMeta'] & { snapshot?: Record<string, unknown> }; readonly executionSnapshot?: unknown; readonly causeCapture?: CauseCapture; readonly response?: unknown };
 export type PreparedBusinessOperation = { input: Record<string, unknown>; context: BusinessOperationContext };
 export type BusinessServiceOptions = { readonly scope?: BusinessScope; readonly providers?: BusinessProviders; readonly operations?: BusinessOperations; readonly flowRegistry?: ActionFlowRegistry; readonly termsForType?: BusinessTermResolver; readonly prepare?: (actionId: string, input: Record<string, unknown>, context: BusinessFlowContext) => Promise<PreparedBusinessOperation>; readonly includeResponse?: boolean };
 export type BusinessServiceRegistry = { getFlow(actionId: string): BusinessFlowChart | undefined; getTypedFlow(actionId: string, type: BusinessType): BusinessFlowChart | undefined; serviceIds(): readonly string[]; executeService(actionId: string, input: Record<string, unknown>, context: BusinessFlowContext): Promise<BusinessServiceResult>; buildServiceFlow(actionId: string, context: BusinessFlowContext): BuiltServiceFlow | undefined; describeService(actionId: string, type?: BusinessType): ServiceDescription | undefined; describeAllServices(type?: BusinessType): readonly ServiceDescription[] };
@@ -74,12 +75,17 @@ export function createBusinessServiceRegistry(repo: BusinessRepository | undefin
       try { assertBusinessScope(scope, context); if (!options.prepare) throw new BusinessOperationError('BUSINESS_UNSUPPORTED', 'A trusted authorization and validation boundary is required'); prepared = await options.prepare(action, input, context); assertBusinessScope(scope, prepared.context); }
       catch (error) { return { status: 'error', error: error instanceof BusinessOperationError ? safeBusinessFailure(error, action).message : 'Action authorization or input validation failed', code: error instanceof BusinessOperationError ? error.code : 'BUSINESS_INPUT_INVALID', manifest: [], narrative: [] }; }
       const ref = randomUUID(); const request: BusinessRequest = { input: structuredClone(prepared.input), context: Object.freeze({ ...prepared.context }) }; requests.set(ref, request);
-      const flow = build(action, prepared.context.businessType)!; const manifest = new ManifestFlowRecorder();
-      const executor = new FlowChartExecutor(flow, { initialContext: { input: { requestRef: ref } }, scopeFactory: (ctx, name, args, env) => new ScopeFacade(ctx, name, args, env), readTracking: 'summary', writeTracking: 'summary', commitValues: 'full' });
-      executor.enableNarrative(); executor.attachFlowRecorder(manifest); executor.setRedactionPolicy({ keys: ['input'], patterns: [/email|token|shipping|secret|password|response|url/i] });
+      const flow = build(action, prepared.context.businessType)!; const manifest = new ManifestFlowRecorder(); const causeCapture = createCauseCapture();
+      const executor = new FlowChartExecutor(flow, { initialContext: { input: { requestRef: ref } }, scopeFactory: (ctx, name, args, env) => new ScopeFacade(ctx, name, args, env), readTracking: 'summary', writeTracking: 'summary', commitValues: 'full', writeProvenance: 'reads-prefix' });
+      executor.enableNarrative(); executor.attachFlowRecorder(manifest); executor.attachFlowRecorder(causeCapture.recorder); executor.setRedactionPolicy({ keys: ['input'], patterns: [/email|token|shipping|secret|password|response|url/i] });
       const observed = () => {
         // Export/recording is observational: it must not erase a provider's acknowledgement.
-        try { return { manifest: manifest.getManifest(), narrative: executor.getNarrativeEntries().map(entry => entry.text), executionSnapshot: executor.getSnapshot({ redact: true }) }; }
+        try {
+          const executionSnapshot = executor.getSnapshot({ redact: true });
+          let capture: CauseCapture | undefined;
+          try { capture = causeCapture.snapshot(executionSnapshot); } catch { /* A missing observation cannot erase an authoritative receipt. */ }
+          return { manifest: manifest.getManifest(), narrative: executor.getNarrativeEntries().map(entry => entry.text), executionSnapshot, ...(capture ? { causeCapture: capture } : {}) };
+        }
         catch { return { manifest: [], narrative: [], observationError: 'Execution recording is unavailable' }; }
       };
       const acknowledged = (observationError?: string): BusinessServiceResult => {

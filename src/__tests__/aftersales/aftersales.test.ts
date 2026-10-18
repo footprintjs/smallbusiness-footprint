@@ -141,6 +141,20 @@ const recordedAfterSales = (trace: AfterSalesTrace): FailureRecording => {
 };
 
 describe('optional after-sales native boundary scope', () => {
+  it('records actual per-write provenance and an independent control capture for each after-sales execution', async () => {
+    const f = fixture(); const requested = await f.request(); await f.act(requested, 'approve');
+    const trace = f.traces.at(-1)!;
+    expect(trace.nativeSnapshot.writeProvenance).toBe('reads-prefix');
+    const writes = trace.nativeSnapshot.commitLog.flatMap(bundle => bundle.trace);
+    expect(writes.length).toBeGreaterThan(0);
+    expect(writes.every(row => Array.isArray(row.readKeys))).toBe(true);
+    expect((trace as AfterSalesTrace & { causeCapture?: unknown }).causeCapture).toMatchObject({ version: 1, ruleVersion: 'recorded-facts-v1' });
+    expect(Object.values(trace.causeCapture?.controlDeps ?? {}).some(item => item.deciderId.startsWith('route-owner-action#'))).toBe(true);
+    expect(trace.causeCapture?.runId).toBe(trace.nativeSnapshot.runId);
+    expect(f.traces.at(-2)?.causeCapture?.runId).not.toBe(trace.causeCapture?.runId);
+    expect(JSON.stringify(trace)).not.toContain(PRIVATE);
+  });
+
   it('keeps default traces unchanged when no host instrumentation hook is installed', async () => {
     const f = fixture(); await f.request();
     expect(f.traces[0].boundaryDiagnostics).toBeUndefined();
