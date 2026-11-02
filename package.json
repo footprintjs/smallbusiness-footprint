@@ -1,7 +1,7 @@
 {
   "name": "smallbusiness-footprint",
   "version": "0.5.0",
-  "description": "Small-business e-commerce domain wrapper for footprint-blueprint \u2014 configurable commerce engine for any shop type",
+  "description": "TypeScript commerce workflows and business profiles on Blueprint: scoped actions, shipping, after-sales and retained operation evidence.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -87,5 +87,15 @@
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
-  }
+  },
+  "keywords": [
+    "typescript",
+    "commerce",
+    "ecommerce",
+    "business-profiles",
+    "workflow",
+    "shipping",
+    "execution-provenance",
+    "footprintjs"
+  ]
 }

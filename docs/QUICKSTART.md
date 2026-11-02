@@ -35,3 +35,7 @@ The reduced quickstart is not the complete booking app or Charming Cherubs deplo
 No agent is included. A future client can reuse an authenticated application action boundary and inspect recorded outcomes; the host remains responsible for transport, permissions, transactions and recovery.
 
 The sibling Blueprint repository contains the release runbook in `docs/RELEASE.md`; use its copy included in the release kit. The preparation branch is local until the reviewed source is pushed and artifacts are published.
+
+## Source CI and release approval
+
+Ordinary source CI checks a packed candidate against this checkout's complete manifest, package identity/dependency constraints, required documentation and declared main/type/export files. This produces a `checked-source-package` artifact; passing source checks does not approve an npm release. Explicit publication still requires the unchanged reviewed archive hashes in both verification and the main-only OIDC publisher. A changed candidate is refused for publication until it receives a separate exact-byte review. No source check updates the approved archive record or publishes a package.

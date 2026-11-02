@@ -1,6 +1,10 @@
 # smallbusiness-footprint 0.5.0
 
-This local `smallbusiness-footprint@0.5.0` candidate depends on `footprint-blueprint@0.5.0`, `footprintjs@10.1.0` and Zod. It uses Node 24.15–24.x. It adds opt-in commerce diagnostics and testing entries and has not been published. Existing commerce, shipping, after-sales, privacy and authoritative-provider boundaries remain in place.
+For backend developers connecting configurable commerce workflows to their own storage and authoritative providers.
+
+[Release-kit quickstart](docs/QUICKSTART.md) · [Integration contracts](docs/INTEGRATION.md) · [Guarantees and ownership](#guarantees-and-ownership)
+
+This local `smallbusiness-footprint@0.5.0` candidate depends on `footprint-blueprint@0.5.0`, `footprintjs@10.1.0` and Zod. It uses Node 24.15–24.x. It adds opt-in commerce diagnostics and testing entries. This README describes the source checkout candidate; [npm registry releases](https://www.npmjs.com/package/smallbusiness-footprint) may contain different code even when version labels match. Existing commerce, shipping, after-sales, privacy and authoritative-provider boundaries remain in place.
 
 SMB is optional. Framework-only applications use Blueprint directly; commerce consumers can install SMB and its declared dependencies are installed automatically. Within Blueprint, focused subpaths select runtime entry graphs and dynamic `import()` provides loading on demand. Ordinary dependency downloads still occur at package installation.
 
