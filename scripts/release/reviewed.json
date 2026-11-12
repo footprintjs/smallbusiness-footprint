@@ -1,28 +1,34 @@
 {
   "name": "smallbusiness-footprint",
-  "version": "0.5.0",
-  "sha256": "2be067180c17a73fe9ab910bc8fe3094d574a5b566539ad12e8200f290714103",
-  "integrity": "sha512-gepqJw81glGpJofmikzLndDyBJ09Wt22bj2gRxGqpX4qgeQk13H6h5RqPr8A6MFKDIZrDS3M1CsY8v1+EhMaEw==",
+  "version": "1.0.0",
+  "sha256": "7163f4d70008da1a79447083592195db373b0e11f2b91e42de31d20d94ed3cf5",
+  "integrity": "sha512-Rut0cTrS0zFRe6ka9Olm6y3ATQOtSoUzShVGB4yU5FcO7IyzD2iQbWD85hdPl723iWfoQgFI9Gg2c+xds3YINQ==",
   "dependencies": {
-    "footprint-blueprint": "0.5.0",
-    "footprintjs": "10.1.0",
-    "zod": "4.6.5"
+    "footprint-blueprint": "1.0.0",
+    "footprintjs": "12.0.0",
+    "zod": "4.6.5",
+    "foottrace": "1.15.0"
   },
   "runtime": [
     {
+      "name": "footprint-blueprint",
+      "version": "1.0.0",
+      "integrity": "sha512-435xMhAS9cdEWDJyHALsJ+mqYhix43Q4XscxCUEH58rIlzzXIAOgyUbjyaCUpG2eInKKOI3lfHZi2r0AqgO/bg=="
+    },
+    {
       "name": "footprintjs",
-      "version": "10.1.0",
-      "integrity": "sha512-ZV8y5tsiF5fwd8A5ef64Gu4V4VutXa5LQMtcmE8rxrO98ZJhoQksVbDqIoy2k/NiuTzgLnrrN6Zn5fA5Cs/++A=="
+      "version": "12.0.0",
+      "integrity": "sha512-OaUaaqikMJFZt9XjFFWhIzhht5rIr+D2H8BxPuT/2SJMElmL0uUwDI2FqbgUwCW9dP52DZHct81gaaFjEgmS5A=="
+    },
+    {
+      "name": "zod",
+      "version": "4.6.5",
+      "integrity": "sha512-v5l/aFXZQeai4awLbOpSoHecE9UiMrnfx75tEXLjNonXVARxQ5mOeipTjROUchszUNCqnE+hqAMujRsRHsut2Q=="
     },
     {
       "name": "foottrace",
-      "version": "1.1.0",
-      "integrity": "sha512-bC+9Sp4oMD33KXOxDM5JHUGkw7rcLrskSAq2pypogQDqkgm6Sf+7vStliIjyYYm26VM/aMYqVTPDnDgJArbkyQ=="
-    },
-    {
-      "name": "footprint-blueprint",
-      "version": "0.5.0",
-      "integrity": "sha512-XYCHzJurB5Wi8B8fAkJ1oqvff3eqdgi1rBL4gruAP1zEzFpuSA8sDeUQlreC4Oj0M96iIQ2fkHsgsEBocwQbMA=="
+      "version": "1.15.0",
+      "integrity": "sha512-n+KFhCWkO9rPGD8wIazNypRBl413iKoodXUrIXTMELM7GOb6VhCf+A7mRNYoMK4aGbZYzdoJHsxizKGkKLCbPw=="
     }
   ],
   "githubRepository": "footprintjs/smallbusiness-footprint",
