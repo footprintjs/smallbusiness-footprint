@@ -4,7 +4,7 @@ For backend developers connecting configurable commerce workflows to their own s
 
 [Release-kit quickstart](docs/QUICKSTART.md) · [Integration contracts](docs/INTEGRATION.md) · [Guarantees and ownership](#guarantees-and-ownership)
 
-**Unreleased 1.0.0 source candidate:** requires `footprint-blueprint@1.0.0`, `footprintjs@12.0.0`, `foottrace@1.15.0` and Zod on Node 24.15–24.x. Published 0.9.0 workflows and optional evidence features are retained. Missing capture stays unknown and never reverses an acknowledged operation. See the [migration notes](docs/MIGRATION-1.0.md). Blueprint must be published before this package; source checks do not authorize either publication.
+**Version 1.0.0:** requires `footprint-blueprint@1.0.0`, `footprintjs@12.0.0`, `foottrace@1.15.0` and Zod on Node 24.15–24.x. Published 0.9.0 workflows and optional evidence features are retained. Missing capture stays unknown and never reverses an acknowledged operation. See the [migration notes](docs/MIGRATION-1.0.md). The release order is Blueprint first, then this package; source checks and immutable release approval remain separate.
 
 SMB is optional. Framework-only applications use Blueprint directly; commerce consumers can install SMB and its declared dependencies are installed automatically. Within Blueprint, focused subpaths select runtime entry graphs and dynamic `import()` provides loading on demand. Ordinary dependency downloads still occur at package installation.
 
@@ -65,13 +65,13 @@ A supplied repository is low-level, already bound to the declared store. `create
 - A real provider acknowledgement is required for success. A later observational failure preserves that acknowledgement, so it cannot be mistaken for an unperformed operation.
 - Footprint records the execution. The library does not provision distributed locks, payment providers, queues, durable checkpoints, scheduler jobs or email delivery.
 
-For migration and provider contracts, see [docs/INTEGRATION.md](docs/INTEGRATION.md). Build the sibling Blueprint root first, then run `pnpm build`, `pnpm typecheck` and `pnpm test` from the SMB repository root on Node 24.15–24.x. The inherited suite contains 217 fixture-only tests; the release validation record captures the actual candidate results.
+For migration and provider contracts, see [docs/INTEGRATION.md](docs/INTEGRATION.md). Build the sibling Blueprint root first, then run `pnpm build`, `pnpm typecheck` and `pnpm test` from the SMB repository root on Node 24.15–24.x. Tests use local fixtures; the exact-head hosted checks and release validation record capture the actual results.
 
 ## Shared receipt boundary
 
 Direct `executeAction` calls use Blueprint and can return shared execution evidence. Recorded `executeServiceFlow` calls retain their own SDK snapshot/manifest/narrative path and do not automatically supply common observation/effect receipts. A host may report explicit shared facts at its application `createPlatform` publication boundary while keeping its original publication workflow recording. Applications choose safe reported fields and remain responsible for authoritative transactions and receipt storage.
 
-## Shipping adapter extension candidate
+## Shipping adapter extension
 
 Version 0.4.0 adds a browser-safe `smallbusiness-footprint/shipping` API. See [bring-your-own shipping adapters](docs/SHIPPING_ADAPTERS.md).
 
@@ -116,7 +116,7 @@ These are reusable test workflows, not a generic production circuit breaker, pay
 
 The commerce normalizer is opt-in. A host that uses a different provider can import Blueprint's `normalizeBoundaryError` directly and supply its own classifier; choosing this testing entry does not register or replace any production provider adapter.
 
-### Native provider-boundary recording (0.6 candidate)
+### Native provider-boundary recording
 
 `smallbusiness-footprint/diagnostics/runtime` exports `createCommerceBoundaryRecorder`. It delegates to Blueprint's recorder and supplies commerce normalization by default; custom vendors can pass their own `normalizeError`. It does not load a provider SDK, create a retry loop, persist a record or decide whether a payment succeeded. The existing `/diagnostics` normalization entry stays separate from this runtime entry.
 

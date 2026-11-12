@@ -1,6 +1,6 @@
 /**
- * Business terminology definitions — the 12 configurable entity labels
- * per business type, derived from the charming-cherubs domain.
+ * Business terminology definitions for configurable commerce workflows.
+ * Configurable entity labels and per-business-type defaults.
  */
 import type { BusinessTermKey } from "../types.js";
 

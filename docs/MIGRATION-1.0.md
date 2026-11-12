@@ -1,6 +1,6 @@
 # Migration to 1.0.0
 
-This is an unreleased source candidate. Source verification and publication approval are separate: the immutable approval record is unchanged and cannot publish these bytes.
+Version 1.0.0 adopts the runtime contracts below. Source verification and publication approval are separate: the release workflow accepts only the exact archive selected by its reviewed approval record.
 
 ## Runtime requirements
 
@@ -14,6 +14,6 @@ Rich `getSnapshot()` recordings are consumed through their actual native contrac
 
 ## Blueprint dependency order
 
-This candidate requires Blueprint 1.0.0. The development-only workspace override uses a built Blueprint source-candidate archive, excluded from the public package. Existing archives are retained. The packed public manifest uses `footprint-blueprint: 1.0.0`; publish the reviewed Blueprint first before installing this package from npm. Do not substitute the local source alias used by focused tests for packed-package verification.
+This version requires Blueprint 1.0.0. The development-only workspace override uses the exact final Blueprint release archive, excluded from the public package. Existing archives are retained. The packed public manifest uses `footprint-blueprint: 1.0.0`; publish the reviewed Blueprint first before installing this package from npm. Do not substitute the local source alias used by focused tests for packed-package verification.
 
 No new capture options are added. Applications still opt into the existing capture hooks and supply their own storage and authoritative provider ports.

@@ -2,11 +2,11 @@
 
 The release kit includes a small booking example and a publication example. They teach the application integration patterns with local fixtures, rather than requiring the full applications or their hosting infrastructure.
 
-The 1.0.0 source candidates require `footprint-blueprint@1.0.0`, `smallbusiness-footprint@1.0.0`, `footprintjs@12.0.0` and `foottrace@1.15.0` on Node 24.15–24.x. Their publication approvals remain separate and are not supplied by a source check. The source workflow produces checked package artifacts; it does not yet produce a combined 1.0.0 quickstart kit. See [migration notes](MIGRATION-1.0.md) for dependency order.
+Version 1.0.0 requires `footprint-blueprint@1.0.0`, `smallbusiness-footprint@1.0.0`, `footprintjs@12.0.0` and `foottrace@1.15.0` on Node 24.15–24.x. Publication approval remains separate from a source check. The source workflow produces checked package artifacts; it does not yet produce a combined 1.0.0 quickstart kit. See [migration notes](MIGRATION-1.0.md) for dependency order.
 
 ### Existing archived kit
 
-The included `examples/shared-evidence/package-template.json` describes the historical 0.7.0 kit with its original dependencies. It is not an installation recipe for the 1.0.0 candidates. In that archived kit, extract it and run from its root:
+The `examples/shared-evidence/package-template.json` in the source checkout describes the historical 0.7.0 kit with its original dependencies. It is not an installation recipe for version 1.0.0. In that archived kit, extract it and run from its root:
 
 ```sh
 cd quickstart
@@ -16,7 +16,7 @@ npm run publication
 npm test
 ```
 
-Both historical libraries install from the kit’s own tarballs. Initial installation needs npm access for its pinned third-party dependencies unless cached. The examples use sample data and in-memory storage and require no cloud account, model or credentials. Both commands print JSON without writing files. Expected rejection diagnostics go to standard error; exit status 0 and passed assertions indicate a successful local run. These instructions do not claim the old kit tests the new candidate.
+Both historical libraries install from the kit’s own tarballs. Initial installation needs npm access for its pinned third-party dependencies unless cached. The examples use sample data and in-memory storage and require no cloud account, model or credentials. Both commands print JSON without writing files. Expected rejection diagnostics go to standard error; exit status 0 and passed assertions indicate a successful local run. These instructions do not claim the old kit tests the 1.0.0 libraries.
 
 The booking example runs actual FootPrint stages and in-memory SQLite, reporting acceptance, overlap rejection and cancellation through the pure evidence collector. Its `applied` effects describe actual row counts before the enclosing transaction commits. The overlap workflow completes normally while its business outcome is rejected.
 

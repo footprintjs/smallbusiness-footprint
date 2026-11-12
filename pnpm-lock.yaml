@@ -163,15 +163,15 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  footprint-blueprint: file:vendor/footprint-blueprint-1.0.0.tgz
+  footprint-blueprint: file:vendor/footprint-blueprint-1.0.0-release.tgz
 
 importers:
 
   .:
     dependencies:
       footprint-blueprint:
-        specifier: file:vendor/footprint-blueprint-1.0.0.tgz
-        version: file:vendor/footprint-blueprint-1.0.0.tgz(zod@4.6.5)
+        specifier: file:vendor/footprint-blueprint-1.0.0-release.tgz
+        version: file:vendor/footprint-blueprint-1.0.0-release.tgz(zod@4.6.5)
       footprintjs:
         specifier: 12.0.0
         version: 12.0.0(zod@4.6.5)
@@ -502,8 +502,8 @@ packages:
       picomatch:
         optional: true
 
-  footprint-blueprint@file:vendor/footprint-blueprint-1.0.0.tgz:
-    resolution: {integrity: sha512-HS/xFcDP45jnJYShgnzd12jrsZ19sXcNkUCHuFp8p9ijCbQ/7eQgInsuqzS+ag26suFp8BJXrbjDsw7grK+2MQ==, tarball: file:vendor/footprint-blueprint-1.0.0.tgz}
+  footprint-blueprint@file:vendor/footprint-blueprint-1.0.0-release.tgz:
+    resolution: {integrity: sha512-435xMhAS9cdEWDJyHALsJ+mqYhix43Q4XscxCUEH58rIlzzXIAOgyUbjyaCUpG2eInKKOI3lfHZi2r0AqgO/bg==, tarball: file:vendor/footprint-blueprint-1.0.0-release.tgz}
     version: 1.0.0
     engines: {node: '>=24.15.0 <25'}
 
@@ -937,7 +937,7 @@ snapshots:
     optionalDependencies:
       picomatch: 4.0.7
 
-  footprint-blueprint@file:vendor/footprint-blueprint-1.0.0.tgz(zod@4.6.5):
+  footprint-blueprint@file:vendor/footprint-blueprint-1.0.0-release.tgz(zod@4.6.5):
     dependencies:
       ajv: 8.20.0
       ajv-formats: 3.0.1
