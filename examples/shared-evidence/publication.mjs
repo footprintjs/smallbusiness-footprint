@@ -1,4 +1,4 @@
-/** Reduced Charming Cherubs boundary pattern, not the complete app workflow.
+/** Guarded publication example using generic host-owned ports.
  * Actual Blueprint/FootPrint actions + SMB typed port; storage is in memory.
  * Every calls link points to a real nested action invocation and its native trace.
  */
@@ -105,7 +105,7 @@ const tools = await outer.getAvailableActions(context);
 assert.equal(tools.length, 1); // Discoverable schema only; no MCP transport or agent starts.
 
 console.log(JSON.stringify({
-  example: 'Reduced Charming Cherubs pattern: actual Blueprint actions + SMB port + in-memory guarded publisher',
+  example: 'Guarded publication with Blueprint actions and a Smallbusiness port',
   assertions: 'passed',
   note: 'Committed is the authoritative in-memory port acknowledgement, not proof of durable database storage. A future caller uses the same schema and trusted authorization boundary; no agent is included.',
   discoveredTools: tools.map(tool => tool.name),
