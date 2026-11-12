@@ -1,10 +1,10 @@
-# 1.0.0 — FootPrint 12 adoption (unreleased)
+# 1.0.0 — 2026-11-12
 
 - Migration: require FootPrint 12.0.0 and Foottrace 1.15.0 on Node 24.15–24.x.
-- Migration: require Blueprint 1.0.0. The source checkout uses the reviewed Blueprint candidate archive for development; the public dependency stays a numeric version and must be published first.
+- Migration: require Blueprint 1.0.0. The source checkout uses the final reviewed Blueprint release archive for development; the public dependency stays a numeric version and must be published first.
 - Exercise saved commerce traces with the current native attempt decisions and partial-write associations through the shared Blueprint and Foottrace readers.
 - Retain the published 0.9.0 functionality and current source checks. Missing, incomplete or failed capture stays unknown; no capture defaults, provider policy or business acknowledgement changes.
-- Validate source candidates against the current source manifest, separately from the unchanged immutable publication approval. This change does not approve publication.
+- Validate source candidates against the current source manifest, separately from exact-byte publication approval.
 
 # 0.9.0 — expected-execution evidence
 
@@ -48,7 +48,7 @@ Local candidate only; no npm publication or deployment is performed by this chan
 - Keep private fault scripts, provider ledgers and test counters outside diagnostic evidence; preserve actual native attempt bindings, unknown write effects and separate diagnostic failures.
 - Keep application UI, translations, runtime provider wiring and durable storage outside this library. Existing checkout, shipping, publication and after-sales entry points remain unchanged.
 
-Published archives were verified against the reviewed release bytes and integrated into Gamma.
+Published archives were verified against the reviewed release bytes and adopted separately by an application.
 
 # 0.4.0 — 2026-10-16 (prepared; publication pending)
 
@@ -59,14 +59,14 @@ Published archives were verified against the reviewed release bytes and integrat
 
 Publication and final stable-package validation are pending.
 
-# 0.4.0-gamma.1 — private coordinated engine candidate
+# Private engine preparation — historical, unpublished
 
 - Preserve owner-approved cancellation, return and refund flows plus vendor-neutral shipping from the existing after-sales candidate.
-- Pin Blueprint 0.4.1-gamma.1 and FootprintJS 10.1.0-gamma.1.
+- Prepared coordinated framework and engine candidates with host-owned execution controls.
 - Add optional trusted engine controls for direct actions and after-sales runs, preserving defaults and authoritative provider/repository decisions.
 - Record actual engine runtime version alongside native after-sales traces.
 
-Local Gamma artifacts only; no npm publication.
+Historical local artifacts only; no npm publication.
 
 # 0.3.1-shipping.1 (local candidate)
 
@@ -106,6 +106,6 @@ Runtime source is unchanged from local 0.2.3. The existing metadata-only browser
 - Added authoritative checkout, inventory and publication ports, captured guards, private request storage and safe recorded summaries.
 - Allowed additional profile and module definitions while validating their dependencies.
 
-Direct Blueprint actions expose shared execution evidence. SMB recorded service flows retain their separate native-recording result; they do not automatically supply common observation/effect receipts. Charming Cherubs reports shared evidence at its explicit application publication boundary.
+Direct Blueprint actions expose shared execution evidence. SMB recorded service flows retain their separate native-recording result; they do not automatically supply common observation/effect receipts. A host reports shared evidence at its explicit application publication boundary.
 
 Hosts continue to own storage transactions, payment/email providers, idempotency and durable recovery. See [the integration guide](docs/INTEGRATION.md) for migration from 0.1.

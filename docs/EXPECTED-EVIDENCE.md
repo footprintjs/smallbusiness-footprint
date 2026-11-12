@@ -10,4 +10,4 @@ Branch, loop and nested-flow coverage needs actual stable scope bindings and ret
 
 The expected-work inventory stays separate from the actual cause graph. Preserve unknown payment or refund outcomes and use the existing provider reconciliation workflow. The optional investigator may explain recorded findings and gaps, but cannot fill those gaps by guessing or approve a financial action.
 
-The Charming Cherubs host adds safe descriptions and renders this separate coverage panel in its admin view. Other brands supply their own descriptions, policies, storage and provider adapters. No model is needed for coverage classification.
+A host adds safe descriptions and renders this separate coverage panel in its admin view. Other brands supply their own descriptions, policies, storage and provider adapters. No model is needed for coverage classification.

@@ -1,4 +1,4 @@
-# Integrating smallbusiness-footprint 1.0.0 source candidate
+# Integrating smallbusiness-footprint 1.0.0
 
 ## Package migration
 
