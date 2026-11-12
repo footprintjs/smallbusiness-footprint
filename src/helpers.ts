@@ -164,11 +164,13 @@ export function createPlatformForRequest(opts: BusinessDefinitions & {
   operations?: BusinessOperations;
   providers?: BusinessProviders;
   executionOptions?: import('footprint-blueprint/actions').ActionExecutorOptions['executionOptions'];
+  recordSink?: import('footprint-blueprint/actions').ActionExecutorOptions['recordSink'];
+  recordSinkFlushTimeoutMs?: import('footprint-blueprint/actions').ActionExecutorOptions['recordSinkFlushTimeoutMs'];
 }): { platform: BusinessPlatform; ctx: TenantContext } {
   const profileStore = createMemoryProfileStore([
     { tenantId: opts.tenantId, unitId: opts.unitId, revision: 1, profileType: opts.businessType, createdAt: new Date().toISOString() },
   ]);
-  const platform = createBusinessPlatform({ profileStore, repository: opts.repository, scope: { tenantId: opts.tenantId, unitId: opts.unitId }, authorizer: opts.authorizer, operations: opts.operations, providers: opts.providers, profiles: opts.profiles, modules: opts.modules, executionOptions: opts.executionOptions });
+  const platform = createBusinessPlatform({ profileStore, repository: opts.repository, scope: { tenantId: opts.tenantId, unitId: opts.unitId }, authorizer: opts.authorizer, operations: opts.operations, providers: opts.providers, profiles: opts.profiles, modules: opts.modules, executionOptions: opts.executionOptions, recordSink: opts.recordSink, recordSinkFlushTimeoutMs: opts.recordSinkFlushTimeoutMs });
   const ctx = createTenantContext({
     tenantId: opts.tenantId,
     unitId: opts.unitId,

@@ -2,7 +2,7 @@
 
 The release kit includes a small booking example and a Charming Cherubs publication example. They teach the application integration patterns with local fixtures, rather than requiring the full applications or their hosting infrastructure.
 
-The two local candidates, `footprint-blueprint@0.5.0` and optional `smallbusiness-footprint@0.5.0`, are prepared for review; publication is pending. Use Node 24.15–24.x and npm. Extract the release kit, then run from its root:
+The 0.9.0 release kit contains reviewed `footprint-blueprint@0.9.0` and optional `smallbusiness-footprint@0.9.0` archives. Use Node 24.15–24.x and npm. Extract the release kit, then run from its root:
 
 ```sh
 cd quickstart
@@ -34,7 +34,7 @@ The reduced quickstart is not the complete booking app or Charming Cherubs deplo
 
 No agent is included. A future client can reuse an authenticated application action boundary and inspect recorded outcomes; the host remains responsible for transport, permissions, transactions and recovery.
 
-The sibling Blueprint repository contains the release runbook in `docs/RELEASE.md`; use its copy included in the release kit. The preparation branch is local until the reviewed source is pushed and artifacts are published.
+The sibling Blueprint repository contains the release runbook in `docs/RELEASE.md`; use its copy included in the release kit. Local quickstart results do not establish registry publication or application deployment; verify those separately against the release receipt.
 
 ## Source CI and release approval
 

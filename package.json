@@ -1,6 +1,6 @@
 {
   "name": "smallbusiness-footprint",
-  "version": "0.5.0",
+  "version": "0.9.0",
   "description": "TypeScript commerce workflows and business profiles on Blueprint: scoped actions, shipping, after-sales and retained operation evidence.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -14,9 +14,10 @@
     "quickstart:publication": "node examples/shared-evidence/publication.mjs"
   },
   "dependencies": {
-    "footprint-blueprint": "0.5.0",
+    "footprint-blueprint": "^0.9.0",
     "footprintjs": "10.1.0",
-    "zod": "4.6.5"
+    "zod": "4.6.5",
+    "foottrace": "1.4.0"
   },
   "devDependencies": {
     "@types/node": "24.19.2",
@@ -69,6 +70,11 @@
       "types": "./dist/diagnostics.d.ts",
       "import": "./dist/diagnostics.js",
       "default": "./dist/diagnostics.js"
+    },
+    "./diagnostics/runtime": {
+      "types": "./dist/diagnostics/runtime.d.ts",
+      "import": "./dist/diagnostics/runtime.js",
+      "default": "./dist/diagnostics/runtime.js"
     },
     "./testing": {
       "types": "./dist/testing.d.ts",

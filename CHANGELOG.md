@@ -1,11 +1,46 @@
-# 0.5.0 — local candidate; not published
+# 0.9.0 — expected-execution evidence
+
+- Adopt the reviewed Blueprint 0.9 compatibility range for expected-execution coverage alongside recorded cause evidence.
+- Document how a host describes expected commerce work and reports missing execution proof without claiming a cancellation, refund or shipment succeeded or failed.
+- Keep checkout, after-sales, stock and publication decisions unchanged. This release adds no provider calls, retries, LLM requests or automatic actions.
+
+Prepared 2026-10-18. Publication, registry-byte verification and application deployment are separate release steps.
+
+# 0.8.0 — local connected-cause candidate; not published
+
+- Use exact Foottrace 1.4.0 and the reviewed Blueprint 0.8 compatibility range.
+- Capture real per-write read provenance and optional Blueprint control/attention facts beside redacted after-sales and composed-service snapshots.
+- Isolate missing diagnostic capture from authoritative acknowledgements; preserve payment, stock and publication decisions.
+
+Local immutable artifacts only; public npm release tooling and publication are separate.
+
+# 0.7.0 — local connected-record candidate; not published
+
+- Add optional per-execution `recordSink` and bounded `recordSinkFlushTimeoutMs` host hooks to after-sales, using the native Foottrace port with no storage/provider dependency.
+- Generate an independent diagnostic UUID per execution; return an optional trace locator and factual flush result without replacing native addresses or claiming durable storage.
+- Use report/manual native recording and bounded final drain so a diagnostic factory, entry write or flush failure cannot reverse or retry an acknowledged refund.
+- Keep raw diagnostic adapter error text redacted and preserve actual native sink loss accounting. An interrupted stored prefix stays visibly incomplete.
+
+Local candidate only; no npm publication or deployment is performed by this change.
+
+# 0.6.0 — local provider-evidence candidate; not published
+
+- Add the explicit `smallbusiness-footprint/diagnostics/runtime` entry with `createCommerceBoundaryRecorder`, a thin wrapper over Blueprint's native recorder. Hosts retain their own vendors, storage, retries and reconciliation decisions.
+- Classify bounded database/transport and payment SDK metadata without copying raw errors, inventing HTTP statuses or claiming an upstream outage. Actual numeric status and explicit trusted host policy take precedence.
+- Add 12 opt-in local SDK-double scenarios using the actual runtime collector; preserve all 27 existing commerce scenarios. Distinguish logical SDK calls from observed transport attempts, retain unknown write outcomes, and disclose late/partial evidence.
+- Add the optional after-sales `withBoundaryScope` host hook and `boundaryDiagnostics` trace sidecar, with isolated per-run collectors and unchanged default behavior.
+- Keep private payloads, provider operation keys and test counters outside stored diagnosis inputs. No model, vendor SDK or network dependency is added.
+
+Local candidate only; no npm publication or deployment is performed by this change.
+
+# 0.5.0 — published 2026-10-16
 
 - Extract 27 local real-FootprintJS commerce failure scenarios into the explicit `smallbusiness-footprint/testing` entry, with typed paired storage ports and immutable scenario metadata.
 - Add the vendor-SDK-free `smallbusiness-footprint/diagnostics` commerce adapter normalization wrapper over Blueprint 0.5 diagnostics.
 - Keep private fault scripts, provider ledgers and test counters outside diagnostic evidence; preserve actual native attempt bindings, unknown write effects and separate diagnostic failures.
 - Keep application UI, translations, runtime provider wiring and durable storage outside this library. Existing checkout, shipping, publication and after-sales entry points remain unchanged.
 
-Local candidate only; npm publication and Gamma deployment are not part of this change.
+Published archives were verified against the reviewed release bytes and integrated into Gamma.
 
 # 0.4.0 — 2026-10-16 (prepared; publication pending)
 

@@ -1,10 +1,10 @@
-# Integrating smallbusiness-footprint 0.5.0
+# Integrating smallbusiness-footprint 0.9.0
 
 ## Package migration
 
-This 0.5.0 candidate uses one exact `footprint-blueprint@0.5.0` dependency instead of the former six `@footprint/*` packages. Replace modern framework imports with `footprint-blueprint/features`, `/tenancy`, `/adapters`, `/seed`, `/actions` or `/platform`; use `/evidence` for the pure receipt collector. The root convenience entry loads Platform's framework graph. Static subpaths select entry graphs, while dynamic imports defer loading until called. Installation still downloads all declared dependencies.
+Version 0.9.0 uses the reviewed portable `footprint-blueprint@^0.9.0` dependency instead of the former six `@footprint/*` packages. Replace modern framework imports with `footprint-blueprint/features`, `/tenancy`, `/adapters`, `/seed`, `/actions` or `/platform`; use `/evidence` for the pure receipt collector. The root convenience entry loads Platform's framework graph. Static subpaths select entry graphs, while dynamic imports defer loading until called. Installation still downloads all declared dependencies.
 
-The commerce main entry remains backend-oriented. The `/metadata` entry supplies browser declarations without loading the execution runtime. `footprintjs@10.1.0` remains separate and pinned. Use Node 24.15–24.x. This prepared candidate has not yet been published; install the reviewed tarballs using [the quickstart](QUICKSTART.md). These import changes do not automatically migrate the older Node 22 school/booking APIs.
+The commerce main entry remains backend-oriented. The `/metadata` entry supplies browser declarations without loading the execution runtime. `footprintjs@10.1.0` and `foottrace@1.4.0` remain separate and pinned. Use Node 24.15–24.x. Install the reviewed tarballs using [the quickstart](QUICKSTART.md), or use the matching npm versions after registry publication has been verified. These import changes do not automatically migrate the older Node 22 school/booking APIs.
 
 ## Configuration and brands
 
@@ -44,6 +44,8 @@ Each SDK run has its own executor and private request reference. Shipping, email
 
 SDK checkpoint APIs do not by themselves create a queue, cross-process lock or durable recovery worker. Persist checkpoints and continuation claims only when a host has implemented those mechanisms; the default service runtime is per-request memory.
 
+For raw database/payment/shipping boundary evidence, opt into [the commerce runtime recorder](PROVIDER-EVIDENCE.md). Its logical calls and adapter-reported transport observations bind the actual executor's native attempts. It neither replaces the application's existing stored trace nor infers a payment result from a successful reconciliation read.
+
 ## Breaking changes from 0.1
 
 - FootprintJS10, ESM/NodeNext and Node24 replace the old SDK4 demo runtime.
@@ -54,3 +56,5 @@ SDK checkpoint APIs do not by themselves create a queue, cross-process lock or d
 - Fake Stripe, scheduler, campaign-send and weak inventory fallback implementations have been removed. Configure authoritative application ports or leave those actions unavailable.
 
 All library tests use local fixtures and real SDK execution. They perform no real payment, email, cloud deployment or database migration. Atomicity and crash/retry guarantees require the host adapter's own integration tests.
+
+For declared expected execution and honest missing-evidence handling, see [Expected commerce evidence](EXPECTED-EVIDENCE.md).
