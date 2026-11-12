@@ -66,6 +66,16 @@ When the hook is installed, `AfterSalesTrace.boundaryDiagnostics` supplies the s
 
 A write timeout, cancellation or ambiguous provider failure remains `unknown`; do not blindly issue the payment again. Query the provider through an independent, idempotent read using the original operation identity. A successful read transport says the query completed, not that a charge was applied. An authoritative domain payment receipt is a separate business fact; the collector never rewrites the original uncertain physical attempt. The host still owns settlement, stock reservations, refunds and recovery.
 
+## Native engine and backward-reader adoption
+
+This library uses FootPrint 12.0.0 and Foottrace 1.15.0 through Blueprint's diagnostic readers. It keeps the engine's native run, stage and attempt identities; it does not rename an attempt reason or reconstruct a missing event. A successful business acknowledgement and the completeness of its diagnostic record remain separate facts.
+
+`executeServiceFlow` keeps summary read/write retention and full commit encoding. Summary retention records keys with value summaries; it does not become full-value capture after a dependency upgrade. The existing per-write read prefixes describe reads that occurred before a write, not proof that a JavaScript expression used them. Foottrace can also follow a value built on an earlier write, such as a merge that adds a field without replacing the existing fields. That link describes the recorded write's construction, not a read by the stage's code.
+
+The library returns the snapshot shape the native executor supplies. Foottrace's support for list-form execution records does not imply that every native runtime snapshot uses that form, and this library does not convert one form into another.
+
+This adoption does not turn on exact read-source capture, capture extents, closed failed-prefix capture or durable storage acknowledgements. No new public capture policy is added. The existing native sink and manual flush remain optional observation ports; an attached sink or successful flush is not a durable receipt. A missing capture, an unrecorded failed invocation, a partial record or an unsupported record stays uncertain. An upgrade cannot add evidence to an older saved run.
+
 ## Local validation
 
 ```js

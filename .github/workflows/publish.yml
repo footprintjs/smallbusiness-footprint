@@ -43,7 +43,7 @@ jobs:
         run: |
           npm run typecheck
           npm run build
-          npm test
+          npm test -- --maxWorkers=4
       - name: Run all seven synthetic quickstart scenarios
         run: |
           npm run quickstart:booking
@@ -52,7 +52,7 @@ jobs:
         run: |
           mkdir -p release
           npm pack --ignore-scripts --pack-destination release
-          mv release/smallbusiness-footprint-0.9.0.tgz release/package.tgz
+          mv release/smallbusiness-footprint-1.0.0.tgz release/package.tgz
           node scripts/release/check-candidate.mjs release/package.tgz
           git diff --exit-code
       - name: Verify immutable review approval before an explicit publication

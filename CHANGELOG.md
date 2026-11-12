@@ -1,3 +1,11 @@
+# 1.0.0 — FootPrint 12 adoption (unreleased)
+
+- Migration: require FootPrint 12.0.0 and Foottrace 1.15.0 on Node 24.15–24.x.
+- Migration: require Blueprint 1.0.0. The source checkout uses the reviewed Blueprint candidate archive for development; the public dependency stays a numeric version and must be published first.
+- Exercise saved commerce traces with the current native attempt decisions and partial-write associations through the shared Blueprint and Foottrace readers.
+- Retain the published 0.9.0 functionality and current source checks. Missing, incomplete or failed capture stays unknown; no capture defaults, provider policy or business acknowledgement changes.
+- Validate source candidates against the current source manifest, separately from the unchanged immutable publication approval. This change does not approve publication.
+
 # 0.9.0 — expected-execution evidence
 
 - Adopt the reviewed Blueprint 0.9 compatibility range for expected-execution coverage alongside recorded cause evidence.

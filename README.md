@@ -1,16 +1,16 @@
-# smallbusiness-footprint 0.9.0
+# smallbusiness-footprint
 
 For backend developers connecting configurable commerce workflows to their own storage and authoritative providers.
 
 [Release-kit quickstart](docs/QUICKSTART.md) · [Integration contracts](docs/INTEGRATION.md) · [Guarantees and ownership](#guarantees-and-ownership)
 
-`smallbusiness-footprint@0.9.0` uses Blueprint `^0.9.0`, FootprintJS 10.1.0, Foottrace 1.4.0 and Zod on Node 24.15–24.x. It adopts Blueprint's optional expected-execution coverage beside genuine commerce records; [descriptions and missing evidence](docs/EXPECTED-EVIDENCE.md) remain separate from provider outcomes and causal proof. Optional host-owned native record sinks, reads-prefix provenance and shared reference-only cause capture remain available. Missing capture stays unknown and never reverses an acknowledged operation. Existing checkout, shipping, after-sales, privacy and authoritative-provider boundaries remain in place. Publication and deployment are verified separately from a source build.
+**Unreleased 1.0.0 source candidate:** requires `footprint-blueprint@1.0.0`, `footprintjs@12.0.0`, `foottrace@1.15.0` and Zod on Node 24.15–24.x. Published 0.9.0 workflows and optional evidence features are retained. Missing capture stays unknown and never reverses an acknowledged operation. See the [migration notes](docs/MIGRATION-1.0.md). Blueprint must be published before this package; source checks do not authorize either publication.
 
 SMB is optional. Framework-only applications use Blueprint directly; commerce consumers can install SMB and its declared dependencies are installed automatically. Within Blueprint, focused subpaths select runtime entry graphs and dynamic `import()` provides loading on demand. Ordinary dependency downloads still occur at package installation.
 
-Use the [release-kit quickstart](docs/QUICKSTART.md) to run reduced booking and Charming Cherubs publication examples from included tarballs. See the [changelog](CHANGELOG.md) for the packaging migration.
+Use the [release-kit quickstart](docs/QUICKSTART.md) to run reduced booking and publication examples from included tarballs. See the [changelog](CHANGELOG.md) for the packaging migration.
 
-A commerce configuration and operation library built on footprint-blueprint and FootprintJS 10. It supplies seven modules, two example business profiles, terminology, strict action schemas, scoped execution and recorded operation charts. Applications supply storage and authoritative business implementations.
+A commerce configuration and operation library built on footprint-blueprint and FootPrint 12. It supplies seven modules, two example business profiles, terminology, strict action schemas, scoped execution and recorded operation charts. Applications supply storage and authoritative business implementations.
 
 Use `smallbusiness-footprint/metadata` in a browser to consume profiles, modules, capabilities and action declarations without importing the Node runtime or Footprint executor. Use the main entry point for backend execution.
 
@@ -69,7 +69,7 @@ For migration and provider contracts, see [docs/INTEGRATION.md](docs/INTEGRATION
 
 ## Shared receipt boundary
 
-Direct `executeAction` calls use Blueprint and can return shared execution evidence. Recorded `executeServiceFlow` calls retain their own SDK snapshot/manifest/narrative path and do not automatically supply common observation/effect receipts. Charming Cherubs reports explicit shared facts at its application `createPlatform` publication boundary while keeping its original publication workflow recording. Applications choose safe reported fields and remain responsible for authoritative transactions and receipt storage.
+Direct `executeAction` calls use Blueprint and can return shared execution evidence. Recorded `executeServiceFlow` calls retain their own SDK snapshot/manifest/narrative path and do not automatically supply common observation/effect receipts. A host may report explicit shared facts at its application `createPlatform` publication boundary while keeping its original publication workflow recording. Applications choose safe reported fields and remain responsible for authoritative transactions and receipt storage.
 
 ## Shipping adapter extension candidate
 
@@ -77,7 +77,7 @@ Version 0.4.0 adds a browser-safe `smallbusiness-footprint/shipping` API. See [b
 
 ## Owner-approved after-sales
 
-`smallbusiness-footprint/aftersales` is a browser-safe contract/policy entry. `smallbusiness-footprint/aftersales/runtime` exports `createAfterSalesService` for backend execution. It uses real FootprintJS 10 charts, without a payment vendor or application import.
+`smallbusiness-footprint/aftersales` is a browser-safe contract/policy entry. `smallbusiness-footprint/aftersales/runtime` exports `createAfterSalesService` for backend execution. It uses real FootPrint 12 charts, without a payment vendor or application import.
 
 The default policy allows cancellation before a shipping/label claim wins, and returns within 30 days of recorded delivery with unworn condition and tags confirmed. `validateAfterSalesPolicy()` validates configurable per-store windows, requirements and enabled flags. Every case snapshots its policy; changing shop settings does not rewrite existing cases. Owner approval is always required. Return approval authorizes return shipment only: receipt and accepted inspection must precede a refund.
 
