@@ -29,7 +29,7 @@ export type BusinessPlatform = Platform & {
 };
 /** Omitted arrays use the built-in presets. Supplied arrays replace them; spread defaults to extend. */
 export type BusinessDefinitions = { readonly modules?: readonly ModuleDefinition[]; readonly profiles?: readonly ProfileDefinition[] };
-export type BusinessPlatformConfig = BusinessDefinitions & { profileStore: ProfileStore; repository?: BusinessRepository; scope?: BusinessScope; overrideStore?: UnitOverrideStore; providers?: BusinessProviders; operations?: BusinessOperations; authorizer?: ActionAuthorizer; flowRegistry?: ActionFlowRegistry; includeResponse?: boolean; traceRecorder?: TraceRecorder; onTraceError?: (error: unknown) => void; executionOptions?: ActionExecutorOptions['executionOptions'] };
+export type BusinessPlatformConfig = BusinessDefinitions & { profileStore: ProfileStore; repository?: BusinessRepository; scope?: BusinessScope; overrideStore?: UnitOverrideStore; providers?: BusinessProviders; operations?: BusinessOperations; authorizer?: ActionAuthorizer; flowRegistry?: ActionFlowRegistry; includeResponse?: boolean; traceRecorder?: TraceRecorder; onTraceError?: (error: unknown) => void; executionOptions?: ActionExecutorOptions['executionOptions']; recordSink?: ActionExecutorOptions['recordSink']; recordSinkFlushTimeoutMs?: ActionExecutorOptions['recordSinkFlushTimeoutMs'] };
 export function createBusinessPlatform(config: BusinessPlatformConfig): BusinessPlatform {
   const scope = config.scope ? Object.freeze({ ...config.scope }) : undefined;
   const registry = createModuleRegistry({ modules: config.modules ?? allBusinessModules, profileTypes: config.profiles ?? allBusinessProfiles });
@@ -75,7 +75,7 @@ export function createBusinessPlatform(config: BusinessPlatformConfig): Business
       return { ...binding, revision: binding.revision + override.revision, moduleOverrides: [...enabled].sort() };
     },
   };
-  const basePlatform = createPlatform({ registry, profileStore, actionRegistry: createActionRegistry({ actions: [...allBusinessActions] }), handlers, authorizer: config.authorizer ?? (() => false), traceRecorder: config.traceRecorder, onTraceError: config.onTraceError, executionOptions: config.executionOptions });
+  const basePlatform = createPlatform({ registry, profileStore, actionRegistry: createActionRegistry({ actions: [...allBusinessActions] }), handlers, authorizer: config.authorizer ?? (() => false), traceRecorder: config.traceRecorder, onTraceError: config.onTraceError, executionOptions: config.executionOptions, recordSink: config.recordSink, recordSinkFlushTimeoutMs: config.recordSinkFlushTimeoutMs });
   const serviceRegistry = createBusinessServiceRegistry(config.repository, {
     scope: scope, providers: config.providers, operations: config.operations, flowRegistry: config.flowRegistry, includeResponse: config.includeResponse, termsForType,
     prepare: async (actionId, input, context) => {

@@ -20,6 +20,12 @@ describe('commerce adapter classification', () => {
     expect(normalizeCommerceBoundaryError(failure, { ...options, system: 'payment' }).category).toBe('permanent');
     expect(normalizeCommerceBoundaryError(failure, { ...options, system: 'shipping' }).category).toBe('permanent');
   });
+  it.each(['configuration', 'storage', 'email'])('recognizes modeled cloud errors for the %s adapter without changing HTTP400', system => {
+    expect(normalizeCommerceBoundaryError({ name: 'AccessDeniedException', $metadata: { httpStatusCode: 400 } }, { ...options, system }))
+      .toMatchObject({ category: 'auth', httpStatus: 400 });
+    expect(normalizeCommerceBoundaryError({ name: 'ThrottlingException', $metadata: { httpStatusCode: 400 } }, { ...options, system }))
+      .toMatchObject({ category: 'rate-limited', httpStatus: 400 });
+  });
   it('preserves numeric precedence, rejects status strings and does not infer a committed write', () => {
     expect(normalizeCommerceBoundaryError({ status: 500, $metadata: { httpStatusCode: 400 } }, { ...options, effect: 'write' }))
       .toMatchObject({ category: 'server', httpStatus: 500, effect: 'unknown' });
@@ -45,6 +51,56 @@ describe('commerce adapter classification', () => {
     });
     expect(result.category).toBe('rate-limited');
     expect(fieldsSeen).toEqual([{ name: 'CustomOverload', httpStatus: 400 }]); expect(Object.isFrozen(fieldsSeen[0])).toBe(true);
+  });
+  it.each([
+    ['StripeAuthenticationError', 'auth'], ['StripePermissionError', 'auth'], ['StripeRateLimitError', 'rate-limited'],
+    ['StripeConnectionError', 'network'], ['StripeInvalidRequestError', 'permanent'], ['StripeAPIError', 'server'],
+  ])('classifies recorded payment SDK type %s without inventing an HTTP response', (type, category) => {
+    const result = normalizeCommerceBoundaryError({ type, message: 'PRIVATE', raw: { payload: 'PRIVATE' } }, { ...options, system: 'payment', effect: 'write' });
+    expect(result).toMatchObject({ category, effect: 'unknown' }); expect(result.httpStatus).toBeUndefined();
+    expect(JSON.stringify(result)).not.toContain('PRIVATE');
+    expect(normalizeCommerceBoundaryError({ type }, { ...options, system: 'shipping' }).category).toBe('unknown');
+  });
+  it('preserves numeric response precedence and custom vendor policies over SDK type hints', () => {
+    expect(normalizeCommerceBoundaryError({ type: 'StripeAuthenticationError', statusCode: 503 }, { ...options, system: 'payment' }))
+      .toMatchObject({ category: 'server', httpStatus: 503 });
+    expect(normalizeCommerceBoundaryError({ type: 'StripeAPIError' }, { ...options, system: 'payment', classify: () => 'rate-limited' }))
+      .toMatchObject({ category: 'rate-limited' });
+    expect(normalizeCommerceBoundaryError({ type: 'constructor' }, { ...options, system: 'payment' }).category).toBe('unknown');
+  });
+  it.each([
+    [{ code: 'ECONNREFUSED' }, 'network'], [{ cause: { code: 'ECONNRESET' } }, 'network'],
+    [{ cause: { code: 'EAI_AGAIN' } }, 'network'], [{ cause: { code: 'ETIMEDOUT' } }, 'timeout'],
+    [{ name: 'TimeoutError' }, 'timeout'], [{ name: 'NetworkingError' }, 'network'],
+  ])('classifies only recorded transport data %j', (failure, category) => {
+    const result = normalizeCommerceBoundaryError(failure, options);
+    expect(result).toMatchObject({ category, effect: 'none' }); expect(result.httpStatus).toBeUndefined();
+  });
+  it('does not turn caller cancellation or numeric rejection into an old nested transport failure', () => {
+    expect(normalizeCommerceBoundaryError({ name: 'AbortError', cause: { code: 'ETIMEDOUT' } }, options).category).toBe('unknown');
+    expect(normalizeCommerceBoundaryError({ status: 401, cause: { code: 'ECONNRESET' } }, options))
+      .toMatchObject({ category: 'auth', httpStatus: 401 });
+  });
+  it.each([
+    [200, 'ECONNRESET', 'network'], [200, 'ETIMEDOUT', 'timeout'], [302, 'ECONNRESET', 'network'],
+    [401, 'ECONNRESET', 'auth'], [429, 'ETIMEDOUT', 'rate-limited'], [503, 'ECONNRESET', 'server'],
+  ])('classifies body transport failure after HTTP%s without discarding recorded rejecting responses', (httpStatus, code, category) => {
+    const result = normalizeCommerceBoundaryError({ status: httpStatus, cause: { code }, message: 'PRIVATE BODY' },
+      { ...options, system: 'payment', effect: 'write' });
+    expect(result).toMatchObject({ category, httpStatus, effect: 'unknown' });
+    expect(JSON.stringify(result)).not.toContain('PRIVATE');
+  });
+  it('never reads SDK type or nested cause getters and never copies a provider request reference', () => {
+    let reads = 0;
+    const failure = Object.defineProperties({}, {
+      type: { get() { reads++; throw new Error('PRIVATE'); } },
+      cause: { get() { reads++; throw new Error('PRIVATE'); } },
+    });
+    const result = normalizeCommerceBoundaryError(failure, { ...options, system: 'payment' });
+    expect(result.category).toBe('unknown'); expect(reads).toBe(0);
+    const nested = Object.defineProperty({}, 'code', { get() { reads++; throw new Error('PRIVATE'); } });
+    expect(normalizeCommerceBoundaryError({ cause: nested, requestId: 'PRIVATE' }, options).category).toBe('unknown');
+    expect(reads).toBe(0); expect(JSON.stringify(result)).not.toContain('PRIVATE');
   });
 });
 

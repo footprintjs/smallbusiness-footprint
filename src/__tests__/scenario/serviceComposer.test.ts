@@ -6,6 +6,14 @@ import { createBusinessOperationFlow } from '../../flows/shared/businessFlow.js'
 import { createFixturePlatform, createMockRepository, fixtureContext, fixtureScope } from '../helpers.js';
 
 describe('real SDK10 business service composition', () => {
+  it('retains real per-write capture beside the authoritative business acknowledgement', async () => {
+    const platform = createFixturePlatform();
+    const result = await platform.executeServiceFlow(fixtureContext, 'create-product', { name: 'Dress', basePrice: 20 });
+    expect(result.status).toBe('success');
+    expect(result.executionSnapshot).toMatchObject({ writeProvenance: 'reads-prefix' });
+    expect((result as typeof result & { causeCapture?: unknown }).causeCapture).toMatchObject({ version: 1, ruleVersion: 'recorded-facts-v1' });
+  });
+
   it('describes all twelve configurable action charts', () => {
     const registry = createBusinessServiceRegistry(undefined);
     expect(getRegisteredActionIds()).toHaveLength(12); expect(registry.describeAllServices()).toHaveLength(12);

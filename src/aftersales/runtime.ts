@@ -1,6 +1,10 @@
-import { flowChart, FlowChartExecutor, decide, type TypedScope } from 'footprintjs';
+import { flowChart, FlowChartExecutor, decide, type TypedScope, type RecordFlushResult } from 'footprintjs';
+import type { RecordSink } from 'foottrace/write';
+import { createCauseCapture } from 'footprint-blueprint/diagnostics/cause';
 import { footprintRuntimeVersion } from '../runtimeVersion.js';
 import { captureExecutionRunOptions, type ExecutionRunOptions } from 'footprint-blueprint/actions';
+import type { BoundaryOperation, BoundaryCallContext } from 'footprint-blueprint/diagnostics/runtime';
+import { createCommerceBoundaryRecorder } from '../diagnostics/runtime.js';
 import {
   AfterSalesError, DEFAULT_AFTER_SALES_POLICY, validateAfterSalesPolicy,
   type AfterSalesAction, type AfterSalesCase, type AfterSalesContext, type AfterSalesItems, type AfterSalesOrder,
@@ -71,18 +75,41 @@ const sameRequest = (record: AfterSalesCase, command: AfterSalesRequest) => reco
   && JSON.stringify([...record.items].sort((a, b) => a.lineId.localeCompare(b.lineId))) === JSON.stringify(command.items)
   && record.reason === command.reason && (command.kind !== 'return' || record.condition?.unworn === !!command.unworn && record.condition.tagsAttached === !!command.tagsAttached);
 
+export interface AfterSalesBoundaryPort {
+  run<T>(operation: BoundaryOperation, work: (context: BoundaryCallContext) => Promise<T>): Promise<T>;
+}
 export type AfterSalesDependencies = {
   storeId: string; repository: AfterSalesRepository; payments: AfterSalesPayments; policy?: AfterSalesPolicy;
   authorizer: (action: 'request' | AfterSalesAction['action'], context: AfterSalesContext, resource: { orderId?: string; caseId?: string }) => boolean | Promise<boolean>;
   now?: () => string; generateId?: () => string; onTrace?: (trace: AfterSalesTrace) => void | Promise<void>;
   /** Trusted host controls. No budget or retry policy is invented by this domain library. */
   executionOptions?: (request: Readonly<{ flowId: AfterSalesTrace['flowId'] }>) => ExecutionRunOptions | undefined;
+  /** Optional host-owned request context; each stage gets a port bound to its real native executor scope. */
+  withBoundaryScope?: (port: AfterSalesBoundaryPort, work: () => Promise<void>) => Promise<void>;
+  /** Optional host storage port. The fresh diagnostic recordId is independent of all business identifiers.
+   * Undefined disables recording for this execution. Factory/adapter failures never change a business result.
+   * After-sales always uses report/manual mode and a bounded final flush; the host owns durable acknowledgements.
+   */
+  recordSink?: (request: Readonly<{ flowId: AfterSalesTrace['flowId']; recordId: string }>) => RecordSink | undefined;
+  /** Final diagnostic drain only, 0–2000 ms (default 250). It does not cap or cancel a provider/business call. */
+  recordSinkFlushTimeoutMs?: number;
 };
+
+/** Consume an accidentally asynchronous trusted factory without reading arbitrary thenable properties. */
+function consumeNativePromise(value: unknown): boolean {
+  if (value === null || typeof value !== 'object') return false;
+  try { Promise.prototype.then.call(value, () => undefined, () => undefined); return true; }
+  catch { return false; }
+}
 
 /** Real FootprintJS charts; all private command, provider and repository data stays in request-local closures. */
 export function createAfterSalesService(deps: AfterSalesDependencies) {
   const { repository, payments } = deps;
-  if (!identifier(deps.storeId) || typeof deps.authorizer !== 'function' || !repository || !payments) invalid();
+  if (!identifier(deps.storeId) || typeof deps.authorizer !== 'function' || !repository || !payments
+    || deps.withBoundaryScope !== undefined && typeof deps.withBoundaryScope !== 'function'
+    || deps.recordSink !== undefined && typeof deps.recordSink !== 'function'
+    || deps.recordSinkFlushTimeoutMs !== undefined && (!integer(deps.recordSinkFlushTimeoutMs) || deps.recordSinkFlushTimeoutMs > 2000)) invalid();
+  const recordSink = deps.recordSink, recordSinkFlushTimeoutMs = deps.recordSinkFlushTimeoutMs ?? 250;
   const policy = validateAfterSalesPolicy(deps.policy ?? DEFAULT_AFTER_SALES_POLICY);
   const now = () => { const value = (deps.now ?? (() => new Date().toISOString()))(); if (!Number.isFinite(Date.parse(value))) invalid(); return value; };
   const generateId = deps.generateId ?? (() => globalThis.crypto.randomUUID());
@@ -110,10 +137,18 @@ export function createAfterSalesService(deps: AfterSalesDependencies) {
   };
   async function execute(flowId: AfterSalesTrace['flowId'], handlers: { name: string; run: () => Promise<void> }[], decisions: string[], route?: () => AfterSalesAction['action']) {
     const stages: string[] = [];
+    const boundaries = deps.withBoundaryScope ? createCommerceBoundaryRecorder() : undefined;
     type SafeTraceState = { phase: string; decisions: string[]; action?: string };
     const wrap = (name: string, handler: () => Promise<void>) => async (scope: TypedScope<SafeTraceState>) => {
       scope.phase = name;
-      try { await handler(); } catch (error) { throw safeFailure(error); }
+      try {
+        if (boundaries && deps.withBoundaryScope) {
+          const port: AfterSalesBoundaryPort = Object.freeze({
+            run: <T>(operation: BoundaryOperation, work: (context: BoundaryCallContext) => Promise<T>) => boundaries.run(scope, operation, work),
+          });
+          await deps.withBoundaryScope(port, handler);
+        } else await handler();
+      } catch (error) { throw safeFailure(error); }
       finally { scope.decisions = [...decisions]; }
     };
     let builder = flowChart<SafeTraceState>(handlers[0].name, wrap(handlers[0].name, handlers[0].run), handlers[0].name);
@@ -128,17 +163,50 @@ export function createAfterSalesService(deps: AfterSalesDependencies) {
       builder = branch.end();
     }
     const chart = builder.build();
-    const executor = new FlowChartExecutor(chart);
+    const causeCapture = createCauseCapture();
+    // A diagnostic factory gets no command, case, payment or customer data. A separate UUID also prevents
+    // retries of the same business command from accidentally overwriting an earlier execution's prefix.
+    let recording: AfterSalesTrace['recording'];
+    let executor: FlowChartExecutor;
+    if (recordSink) {
+      const recordId = globalThis.crypto.randomUUID();
+      try {
+        const adapter = recordSink(Object.freeze({ flowId, recordId }));
+        if (consumeNativePromise(adapter)) throw new TypeError('recordSink must return a native sink synchronously');
+        executor = new FlowChartExecutor(chart, { writeProvenance: 'reads-prefix',
+          ...(adapter === undefined ? {} : { sink: { adapter, onFailure: 'report', flush: 'manual' } as const }),
+        });
+        if (adapter !== undefined) recording = { recordId, status: 'attached' };
+      } catch {
+        // Optional observability must not turn a durable refund acknowledgement into a retryable failure.
+        executor = new FlowChartExecutor(chart, { writeProvenance: 'reads-prefix' });
+        recording = { recordId, status: 'unavailable' };
+      }
+    } else executor = new FlowChartExecutor(chart, { writeProvenance: 'reads-prefix' });
+    executor.setRedactionPolicy({ keys: ['idempotencyKey', 'authorization', 'token', 'secret', 'password', 'recordSinkError'],
+      diagnostics: { keys: ['errors.recordSinkError'] } });
     executor.enableNarrative();
+    executor.attachFlowRecorder(causeCapture.recorder);
     executor.attachFlowRecorder({ id: 'aftersales-metadata', onStageExecuted(event) { stages.push(event.stageName); } });
+    if (boundaries) executor.attachFlowRecorder(boundaries.flowRecorder);
     let failure: AfterSalesError | undefined;
     const startedAt = new Date().toISOString();
     try { await executor.run(captureExecutionRunOptions(deps.executionOptions?.(Object.freeze({ flowId })))); } catch (error) { failure = safeFailure(error); }
     const finishedAt = new Date().toISOString();
+    if (recording?.status === 'attached') {
+      let flush: RecordFlushResult;
+      try { flush = await executor.flushRecord({ timeoutMs: recordSinkFlushTimeoutMs }); }
+      catch { flush = { done: false, failed: true, pending: false }; }
+      recording = { ...recording, flush };
+    }
+    const nativeSnapshot = executor.getSnapshot({ redact: true });
+    let recordedCause: AfterSalesTrace['causeCapture'];
+    try { recordedCause = causeCapture.snapshot(nativeSnapshot); } catch { /* Missing diagnostic coverage stays unknown; never retry acknowledged commerce. */ }
     const trace: AfterSalesTrace = { flowId, runId: executor.getSnapshot({ redact: true }).runId, startedAt, finishedAt, outcome: failure ? 'error' : 'ok',
       stages: [...stages], decisions: [...decisions], ...(failure ? { code: failure.code } : {}),
-      nativeSnapshot: executor.getSnapshot({ redact: true }), flowSpec: chart.buildTimeStructure!, narrative: executor.getNarrativeEntries(),
-      runtime: { library: 'footprintjs', version: footprintRuntimeVersion } };
+      nativeSnapshot, ...(recordedCause ? { causeCapture: recordedCause } : {}), flowSpec: chart.buildTimeStructure!, narrative: executor.getNarrativeEntries(),
+      runtime: { library: 'footprintjs', version: footprintRuntimeVersion },
+      ...(boundaries ? { boundaryDiagnostics: boundaries.snapshot() } : {}), ...(recording ? { recording } : {}) };
     try { await deps.onTrace?.(trace); } catch { /* A diagnostic failure cannot reverse a refund or durable case. */ }
     if (failure) throw failure;
   }

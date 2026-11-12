@@ -1,3 +1,5 @@
+import { memorySink } from 'foottrace/write';
+import { readStoredRecord } from 'foottrace';
 import footprintPackage from 'footprintjs/package.json' with { type: 'json' };
 import { describe, expect, it, vi } from 'vitest';
 import { createFixturePlatform, fixtureContext, fixtureScope, createMockRepository } from '../helpers.js';
@@ -27,6 +29,17 @@ describe('configured Blueprint recorder through BusinessPlatform', () => {
     const result = await createFixturePlatform({ operations: { 'create-product': operation }, traceRecorder: { record }, onTraceError }).executeAction(fixtureContext, 'create-product', { name: 'Dress', basePrice: 20 });
     expect(result.status).toBe('success'); expect(result.result).toMatchObject({ acknowledgement: 'committed', output: { productId: 'p1' } });
     expect(operation).toHaveBeenCalledOnce(); expect(record).toHaveBeenCalledOnce(); expect(onTraceError).toHaveBeenCalledOnce();
+  });
+  it('forwards an optional native action sink and bounded flush without losing an acknowledged operation', async () => {
+    const sink = memorySink(), locators: string[] = [], observer = vi.fn();
+    const operation = vi.fn(async () => ({ acknowledgement: 'committed' as const, output: { productId: 'p1' } }));
+    const result = await createFixturePlatform({ operations: { 'create-product': operation }, onTraceError: observer,
+      recordSink: ({ actionId, recordId }) => { expect(actionId).toBe('create-product'); locators.push(recordId); return { ...sink, flush: () => new Promise<void>(() => {}) }; },
+      recordSinkFlushTimeoutMs: 10 }).executeAction(fixtureContext, 'create-product', { name: 'Dress', basePrice: 20 });
+    expect(result.status).toBe('success'); expect(operation).toHaveBeenCalledOnce(); expect(locators).toHaveLength(1); expect(observer).toHaveBeenCalledOnce();
+    expect(locators[0]).not.toBe(result.traceRunId);
+    expect(readStoredRecord(sink.entries).root(result.executionTrace!.runId)?.complete).toBe(true);
+    expect(result.executionTrace?.executionSnapshot).toHaveProperty('sink');
   });
   it('captures adapter scope rather than allowing a caller to retarget a repository', async () => {
     const scope = { ...fixtureScope }; const start = vi.fn(async () => ({ acknowledgement: 'pending' as const, output: { orderId: 'o1' } }));
