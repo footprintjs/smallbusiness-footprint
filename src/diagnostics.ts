@@ -1,4 +1,5 @@
 import { normalizeBoundaryError } from 'footprint-blueprint/diagnostics';
+export { commerceFailureExplanationTemplates } from './diagnostics/explanations/index.js';
 
 export type CommerceBoundaryErrorOptions = Parameters<typeof normalizeBoundaryError>[1];
 export type NormalizedCommerceBoundaryError = ReturnType<typeof normalizeBoundaryError>;

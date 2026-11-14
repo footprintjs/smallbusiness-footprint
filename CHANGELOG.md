@@ -1,3 +1,7 @@
+# Unreleased
+
+- Add optional immutable `commerceFailureExplanationTemplates` wording for recorded access rejection, unknown write effects, observed retry recovery and unconfirmed troubleshooting storage. Blueprint owns matching, canonical observations and uncertainty; these presets add no causal findings, repair actions or permissions.
+
 # 1.0.0 — 2026-11-12
 
 - Migration: require FootPrint 12.0.0 and Foottrace 1.15.0 on Node 24.15–24.x.
