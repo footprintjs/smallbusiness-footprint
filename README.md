@@ -110,7 +110,21 @@ const diagnosis = diagnoseFailureRecording(record);
 
 The default recording store is private in-memory JSON. Hosts can provide **both** `persist(record)` and `load({storeId, runId, flowId})`; exact read-back identity/content is checked. Storage failure returns a visibly missing native record and no unsaved sidecar evidence. Host storage implementations own tenant isolation, durable writes and retention. Importing this entry does not enable fault injection anywhere: do not mount it as a production or public HTTP route.
 
-`smallbusiness-footprint/diagnostics` exports `normalizeCommerceBoundaryError`. It recognizes AWS-shaped **database** auth/throttle names with actual numeric HTTP metadata without importing an AWS SDK or changing the status. Other vendor classifications can use Blueprint's bounded `classify(fields)` callback. An explicit valid host classification takes priority over the optional database compatibility map; undefined, invalid or throwing classifiers retain safe built-in/default behavior. Classification is evidence, not a retry policy or proof that a provider is down. Public findings never expose provider messages or private payloads. Customer wording, translations and admin previews belong to the consuming application.
+`smallbusiness-footprint/diagnostics` exports `normalizeCommerceBoundaryError`. It recognizes AWS-shaped **database** auth/throttle names with actual numeric HTTP metadata without importing an AWS SDK or changing the status. Other vendor classifications can use Blueprint's bounded `classify(fields)` callback. An explicit valid host classification takes priority over the optional database compatibility map; undefined, invalid or throwing classifiers retain safe built-in/default behavior. Classification is evidence, not a retry policy or proof that a provider is down. Public findings never expose provider messages or private payloads. Hosts own custom wording, translations and admin previews; the optional presets below supply reusable commerce wording without changing the diagnosis.
+
+#### Optional problem and next-step wording
+
+`commerceFailureExplanationTemplates` is immutable, optional data for Blueprint's evidence-preserving explanation formatter. It supplies short commerce problem text and suggested checks for actual recorded finding codes. Without these presets, the formatter uses its generic defaults. A host may supply its own reviewed template catalog instead.
+
+```js
+import { commerceFailureExplanationTemplates } from 'smallbusiness-footprint/diagnostics';
+
+// Pass as { templates: commerceFailureExplanationTemplates } to a Blueprint
+// release that provides formatFailureExplanation or createFailureExplanation.
+// The current public dependency remains 1.0.0; no unpublished formatter is imported.
+```
+
+Keep the formatter's canonical **Problem → Recorded cause → Suggested next step**, evidence references and unknowns visible. Configured wording is authored business guidance; it is not a new finding or a verified solution. No preset provides cause text, executes a repair or grants permission. An unknown write effect uses Blueprint's mandatory check of the original operation before another write. A generic service failure does not select a shipping or inventory explanation without an admitted business finding code.
 
 These are reusable test workflows, not a generic production circuit breaker, payment reconciler or shipping provider implementation. Runtime commerce continues to use the existing provider interfaces and authoritative receipts.
 
