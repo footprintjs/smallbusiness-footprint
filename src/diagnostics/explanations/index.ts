@@ -7,8 +7,8 @@ export const commerceFailureExplanationTemplates = Object.freeze([
   Object.freeze({
     id: 'commerce-access-rejected',
     when: Object.freeze({ findingCode: 'AUTH_REJECTION_RECORDED' }),
-    problem: 'A connected business service refused access.',
-    suggestedNextStep: 'Ask an administrator to check the connected service access settings.',
+    problem: 'The business operation encountered an access problem.',
+    suggestedNextStep: 'Ask an administrator to check credentials and access settings.',
   }),
   Object.freeze({
     id: 'commerce-write-uncertain',
