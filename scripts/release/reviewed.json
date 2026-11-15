@@ -1,10 +1,10 @@
 {
   "name": "smallbusiness-footprint",
-  "version": "1.0.0",
-  "sha256": "acf76941fd4138161ac499cb912beca325575cad60eef36b9a941eb68958ee74",
-  "integrity": "sha512-P6wY9AlmshOhBilX+TU2z+x4LPIvN/y1yBTAZQeOst4IHKFQtpIA7i4LY4sx8OS0Ps6Opr7UZ7XWT7tgjxu67w==",
+  "version": "1.1.0",
+  "sha256": "d45e69a9952692ab74bce97e2e8e61a60224aa85844b7822cc0d1e65aec027cf",
+  "integrity": "sha512-8AS9qU+ytbXVh0Juqt58nNPDcmq98kz9R8tiUm3qRY0OL+xHXKmPpeDmKuzVX0H2ENwB/KuC9CiLYejg3o8M1w==",
   "dependencies": {
-    "footprint-blueprint": "1.0.0",
+    "footprint-blueprint": "1.1.0",
     "footprintjs": "12.0.0",
     "zod": "4.6.5",
     "foottrace": "1.15.0"
@@ -12,8 +12,8 @@
   "runtime": [
     {
       "name": "footprint-blueprint",
-      "version": "1.0.0",
-      "integrity": "sha512-435xMhAS9cdEWDJyHALsJ+mqYhix43Q4XscxCUEH58rIlzzXIAOgyUbjyaCUpG2eInKKOI3lfHZi2r0AqgO/bg=="
+      "version": "1.1.0",
+      "integrity": "sha512-30ActJcuHiz2IOVx+1tRqRHug6MBIGI7HapjmJnU5OP2ZQE2ZKR8DeVlzpu3pMktBtAjlQ6ZqieAUkG0uEUD3Q=="
     },
     {
       "name": "footprintjs",

@@ -4,7 +4,7 @@ For backend developers connecting configurable commerce workflows to their own s
 
 [Release-kit quickstart](docs/QUICKSTART.md) · [Integration contracts](docs/INTEGRATION.md) · [Guarantees and ownership](#guarantees-and-ownership)
 
-**Version 1.0.0:** requires `footprint-blueprint@1.0.0`, `footprintjs@12.0.0`, `foottrace@1.15.0` and Zod on Node 24.15–24.x. Published 0.9.0 workflows and optional evidence features are retained. Missing capture stays unknown and never reverses an acknowledged operation. See the [migration notes](docs/MIGRATION-1.0.md). The release order is Blueprint first, then this package; source checks and immutable release approval remain separate.
+**Version 1.1.0:** requires `footprint-blueprint@1.1.0`, `footprintjs@12.0.0`, `foottrace@1.15.0` and Zod on Node 24.15–24.x. Published 0.9.0 workflows and optional evidence features are retained. Missing capture stays unknown and never reverses an acknowledged operation. See the [migration notes](docs/MIGRATION-1.0.md). The release order is Blueprint first, then this package; source checks and immutable release approval remain separate.
 
 SMB is optional. Framework-only applications use Blueprint directly; commerce consumers can install SMB and its declared dependencies are installed automatically. Within Blueprint, focused subpaths select runtime entry graphs and dynamic `import()` provides loading on demand. Ordinary dependency downloads still occur at package installation.
 
@@ -119,9 +119,8 @@ The default recording store is private in-memory JSON. Hosts can provide **both*
 ```js
 import { commerceFailureExplanationTemplates } from 'smallbusiness-footprint/diagnostics';
 
-// Pass as { templates: commerceFailureExplanationTemplates } to a Blueprint
-// release that provides formatFailureExplanation or createFailureExplanation.
-// The current public dependency remains 1.0.0; no unpublished formatter is imported.
+// Pass as { templates: commerceFailureExplanationTemplates } to
+// Blueprint's formatFailureExplanation or createFailureExplanation.
 ```
 
 Keep the formatter's canonical **Problem → Recorded cause → Suggested next step**, evidence references and unknowns visible. Configured wording is authored business guidance; it is not a new finding or a verified solution. No preset provides cause text, executes a repair or grants permission. An unknown write effect uses Blueprint's mandatory check of the original operation before another write. A generic service failure does not select a shipping or inventory explanation without an admitted business finding code.

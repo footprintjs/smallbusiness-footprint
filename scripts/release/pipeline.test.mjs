@@ -35,6 +35,32 @@ test('ordinary source packing does not mistake changed candidate bytes for relea
   assert.doesNotMatch(pack, /^        if:/m, 'Source candidates must be checked on every event.');
 });
 
+test('source candidate staging follows the current manifest version', async t => {
+  const staging = stepWith('npm pack --ignore-scripts').match(/^          mv .+release\/package\.tgz$/m)?.[0].trim();
+  assert.ok(staging, 'The actual source-candidate archive staging command is required.');
+  for (const version of ['1.1.0', '2.7.3']) {
+    await t.test(version, () => {
+      const directory = mkdtempSync(join(tmpdir(), 'source-version-staging-'));
+      try {
+        mkdirSync(join(directory, 'release'));
+        writeFileSync(join(directory, 'package.json'), JSON.stringify({ version }));
+        const current = join(directory, 'release', `smallbusiness-footprint-${version}.tgz`);
+        const stale = join(directory, 'release', 'smallbusiness-footprint-1.0.0.tgz');
+        const bytes = `current archive fixture for ${version}\n`;
+        writeFileSync(current, bytes);
+        writeFileSync(stale, 'stale archive fixture\n');
+        const result = spawnSync('/bin/sh', ['-eu', '-c', staging], {
+          cwd: directory, encoding: 'utf8', timeout: 10000,
+        });
+        assert.equal(result.status, 0, result.stderr);
+        assert.equal(readFileSync(join(directory, 'release', 'package.tgz'), 'utf8'), bytes);
+        assert.equal(existsSync(current), false);
+        assert.equal(readFileSync(stale, 'utf8'), 'stale archive fixture\n');
+      } finally { rmSync(directory, { recursive: true, force: true }); }
+    });
+  }
+});
+
 test('every explicit publication retains archive approval, registry preflight and main-only downstream publication', () => {
   const archive = stepWith('node scripts/release/run.mjs archive release/package.tgz');
   const preflight = stepWith('node scripts/release/run.mjs preflight release/package.tgz');
