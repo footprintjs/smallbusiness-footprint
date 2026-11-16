@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 1,
-  "representation": "native-footprint-mermaid-with-stable-local-prefix-aliases",
-  "inputSha256": "0e120058e4b1c4edb368f3cb91abbea2f775ad545a0887b41d8eec057a831963",
+  "schemaVersion": 2,
+  "representation": "native-footprint-topology-with-verified-control-annotations",
+  "inputSha256": "cad5181e473e3001f6b55752f12d9f9509786436f2743080765e0238b3e43dde",
   "inputs": {
     "productionSources": {
       "src/actions/businessActions.ts": "2e0fc4ba910c49f91d2c48013e6bf8aafe56bd9c0f66c32fcbf02003404e3300",
@@ -67,7 +67,8 @@
       "src/types.ts": "1aac7c0e21a1b460d5c3cdd0afe448c4dc7f4460835af87f53541e4f9bb60e65"
     },
     "generatorFiles": {
-      "scripts/developer/flow-docs.mjs": "bf7adb506a2c7913716999196c7595b737b953a57ab8b9606e73ae1ee53cb41e",
+      "scripts/developer/flow-docs.mjs": "629c034d7981881dde799ab11a74a8025872f56b9ee252d01abe490b267e4a5c",
+      "scripts/developer/native-mermaid.mjs": "082135ff73574f8af8001e89f5d1f47368c5efb0d03d9910ffad443f1e7d0665",
       "scripts/developer/build-manifest.mjs": "0e6a5786a0e067e3bb97ec2dd2e19e4b5b74707cc9c57672775e4073e3c55f50",
       "scripts/developer/build.mjs": "987f4577bca23bec29ba3b7636bb01dfb42747807cb653e856884b05e68caa1e"
     },
@@ -115,165 +116,2374 @@
   },
   "views": [
     {
-      "id": "load-reconciliation-order-d27b1994333b",
-      "file": "docs/flows/views/load-reconciliation-order-d27b1994333b/README.md",
-      "signature": "d27b1994333bda4b490d07eb97353e2b9463cbf41d5b5488b9a7bca6eb5f336f",
+      "id": "load-reconciliation-order-12227388301f",
+      "file": "docs/flows/views/load-reconciliation-order-12227388301f/README.md",
+      "signature": "12227388301f70b205cb4d0d662a113450babe6f43786d16e6d3272f1a620daf",
       "nodeCount": 7,
-      "mermaidSha256": "2cb0080f1708990497451e20c051d47e96045b668c1e86cb1c3b74f3d4b0754f"
+      "mermaidSha256": "4b5a793b0645fbb524c4fbb8589766b9afb357cb1deffbddb1c3abf66930491a",
+      "rawSdkMermaid": "flowchart TD\nload_reconciliation_order[\"load-reconciliation-order\"]\nload_reconciliation_order --> refund_lookup_kind\nrefund_lookup_kind[\"refund-lookup-kind\"]\nrefund_lookup_kind --> retrieve\nretrieve[\"retrieve-existing-refund\"]\nrefund_lookup_kind --> find\nfind[\"find-existing-refund\"]\nrefund_lookup_kind --> refund_lookup_available\nrefund_lookup_available[\"refund-lookup-available\"]\nrefund_lookup_available --> available\navailable[\"reconcile-evidence\"]\nrefund_lookup_available --> unavailable\nunavailable[\"keep-unavailable-reconciliation\"]",
+      "semanticProof": {
+        "version": "native-mermaid-semantic-v1",
+        "sdkTopologyVerified": true,
+        "nodeIdentitiesVerified": true,
+        "nodeCount": 7,
+        "edgeCount": 6,
+        "rawSdkSha256": "2cb0080f1708990497451e20c051d47e96045b668c1e86cb1c3b74f3d4b0754f",
+        "annotatedSha256": "4b5a793b0645fbb524c4fbb8589766b9afb357cb1deffbddb1c3abf66930491a",
+        "nodeIdentitySha256": "2c027d5b62a9c778a47b30f6c950dceab0ee11a2952c154a8d3af5e55866022f",
+        "rawEdgeMultisetSha256": "eeea324fe35c10b280d7cc8ec570b957437b8d8e05e114d411a46b0a214166cf",
+        "annotatedEdgeMultisetSha256": "eeea324fe35c10b280d7cc8ec570b957437b8d8e05e114d411a46b0a214166cf",
+        "nodeIdMap": [
+          {
+            "id": "load-reconciliation-order",
+            "mermaidId": "load_reconciliation_order",
+            "name": "load-reconciliation-order",
+            "kind": "stage"
+          },
+          {
+            "id": "refund-lookup-kind",
+            "mermaidId": "refund_lookup_kind",
+            "name": "refund-lookup-kind",
+            "kind": "decision"
+          },
+          {
+            "id": "retrieve",
+            "mermaidId": "retrieve",
+            "name": "retrieve-existing-refund",
+            "kind": "stage"
+          },
+          {
+            "id": "find",
+            "mermaidId": "find",
+            "name": "find-existing-refund",
+            "kind": "stage"
+          },
+          {
+            "id": "refund-lookup-available",
+            "mermaidId": "refund_lookup_available",
+            "name": "refund-lookup-available",
+            "kind": "decision"
+          },
+          {
+            "id": "available",
+            "mermaidId": "available",
+            "name": "reconcile-evidence",
+            "kind": "subflow"
+          },
+          {
+            "id": "unavailable",
+            "mermaidId": "unavailable",
+            "name": "keep-unavailable-reconciliation",
+            "kind": "stage"
+          }
+        ],
+        "edges": [
+          {
+            "from": "load_reconciliation_order",
+            "to": "refund_lookup_kind",
+            "kind": "next"
+          },
+          {
+            "from": "refund_lookup_kind",
+            "to": "retrieve",
+            "kind": "branch",
+            "branchKey": "retrieve"
+          },
+          {
+            "from": "refund_lookup_kind",
+            "to": "find",
+            "kind": "branch",
+            "branchKey": "find"
+          },
+          {
+            "from": "refund_lookup_kind",
+            "to": "refund_lookup_available",
+            "kind": "continuation",
+            "continuation": "after selected branch"
+          },
+          {
+            "from": "refund_lookup_available",
+            "to": "available",
+            "kind": "branch",
+            "branchKey": "available"
+          },
+          {
+            "from": "refund_lookup_available",
+            "to": "unavailable",
+            "kind": "branch",
+            "branchKey": "unavailable"
+          }
+        ]
+      }
     },
     {
-      "id": "load-request-order-a127820a90ea",
-      "file": "docs/flows/views/load-request-order-a127820a90ea/README.md",
-      "signature": "a127820a90ea6d3f39cd73f9e807d236bb07d0d024010ff981c4a27356a36a46",
+      "id": "load-request-order-3241bb124094",
+      "file": "docs/flows/views/load-request-order-3241bb124094/README.md",
+      "signature": "3241bb12409411ddc8ef79ccfe17db79ab53d46aca7dba59a48e6abdd46a2810",
       "nodeCount": 18,
-      "mermaidSha256": "c7dd03b0d99d74dc34373ce8beb3c98c0cee31478d5460920afcc5d48122d1fd"
+      "mermaidSha256": "eeface9abd5a068fdec949c5f6d427b5e61733b7afb3088e735a1f98645548c0",
+      "rawSdkMermaid": "flowchart TD\nload_request_order[\"load-request-order\"]\nload_request_order --> request_order_eligible\nrequest_order_eligible[\"request-order-eligible\"]\nrequest_order_eligible --> request_order_eligible_allowed\nrequest_order_eligible_allowed[\"initialize-request-items\"]\nrequest_order_eligible --> request_order_eligible_denied\nrequest_order_eligible_denied[\"request-order-eligible-denied\"]\nrequest_order_eligible --> request_item_loop\nrequest_item_loop[\"request-item-loop\"]\nrequest_item_loop --> item\nitem[\"inspect-request-item\"]\nitem --> request_item_loop\nrequest_item_loop --> reject\nreject[\"reject-request-item\"]\nrequest_item_loop --> complete\ncomplete[\"request-items-complete\"]\nrequest_item_loop --> invalid_bound\ninvalid_bound[\"request-items-bound-exceeded\"]\nrequest_item_loop --> request_kind\nrequest_kind[\"request-kind\"]\nrequest_kind --> cancellation\ncancellation[\"read-cancellation-policy\"]\nrequest_kind --> return\nreturn[\"read-return-policy\"]\nrequest_kind --> request_policy_eligible\nrequest_policy_eligible[\"request-policy-eligible\"]\nrequest_policy_eligible --> request_policy_eligible_allowed\nrequest_policy_eligible_allowed[\"persist-request\"]\nrequest_policy_eligible --> request_policy_eligible_denied\nrequest_policy_eligible_denied[\"request-policy-eligible-denied\"]\nrequest_policy_eligible --> persisted_request_matches\npersisted_request_matches[\"persisted-request-matches\"]\npersisted_request_matches --> persisted_request_matches_allowed\npersisted_request_matches_allowed[\"request-persisted\"]\npersisted_request_matches --> persisted_request_matches_denied\npersisted_request_matches_denied[\"persisted-request-matches-denied\"]",
+      "semanticProof": {
+        "version": "native-mermaid-semantic-v1",
+        "sdkTopologyVerified": true,
+        "nodeIdentitiesVerified": true,
+        "nodeCount": 18,
+        "edgeCount": 18,
+        "rawSdkSha256": "c7dd03b0d99d74dc34373ce8beb3c98c0cee31478d5460920afcc5d48122d1fd",
+        "annotatedSha256": "eeface9abd5a068fdec949c5f6d427b5e61733b7afb3088e735a1f98645548c0",
+        "nodeIdentitySha256": "d87e3644d4e794c435d422215ceb201b54c48bbded19e4d58ee814df5df97653",
+        "rawEdgeMultisetSha256": "81ff52aa36ed40004b1f15dd6fd877003e9d7184fd845d128d2aa9fd92368ed3",
+        "annotatedEdgeMultisetSha256": "81ff52aa36ed40004b1f15dd6fd877003e9d7184fd845d128d2aa9fd92368ed3",
+        "nodeIdMap": [
+          {
+            "id": "load-request-order",
+            "mermaidId": "load_request_order",
+            "name": "load-request-order",
+            "kind": "stage"
+          },
+          {
+            "id": "request-order-eligible",
+            "mermaidId": "request_order_eligible",
+            "name": "request-order-eligible",
+            "kind": "decision"
+          },
+          {
+            "id": "request-order-eligible-allowed",
+            "mermaidId": "request_order_eligible_allowed",
+            "name": "initialize-request-items",
+            "kind": "stage"
+          },
+          {
+            "id": "request-order-eligible-denied",
+            "mermaidId": "request_order_eligible_denied",
+            "name": "request-order-eligible-denied",
+            "kind": "stage"
+          },
+          {
+            "id": "request-item-loop",
+            "mermaidId": "request_item_loop",
+            "name": "request-item-loop",
+            "kind": "decision"
+          },
+          {
+            "id": "item",
+            "mermaidId": "item",
+            "name": "inspect-request-item",
+            "kind": "stage"
+          },
+          {
+            "id": "reject",
+            "mermaidId": "reject",
+            "name": "reject-request-item",
+            "kind": "stage"
+          },
+          {
+            "id": "complete",
+            "mermaidId": "complete",
+            "name": "request-items-complete",
+            "kind": "stage"
+          },
+          {
+            "id": "invalid-bound",
+            "mermaidId": "invalid_bound",
+            "name": "request-items-bound-exceeded",
+            "kind": "stage"
+          },
+          {
+            "id": "request-kind",
+            "mermaidId": "request_kind",
+            "name": "request-kind",
+            "kind": "decision"
+          },
+          {
+            "id": "cancellation",
+            "mermaidId": "cancellation",
+            "name": "read-cancellation-policy",
+            "kind": "stage"
+          },
+          {
+            "id": "return",
+            "mermaidId": "return",
+            "name": "read-return-policy",
+            "kind": "stage"
+          },
+          {
+            "id": "request-policy-eligible",
+            "mermaidId": "request_policy_eligible",
+            "name": "request-policy-eligible",
+            "kind": "decision"
+          },
+          {
+            "id": "request-policy-eligible-allowed",
+            "mermaidId": "request_policy_eligible_allowed",
+            "name": "persist-request",
+            "kind": "stage"
+          },
+          {
+            "id": "request-policy-eligible-denied",
+            "mermaidId": "request_policy_eligible_denied",
+            "name": "request-policy-eligible-denied",
+            "kind": "stage"
+          },
+          {
+            "id": "persisted-request-matches",
+            "mermaidId": "persisted_request_matches",
+            "name": "persisted-request-matches",
+            "kind": "decision"
+          },
+          {
+            "id": "persisted-request-matches-allowed",
+            "mermaidId": "persisted_request_matches_allowed",
+            "name": "request-persisted",
+            "kind": "stage"
+          },
+          {
+            "id": "persisted-request-matches-denied",
+            "mermaidId": "persisted_request_matches_denied",
+            "name": "persisted-request-matches-denied",
+            "kind": "stage"
+          }
+        ],
+        "edges": [
+          {
+            "from": "load_request_order",
+            "to": "request_order_eligible",
+            "kind": "next"
+          },
+          {
+            "from": "request_order_eligible",
+            "to": "request_order_eligible_allowed",
+            "kind": "branch",
+            "branchKey": "request-order-eligible-allowed"
+          },
+          {
+            "from": "request_order_eligible",
+            "to": "request_order_eligible_denied",
+            "kind": "branch",
+            "branchKey": "request-order-eligible-denied"
+          },
+          {
+            "from": "request_order_eligible",
+            "to": "request_item_loop",
+            "kind": "continuation",
+            "continuation": "after selected branch"
+          },
+          {
+            "from": "request_item_loop",
+            "to": "item",
+            "kind": "branch",
+            "branchKey": "item"
+          },
+          {
+            "from": "item",
+            "to": "request_item_loop",
+            "kind": "loop"
+          },
+          {
+            "from": "request_item_loop",
+            "to": "reject",
+            "kind": "branch",
+            "branchKey": "reject"
+          },
+          {
+            "from": "request_item_loop",
+            "to": "complete",
+            "kind": "branch",
+            "branchKey": "complete"
+          },
+          {
+            "from": "request_item_loop",
+            "to": "invalid_bound",
+            "kind": "branch",
+            "branchKey": "invalid-bound"
+          },
+          {
+            "from": "request_item_loop",
+            "to": "request_kind",
+            "kind": "continuation",
+            "continuation": "after selected branch"
+          },
+          {
+            "from": "request_kind",
+            "to": "cancellation",
+            "kind": "branch",
+            "branchKey": "cancellation"
+          },
+          {
+            "from": "request_kind",
+            "to": "return",
+            "kind": "branch",
+            "branchKey": "return"
+          },
+          {
+            "from": "request_kind",
+            "to": "request_policy_eligible",
+            "kind": "continuation",
+            "continuation": "after selected branch"
+          },
+          {
+            "from": "request_policy_eligible",
+            "to": "request_policy_eligible_allowed",
+            "kind": "branch",
+            "branchKey": "request-policy-eligible-allowed"
+          },
+          {
+            "from": "request_policy_eligible",
+            "to": "request_policy_eligible_denied",
+            "kind": "branch",
+            "branchKey": "request-policy-eligible-denied"
+          },
+          {
+            "from": "request_policy_eligible",
+            "to": "persisted_request_matches",
+            "kind": "continuation",
+            "continuation": "after selected branch"
+          },
+          {
+            "from": "persisted_request_matches",
+            "to": "persisted_request_matches_allowed",
+            "kind": "branch",
+            "branchKey": "persisted-request-matches-allowed"
+          },
+          {
+            "from": "persisted_request_matches",
+            "to": "persisted_request_matches_denied",
+            "kind": "branch",
+            "branchKey": "persisted-request-matches-denied"
+          }
+        ]
+      }
     },
     {
-      "id": "owner-approve-2ac56700f4e3",
-      "file": "docs/flows/views/owner-approve-2ac56700f4e3/README.md",
-      "signature": "2ac56700f4e3c8a73aca847ddc85c5775bf5ddc5d5c2bf30de25fe2bc9e9e45c",
+      "id": "owner-approve-e136335ffb56",
+      "file": "docs/flows/views/owner-approve-e136335ffb56/README.md",
+      "signature": "e136335ffb56aa1148c43738dae9b6b606d3e1941662cb52ed2044be5a45e2f6",
       "nodeCount": 4,
-      "mermaidSha256": "7fd9f1e6e053b17d0d6841d52bad7f96ccb06f82a44392079c6b0eede414ba95"
+      "mermaidSha256": "ebbe0dac4a2598d6393ddf3cc1c24a175285386b3c90bfe599b87aa0b4e36341",
+      "rawSdkMermaid": "flowchart TD\nowner_approve[\"owner-approve\"]\nowner_approve --> approval_eligible\napproval_eligible[\"approval-eligible\"]\napproval_eligible --> approval_eligible_allowed\napproval_eligible_allowed[\"save-owner-approval\"]\napproval_eligible --> approval_eligible_denied\napproval_eligible_denied[\"approval-eligible-denied\"]",
+      "semanticProof": {
+        "version": "native-mermaid-semantic-v1",
+        "sdkTopologyVerified": true,
+        "nodeIdentitiesVerified": true,
+        "nodeCount": 4,
+        "edgeCount": 3,
+        "rawSdkSha256": "7fd9f1e6e053b17d0d6841d52bad7f96ccb06f82a44392079c6b0eede414ba95",
+        "annotatedSha256": "ebbe0dac4a2598d6393ddf3cc1c24a175285386b3c90bfe599b87aa0b4e36341",
+        "nodeIdentitySha256": "4ede1139fd7f328ca4da760ecdbf0ad7f20801c2fd2d72fb1e0a29aa869d0a51",
+        "rawEdgeMultisetSha256": "75b54ab66fff1f5590eed405253d07c9010e2c5875cbcd2eef12e062095c12d8",
+        "annotatedEdgeMultisetSha256": "75b54ab66fff1f5590eed405253d07c9010e2c5875cbcd2eef12e062095c12d8",
+        "nodeIdMap": [
+          {
+            "id": "owner-approve",
+            "mermaidId": "owner_approve",
+            "name": "owner-approve",
+            "kind": "stage"
+          },
+          {
+            "id": "approval-eligible",
+            "mermaidId": "approval_eligible",
+            "name": "approval-eligible",
+            "kind": "decision"
+          },
+          {
+            "id": "approval-eligible-allowed",
+            "mermaidId": "approval_eligible_allowed",
+            "name": "save-owner-approval",
+            "kind": "stage"
+          },
+          {
+            "id": "approval-eligible-denied",
+            "mermaidId": "approval_eligible_denied",
+            "name": "approval-eligible-denied",
+            "kind": "stage"
+          }
+        ],
+        "edges": [
+          {
+            "from": "owner_approve",
+            "to": "approval_eligible",
+            "kind": "next"
+          },
+          {
+            "from": "approval_eligible",
+            "to": "approval_eligible_allowed",
+            "kind": "branch",
+            "branchKey": "approval-eligible-allowed"
+          },
+          {
+            "from": "approval_eligible",
+            "to": "approval_eligible_denied",
+            "kind": "branch",
+            "branchKey": "approval-eligible-denied"
+          }
+        ]
+      }
     },
     {
-      "id": "owner-receive-aad1d7d71fde",
-      "file": "docs/flows/views/owner-receive-aad1d7d71fde/README.md",
-      "signature": "aad1d7d71fde1a79c099b21082c734c3868328c8374a01515b87a36d87ec6c0c",
+      "id": "owner-receive-aa8ce04e60f3",
+      "file": "docs/flows/views/owner-receive-aa8ce04e60f3/README.md",
+      "signature": "aa8ce04e60f32d7429b76956a7e056c4f769999f90d565b981c5f9a52bad2b44",
       "nodeCount": 7,
-      "mermaidSha256": "01edaf9abb02a83e9af8f63ecc2f3819dffafa5f80a4adc1723fbc7a78ff706d"
+      "mermaidSha256": "e1790750222303508f574796dfa6f6e3207edc89ec047d1b002a87a5dcadad3c",
+      "rawSdkMermaid": "flowchart TD\nowner_receive[\"owner-receive\"]\nowner_receive --> inspection_eligible\ninspection_eligible[\"inspection-eligible\"]\ninspection_eligible --> inspection_eligible_allowed\ninspection_eligible_allowed[\"read-inspection-result\"]\ninspection_eligible --> inspection_eligible_denied\ninspection_eligible_denied[\"inspection-eligible-denied\"]\ninspection_eligible --> inspection_result\ninspection_result[\"inspection-result\"]\ninspection_result --> accepted\naccepted[\"save-accepted-inspection\"]\ninspection_result --> rejected\nrejected[\"save-rejected-inspection\"]",
+      "semanticProof": {
+        "version": "native-mermaid-semantic-v1",
+        "sdkTopologyVerified": true,
+        "nodeIdentitiesVerified": true,
+        "nodeCount": 7,
+        "edgeCount": 6,
+        "rawSdkSha256": "01edaf9abb02a83e9af8f63ecc2f3819dffafa5f80a4adc1723fbc7a78ff706d",
+        "annotatedSha256": "e1790750222303508f574796dfa6f6e3207edc89ec047d1b002a87a5dcadad3c",
+        "nodeIdentitySha256": "ae92216f91ce7afc29c6b9b709c7f659fb9e04b7d771bfbbc5b3f0d1b62aac64",
+        "rawEdgeMultisetSha256": "64ef7cc71424cd8bd9e816b2f25d89e74e86b7034cb2b9beb2f7005e1a02e030",
+        "annotatedEdgeMultisetSha256": "64ef7cc71424cd8bd9e816b2f25d89e74e86b7034cb2b9beb2f7005e1a02e030",
+        "nodeIdMap": [
+          {
+            "id": "owner-receive",
+            "mermaidId": "owner_receive",
+            "name": "owner-receive",
+            "kind": "stage"
+          },
+          {
+            "id": "inspection-eligible",
+            "mermaidId": "inspection_eligible",
+            "name": "inspection-eligible",
+            "kind": "decision"
+          },
+          {
+            "id": "inspection-eligible-allowed",
+            "mermaidId": "inspection_eligible_allowed",
+            "name": "read-inspection-result",
+            "kind": "stage"
+          },
+          {
+            "id": "inspection-eligible-denied",
+            "mermaidId": "inspection_eligible_denied",
+            "name": "inspection-eligible-denied",
+            "kind": "stage"
+          },
+          {
+            "id": "inspection-result",
+            "mermaidId": "inspection_result",
+            "name": "inspection-result",
+            "kind": "decision"
+          },
+          {
+            "id": "accepted",
+            "mermaidId": "accepted",
+            "name": "save-accepted-inspection",
+            "kind": "stage"
+          },
+          {
+            "id": "rejected",
+            "mermaidId": "rejected",
+            "name": "save-rejected-inspection",
+            "kind": "stage"
+          }
+        ],
+        "edges": [
+          {
+            "from": "owner_receive",
+            "to": "inspection_eligible",
+            "kind": "next"
+          },
+          {
+            "from": "inspection_eligible",
+            "to": "inspection_eligible_allowed",
+            "kind": "branch",
+            "branchKey": "inspection-eligible-allowed"
+          },
+          {
+            "from": "inspection_eligible",
+            "to": "inspection_eligible_denied",
+            "kind": "branch",
+            "branchKey": "inspection-eligible-denied"
+          },
+          {
+            "from": "inspection_eligible",
+            "to": "inspection_result",
+            "kind": "continuation",
+            "continuation": "after selected branch"
+          },
+          {
+            "from": "inspection_result",
+            "to": "accepted",
+            "kind": "branch",
+            "branchKey": "accepted"
+          },
+          {
+            "from": "inspection_result",
+            "to": "rejected",
+            "kind": "branch",
+            "branchKey": "rejected"
+          }
+        ]
+      }
     },
     {
-      "id": "owner-reconcile-10cab679e261",
-      "file": "docs/flows/views/owner-reconcile-10cab679e261/README.md",
-      "signature": "10cab679e26146f77e34a65b6ce2c23fa276cd02a15aab35d6d217647c0d8fd5",
+      "id": "owner-reconcile-1f5b5c6ce861",
+      "file": "docs/flows/views/owner-reconcile-1f5b5c6ce861/README.md",
+      "signature": "1f5b5c6ce86124b9b8650ce6797256368f494b077a5812a370c6188ff2b4a354",
       "nodeCount": 2,
-      "mermaidSha256": "6ceb25ecf0d6da7020f72be2352fa2907d14c54eee56677ee3fa9c25f7ea19c0"
+      "mermaidSha256": "3334dede1735eb4d146343bbac197165908fa5a377d3785d0ded79617b25987e",
+      "rawSdkMermaid": "flowchart TD\nowner_reconcile[\"owner-reconcile\"]\nowner_reconcile --> owner_reconciliation\nowner_reconciliation[\"owner-reconciliation\"]",
+      "semanticProof": {
+        "version": "native-mermaid-semantic-v1",
+        "sdkTopologyVerified": true,
+        "nodeIdentitiesVerified": true,
+        "nodeCount": 2,
+        "edgeCount": 1,
+        "rawSdkSha256": "6ceb25ecf0d6da7020f72be2352fa2907d14c54eee56677ee3fa9c25f7ea19c0",
+        "annotatedSha256": "3334dede1735eb4d146343bbac197165908fa5a377d3785d0ded79617b25987e",
+        "nodeIdentitySha256": "b88bfcce99ad9e3b37ddbb17b674eb7a894872e3d7f0a6d48bcf1bc0e4ede249",
+        "rawEdgeMultisetSha256": "6d626464f54513a11301fecea806eaa724b1072572ba275f713d8595494b59c3",
+        "annotatedEdgeMultisetSha256": "6d626464f54513a11301fecea806eaa724b1072572ba275f713d8595494b59c3",
+        "nodeIdMap": [
+          {
+            "id": "owner-reconcile",
+            "mermaidId": "owner_reconcile",
+            "name": "owner-reconcile",
+            "kind": "stage"
+          },
+          {
+            "id": "owner-reconciliation",
+            "mermaidId": "owner_reconciliation",
+            "name": "owner-reconciliation",
+            "kind": "subflow"
+          }
+        ],
+        "edges": [
+          {
+            "from": "owner_reconcile",
+            "to": "owner_reconciliation",
+            "kind": "next"
+          }
+        ]
+      }
     },
     {
-      "id": "owner-refund-154bd3c81b12",
-      "file": "docs/flows/views/owner-refund-154bd3c81b12/README.md",
-      "signature": "154bd3c81b12eb387cab6345f7718530ad375d6baa19086991ee135ec27ae11c",
+      "id": "owner-refund-9de3fa31913a",
+      "file": "docs/flows/views/owner-refund-9de3fa31913a/README.md",
+      "signature": "9de3fa31913a065b60579c97b285126c3358941a6c492e813b47325eab24e587",
       "nodeCount": 4,
-      "mermaidSha256": "e16aca9c07687d3d47f8f150927722a4599f2d746dff452916b0f51f214e8d70"
+      "mermaidSha256": "2982b195609fc1380321be0da3ca340418a38ee85ca7dce91060887a5f5845bf",
+      "rawSdkMermaid": "flowchart TD\nowner_refund[\"owner-refund\"]\nowner_refund --> existing_refund_intent\nexisting_refund_intent[\"existing-refund-intent\"]\nexisting_refund_intent --> existing\nexisting[\"existing-refund\"]\nexisting_refund_intent --> new\nnew[\"new-refund\"]",
+      "semanticProof": {
+        "version": "native-mermaid-semantic-v1",
+        "sdkTopologyVerified": true,
+        "nodeIdentitiesVerified": true,
+        "nodeCount": 4,
+        "edgeCount": 3,
+        "rawSdkSha256": "e16aca9c07687d3d47f8f150927722a4599f2d746dff452916b0f51f214e8d70",
+        "annotatedSha256": "2982b195609fc1380321be0da3ca340418a38ee85ca7dce91060887a5f5845bf",
+        "nodeIdentitySha256": "bce249e141146c771495211e2debbd589f5c674d8c39a5d4308755bb4ee63e72",
+        "rawEdgeMultisetSha256": "a72b878f2827a6ee42a2ddbcf752e6b33e68f25600215f8ba7e021b7957aa0df",
+        "annotatedEdgeMultisetSha256": "a72b878f2827a6ee42a2ddbcf752e6b33e68f25600215f8ba7e021b7957aa0df",
+        "nodeIdMap": [
+          {
+            "id": "owner-refund",
+            "mermaidId": "owner_refund",
+            "name": "owner-refund",
+            "kind": "stage"
+          },
+          {
+            "id": "existing-refund-intent",
+            "mermaidId": "existing_refund_intent",
+            "name": "existing-refund-intent",
+            "kind": "decision"
+          },
+          {
+            "id": "existing",
+            "mermaidId": "existing",
+            "name": "existing-refund",
+            "kind": "subflow"
+          },
+          {
+            "id": "new",
+            "mermaidId": "new",
+            "name": "new-refund",
+            "kind": "subflow"
+          }
+        ],
+        "edges": [
+          {
+            "from": "owner_refund",
+            "to": "existing_refund_intent",
+            "kind": "next"
+          },
+          {
+            "from": "existing_refund_intent",
+            "to": "existing",
+            "kind": "branch",
+            "branchKey": "existing"
+          },
+          {
+            "from": "existing_refund_intent",
+            "to": "new",
+            "kind": "branch",
+            "branchKey": "new"
+          }
+        ]
+      }
     },
     {
-      "id": "owner-reject-f16df0ead3ee",
-      "file": "docs/flows/views/owner-reject-f16df0ead3ee/README.md",
-      "signature": "f16df0ead3ee82419a064c4c64b81fb7e1abbff3db80f7c540c1ac0c27a7a520",
+      "id": "owner-reject-b6a624cd344a",
+      "file": "docs/flows/views/owner-reject-b6a624cd344a/README.md",
+      "signature": "b6a624cd344a41874043d68b9864bf306b4284188b118fd46e3edaf814ad71bb",
       "nodeCount": 4,
-      "mermaidSha256": "151f9b45b79ca4baceb1bf7aaffa150c0ddad52ffa7e81d34ab695677248bfb1"
+      "mermaidSha256": "a0922f22309a41d4ed3899c47157c070b41ba1c24baa2ee4909d37b8b09bffc4",
+      "rawSdkMermaid": "flowchart TD\nowner_reject[\"owner-reject\"]\nowner_reject --> rejection_eligible\nrejection_eligible[\"rejection-eligible\"]\nrejection_eligible --> rejection_eligible_allowed\nrejection_eligible_allowed[\"save-owner-rejection\"]\nrejection_eligible --> rejection_eligible_denied\nrejection_eligible_denied[\"rejection-eligible-denied\"]",
+      "semanticProof": {
+        "version": "native-mermaid-semantic-v1",
+        "sdkTopologyVerified": true,
+        "nodeIdentitiesVerified": true,
+        "nodeCount": 4,
+        "edgeCount": 3,
+        "rawSdkSha256": "151f9b45b79ca4baceb1bf7aaffa150c0ddad52ffa7e81d34ab695677248bfb1",
+        "annotatedSha256": "a0922f22309a41d4ed3899c47157c070b41ba1c24baa2ee4909d37b8b09bffc4",
+        "nodeIdentitySha256": "a4455a3d433beb74cba3b9ff9db2f8cdd12299eb19e2ac4696c62dc513707ffc",
+        "rawEdgeMultisetSha256": "833640e946153836ec9d16748c7f842c088b69cfcb6fbed9044d071acc14346f",
+        "annotatedEdgeMultisetSha256": "833640e946153836ec9d16748c7f842c088b69cfcb6fbed9044d071acc14346f",
+        "nodeIdMap": [
+          {
+            "id": "owner-reject",
+            "mermaidId": "owner_reject",
+            "name": "owner-reject",
+            "kind": "stage"
+          },
+          {
+            "id": "rejection-eligible",
+            "mermaidId": "rejection_eligible",
+            "name": "rejection-eligible",
+            "kind": "decision"
+          },
+          {
+            "id": "rejection-eligible-allowed",
+            "mermaidId": "rejection_eligible_allowed",
+            "name": "save-owner-rejection",
+            "kind": "stage"
+          },
+          {
+            "id": "rejection-eligible-denied",
+            "mermaidId": "rejection_eligible_denied",
+            "name": "rejection-eligible-denied",
+            "kind": "stage"
+          }
+        ],
+        "edges": [
+          {
+            "from": "owner_reject",
+            "to": "rejection_eligible",
+            "kind": "next"
+          },
+          {
+            "from": "rejection_eligible",
+            "to": "rejection_eligible_allowed",
+            "kind": "branch",
+            "branchKey": "rejection-eligible-allowed"
+          },
+          {
+            "from": "rejection_eligible",
+            "to": "rejection_eligible_denied",
+            "kind": "branch",
+            "branchKey": "rejection-eligible-denied"
+          }
+        ]
+      }
     },
     {
-      "id": "read-cancellation-disposition-b82078418116",
-      "file": "docs/flows/views/read-cancellation-disposition-b82078418116/README.md",
-      "signature": "b82078418116d51767e1fa92f3c15e8cd98dd58dda28ac5209ad9c4246a3a6db",
+      "id": "read-cancellation-disposition-fe5c69c74747",
+      "file": "docs/flows/views/read-cancellation-disposition-fe5c69c74747/README.md",
+      "signature": "fe5c69c74747996eb9ab04856804e4ecdc98dd39f3abe9eda9eac0dc14590998",
       "nodeCount": 5,
-      "mermaidSha256": "1d3bc83faaed3e748e253ddbffa6a20a732a0a61ded412c8ca04a35013f15ce5"
+      "mermaidSha256": "0fdfaac5318d70ce547408ff64bae0d73b09fabcfa983e4970d2a8b34d6f49ed",
+      "rawSdkMermaid": "flowchart TD\nread_cancellation_disposition[\"read-cancellation-disposition\"]\nread_cancellation_disposition --> refund_is_cancellation\nrefund_is_cancellation[\"refund-is-cancellation\"]\nrefund_is_cancellation --> cancellation\ncancellation[\"cancellation-disposition\"]\nrefund_is_cancellation --> return\nreturn[\"settle-return\"]\nrefund_is_cancellation --> restock_successful_refund\nrestock_successful_refund[\"restock-successful-refund\"]",
+      "semanticProof": {
+        "version": "native-mermaid-semantic-v1",
+        "sdkTopologyVerified": true,
+        "nodeIdentitiesVerified": true,
+        "nodeCount": 5,
+        "edgeCount": 4,
+        "rawSdkSha256": "1d3bc83faaed3e748e253ddbffa6a20a732a0a61ded412c8ca04a35013f15ce5",
+        "annotatedSha256": "0fdfaac5318d70ce547408ff64bae0d73b09fabcfa983e4970d2a8b34d6f49ed",
+        "nodeIdentitySha256": "73dfc28f87c7beff17653033d247ee95a57fd3c9988d544ddc467798ce7e7b3e",
+        "rawEdgeMultisetSha256": "fa081bf930bc9c65e134798f4e81da647d82869413ef704f7df7a8ff692eea18",
+        "annotatedEdgeMultisetSha256": "fa081bf930bc9c65e134798f4e81da647d82869413ef704f7df7a8ff692eea18",
+        "nodeIdMap": [
+          {
+            "id": "read-cancellation-disposition",
+            "mermaidId": "read_cancellation_disposition",
+            "name": "read-cancellation-disposition",
+            "kind": "stage"
+          },
+          {
+            "id": "refund-is-cancellation",
+            "mermaidId": "refund_is_cancellation",
+            "name": "refund-is-cancellation",
+            "kind": "decision"
+          },
+          {
+            "id": "cancellation",
+            "mermaidId": "cancellation",
+            "name": "cancellation-disposition",
+            "kind": "subflow"
+          },
+          {
+            "id": "return",
+            "mermaidId": "return",
+            "name": "settle-return",
+            "kind": "stage"
+          },
+          {
+            "id": "restock-successful-refund",
+            "mermaidId": "restock_successful_refund",
+            "name": "restock-successful-refund",
+            "kind": "subflow"
+          }
+        ],
+        "edges": [
+          {
+            "from": "read_cancellation_disposition",
+            "to": "refund_is_cancellation",
+            "kind": "next"
+          },
+          {
+            "from": "refund_is_cancellation",
+            "to": "cancellation",
+            "kind": "branch",
+            "branchKey": "cancellation"
+          },
+          {
+            "from": "refund_is_cancellation",
+            "to": "return",
+            "kind": "branch",
+            "branchKey": "return"
+          },
+          {
+            "from": "refund_is_cancellation",
+            "to": "restock_successful_refund",
+            "kind": "continuation",
+            "continuation": "after selected branch"
+          }
+        ]
+      }
     },
     {
-      "id": "read-existing-refund-command-192905395ef8",
-      "file": "docs/flows/views/read-existing-refund-command-192905395ef8/README.md",
-      "signature": "192905395ef868a91d9fb899da43063be2ff39d4188445a0c4d5736af91b1a06",
+      "id": "read-existing-refund-command-831a7bbd0ef1",
+      "file": "docs/flows/views/read-existing-refund-command-831a7bbd0ef1/README.md",
+      "signature": "831a7bbd0ef188c9d31f229052262a174a18cab77c918de207f4896b01fb8d7d",
       "nodeCount": 6,
-      "mermaidSha256": "697ff14b0f85100fb10354e5e1d3ebbafa6054067ca633946c59a4a2e985ff44"
+      "mermaidSha256": "b07b376b2bdee2155d59176b6210591be6807588c01d4be90167340b98ee615d",
+      "rawSdkMermaid": "flowchart TD\nread_existing_refund_command[\"read-existing-refund-command\"]\nread_existing_refund_command --> refund_command_matches\nrefund_command_matches[\"refund-command-matches\"]\nrefund_command_matches --> refund_command_matches_allowed\nrefund_command_matches_allowed[\"refund-command-matches-allowed\"]\nrefund_command_matches --> refund_command_matches_denied\nrefund_command_matches_denied[\"refund-command-matches-denied\"]\nrefund_command_matches --> existing_refund_matched\nexisting_refund_matched[\"existing-refund-matched\"]\nexisting_refund_matched --> matching_refund_reconciliation\nmatching_refund_reconciliation[\"matching-refund-reconciliation\"]",
+      "semanticProof": {
+        "version": "native-mermaid-semantic-v1",
+        "sdkTopologyVerified": true,
+        "nodeIdentitiesVerified": true,
+        "nodeCount": 6,
+        "edgeCount": 5,
+        "rawSdkSha256": "697ff14b0f85100fb10354e5e1d3ebbafa6054067ca633946c59a4a2e985ff44",
+        "annotatedSha256": "b07b376b2bdee2155d59176b6210591be6807588c01d4be90167340b98ee615d",
+        "nodeIdentitySha256": "349070eca090a8880931b3e406e2e1debc49d3a33cb69a005447fc0d20f0d70d",
+        "rawEdgeMultisetSha256": "95c176d311b69064fd25fdc4c71ef299d193acf6af5c1fac2cc6a60c64005c8b",
+        "annotatedEdgeMultisetSha256": "95c176d311b69064fd25fdc4c71ef299d193acf6af5c1fac2cc6a60c64005c8b",
+        "nodeIdMap": [
+          {
+            "id": "read-existing-refund-command",
+            "mermaidId": "read_existing_refund_command",
+            "name": "read-existing-refund-command",
+            "kind": "stage"
+          },
+          {
+            "id": "refund-command-matches",
+            "mermaidId": "refund_command_matches",
+            "name": "refund-command-matches",
+            "kind": "decision"
+          },
+          {
+            "id": "refund-command-matches-allowed",
+            "mermaidId": "refund_command_matches_allowed",
+            "name": "refund-command-matches-allowed",
+            "kind": "stage"
+          },
+          {
+            "id": "refund-command-matches-denied",
+            "mermaidId": "refund_command_matches_denied",
+            "name": "refund-command-matches-denied",
+            "kind": "stage"
+          },
+          {
+            "id": "existing-refund-matched",
+            "mermaidId": "existing_refund_matched",
+            "name": "existing-refund-matched",
+            "kind": "stage"
+          },
+          {
+            "id": "matching-refund-reconciliation",
+            "mermaidId": "matching_refund_reconciliation",
+            "name": "matching-refund-reconciliation",
+            "kind": "subflow"
+          }
+        ],
+        "edges": [
+          {
+            "from": "read_existing_refund_command",
+            "to": "refund_command_matches",
+            "kind": "next"
+          },
+          {
+            "from": "refund_command_matches",
+            "to": "refund_command_matches_allowed",
+            "kind": "branch",
+            "branchKey": "refund-command-matches-allowed"
+          },
+          {
+            "from": "refund_command_matches",
+            "to": "refund_command_matches_denied",
+            "kind": "branch",
+            "branchKey": "refund-command-matches-denied"
+          },
+          {
+            "from": "refund_command_matches",
+            "to": "existing_refund_matched",
+            "kind": "continuation",
+            "continuation": "after selected branch"
+          },
+          {
+            "from": "existing_refund_matched",
+            "to": "matching_refund_reconciliation",
+            "kind": "next"
+          }
+        ]
+      }
     },
     {
-      "id": "read-full-cancellation-93d8689e179a",
-      "file": "docs/flows/views/read-full-cancellation-93d8689e179a/README.md",
-      "signature": "93d8689e179adcf781aa4ae149d754329ecc39c42e38aaa9b28bb5d66aa5c3a6",
+      "id": "read-full-cancellation-f74b4bfdff3e",
+      "file": "docs/flows/views/read-full-cancellation-f74b4bfdff3e/README.md",
+      "signature": "f74b4bfdff3ea3f2553e0db2d86590f417c19699396daa567b5b956394e1f562",
       "nodeCount": 4,
-      "mermaidSha256": "34753c1484c77cab8613f06a2f24b0ebc7298f131ff02f7fa83d5c000c5aa8a8"
+      "mermaidSha256": "0c1b7517ad89504149bb0e3cfca0ea7e053b80fdde338c689d508d3d212a0322",
+      "rawSdkMermaid": "flowchart TD\nread_full_cancellation[\"read-full-cancellation\"]\nread_full_cancellation --> full_cancellation\nfull_cancellation[\"full-cancellation\"]\nfull_cancellation --> full\nfull[\"settle-cancelled\"]\nfull_cancellation --> partial\npartial[\"settle-partial-cancellation\"]",
+      "semanticProof": {
+        "version": "native-mermaid-semantic-v1",
+        "sdkTopologyVerified": true,
+        "nodeIdentitiesVerified": true,
+        "nodeCount": 4,
+        "edgeCount": 3,
+        "rawSdkSha256": "34753c1484c77cab8613f06a2f24b0ebc7298f131ff02f7fa83d5c000c5aa8a8",
+        "annotatedSha256": "0c1b7517ad89504149bb0e3cfca0ea7e053b80fdde338c689d508d3d212a0322",
+        "nodeIdentitySha256": "1ab7b8a53e27dda815edd5d31c15e37b1b1ef18a85dbb1300e7e2b35fca7d510",
+        "rawEdgeMultisetSha256": "2a3d48c75457331961587baf346f8d21f6d972a37e53e2256bc53ecc6988b393",
+        "annotatedEdgeMultisetSha256": "2a3d48c75457331961587baf346f8d21f6d972a37e53e2256bc53ecc6988b393",
+        "nodeIdMap": [
+          {
+            "id": "read-full-cancellation",
+            "mermaidId": "read_full_cancellation",
+            "name": "read-full-cancellation",
+            "kind": "stage"
+          },
+          {
+            "id": "full-cancellation",
+            "mermaidId": "full_cancellation",
+            "name": "full-cancellation",
+            "kind": "decision"
+          },
+          {
+            "id": "full",
+            "mermaidId": "full",
+            "name": "settle-cancelled",
+            "kind": "stage"
+          },
+          {
+            "id": "partial",
+            "mermaidId": "partial",
+            "name": "settle-partial-cancellation",
+            "kind": "stage"
+          }
+        ],
+        "edges": [
+          {
+            "from": "read_full_cancellation",
+            "to": "full_cancellation",
+            "kind": "next"
+          },
+          {
+            "from": "full_cancellation",
+            "to": "full",
+            "kind": "branch",
+            "branchKey": "full"
+          },
+          {
+            "from": "full_cancellation",
+            "to": "partial",
+            "kind": "branch",
+            "branchKey": "partial"
+          }
+        ]
+      }
     },
     {
-      "id": "read-reconciliation-eligibility-32365b19c35f",
-      "file": "docs/flows/views/read-reconciliation-eligibility-32365b19c35f/README.md",
-      "signature": "32365b19c35f3fde77bf036e55aaaf43373b7441cbd7e33874e0bb2b72f2aefd",
+      "id": "read-reconciliation-eligibility-8e6bd9dfe8ce",
+      "file": "docs/flows/views/read-reconciliation-eligibility-8e6bd9dfe8ce/README.md",
+      "signature": "8e6bd9dfe8ce70ec20e1dec04cf05963e0391b093a7ef9aced30baf68d7a51f7",
       "nodeCount": 8,
-      "mermaidSha256": "aed2a70ca39d209f7fde33f404213901589b209ca793ca4cbc33faaca6664c86"
+      "mermaidSha256": "b41186edf16bd54fbec6d8c7799ebe37276194af8ca2e55924303a3cfd4d868e",
+      "rawSdkMermaid": "flowchart TD\nread_reconciliation_eligibility[\"read-reconciliation-eligibility\"]\nread_reconciliation_eligibility --> refund_reconciliation_eligible\nrefund_reconciliation_eligible[\"refund-reconciliation-eligible\"]\nrefund_reconciliation_eligible --> refund_reconciliation_eligible_allowed\nrefund_reconciliation_eligible_allowed[\"refund-reconciliation-eligible-allowed\"]\nrefund_reconciliation_eligible --> refund_reconciliation_eligible_denied\nrefund_reconciliation_eligible_denied[\"refund-reconciliation-eligible-denied\"]\nrefund_reconciliation_eligible --> read_terminal_refund_status\nread_terminal_refund_status[\"read-terminal-refund-status\"]\nread_terminal_refund_status --> refund_terminal_failure\nrefund_terminal_failure[\"refund-terminal-failure\"]\nrefund_terminal_failure --> failed\nfailed[\"manual-review-terminal-refund\"]\nrefund_terminal_failure --> lookup\nlookup[\"lookup-refund-evidence\"]",
+      "semanticProof": {
+        "version": "native-mermaid-semantic-v1",
+        "sdkTopologyVerified": true,
+        "nodeIdentitiesVerified": true,
+        "nodeCount": 8,
+        "edgeCount": 7,
+        "rawSdkSha256": "aed2a70ca39d209f7fde33f404213901589b209ca793ca4cbc33faaca6664c86",
+        "annotatedSha256": "b41186edf16bd54fbec6d8c7799ebe37276194af8ca2e55924303a3cfd4d868e",
+        "nodeIdentitySha256": "d395640931257e0e70e3cf06226d14939f4c7c1373efa83fb3424b18e228d560",
+        "rawEdgeMultisetSha256": "7cc38a9525bb2d8c2d00ce41890d1c07c30d665f6405f0116e2f90f8d83f0bee",
+        "annotatedEdgeMultisetSha256": "7cc38a9525bb2d8c2d00ce41890d1c07c30d665f6405f0116e2f90f8d83f0bee",
+        "nodeIdMap": [
+          {
+            "id": "read-reconciliation-eligibility",
+            "mermaidId": "read_reconciliation_eligibility",
+            "name": "read-reconciliation-eligibility",
+            "kind": "stage"
+          },
+          {
+            "id": "refund-reconciliation-eligible",
+            "mermaidId": "refund_reconciliation_eligible",
+            "name": "refund-reconciliation-eligible",
+            "kind": "decision"
+          },
+          {
+            "id": "refund-reconciliation-eligible-allowed",
+            "mermaidId": "refund_reconciliation_eligible_allowed",
+            "name": "refund-reconciliation-eligible-allowed",
+            "kind": "stage"
+          },
+          {
+            "id": "refund-reconciliation-eligible-denied",
+            "mermaidId": "refund_reconciliation_eligible_denied",
+            "name": "refund-reconciliation-eligible-denied",
+            "kind": "stage"
+          },
+          {
+            "id": "read-terminal-refund-status",
+            "mermaidId": "read_terminal_refund_status",
+            "name": "read-terminal-refund-status",
+            "kind": "stage"
+          },
+          {
+            "id": "refund-terminal-failure",
+            "mermaidId": "refund_terminal_failure",
+            "name": "refund-terminal-failure",
+            "kind": "decision"
+          },
+          {
+            "id": "failed",
+            "mermaidId": "failed",
+            "name": "manual-review-terminal-refund",
+            "kind": "stage"
+          },
+          {
+            "id": "lookup",
+            "mermaidId": "lookup",
+            "name": "lookup-refund-evidence",
+            "kind": "subflow"
+          }
+        ],
+        "edges": [
+          {
+            "from": "read_reconciliation_eligibility",
+            "to": "refund_reconciliation_eligible",
+            "kind": "next"
+          },
+          {
+            "from": "refund_reconciliation_eligible",
+            "to": "refund_reconciliation_eligible_allowed",
+            "kind": "branch",
+            "branchKey": "refund-reconciliation-eligible-allowed"
+          },
+          {
+            "from": "refund_reconciliation_eligible",
+            "to": "refund_reconciliation_eligible_denied",
+            "kind": "branch",
+            "branchKey": "refund-reconciliation-eligible-denied"
+          },
+          {
+            "from": "refund_reconciliation_eligible",
+            "to": "read_terminal_refund_status",
+            "kind": "continuation",
+            "continuation": "after selected branch"
+          },
+          {
+            "from": "read_terminal_refund_status",
+            "to": "refund_terminal_failure",
+            "kind": "next"
+          },
+          {
+            "from": "refund_terminal_failure",
+            "to": "failed",
+            "kind": "branch",
+            "branchKey": "failed"
+          },
+          {
+            "from": "refund_terminal_failure",
+            "to": "lookup",
+            "kind": "branch",
+            "branchKey": "lookup"
+          }
+        ]
+      }
     },
     {
-      "id": "read-refund-eligibility-947fe9e6ab83",
-      "file": "docs/flows/views/read-refund-eligibility-947fe9e6ab83/README.md",
-      "signature": "947fe9e6ab83202615f9e9c9c446d73184bb07084b369c4c0dbb4328e0992301",
+      "id": "read-refund-eligibility-9bf14817441a",
+      "file": "docs/flows/views/read-refund-eligibility-9bf14817441a/README.md",
+      "signature": "9bf14817441a45f6ee66c25e44b648bee35e01ac6077004d7f17189a692091af",
       "nodeCount": 22,
-      "mermaidSha256": "c82bcb3bf56f91add99c71087573c342e51ae4997be490775a8d91c6636fdd39"
+      "mermaidSha256": "3af709ff7c5fc90da147ac79bd880bae318d0e789b5292ab9e6e2e37dd79be6d",
+      "rawSdkMermaid": "flowchart TD\nread_refund_eligibility[\"read-refund-eligibility\"]\nread_refund_eligibility --> refund_eligible\nrefund_eligible[\"refund-eligible\"]\nrefund_eligible --> refund_eligible_allowed\nrefund_eligible_allowed[\"load-refund-order\"]\nrefund_eligible --> refund_eligible_denied\nrefund_eligible_denied[\"refund-eligible-denied\"]\nrefund_eligible --> cancellation_still_eligible\ncancellation_still_eligible[\"cancellation-still-eligible\"]\ncancellation_still_eligible --> cancellation_still_eligible_allowed\ncancellation_still_eligible_allowed[\"get-current-payment\"]\ncancellation_still_eligible --> cancellation_still_eligible_denied\ncancellation_still_eligible_denied[\"cancellation-still-eligible-denied\"]\ncancellation_still_eligible --> current_payment_available\ncurrent_payment_available[\"current-payment-available\"]\ncurrent_payment_available --> current_payment_available_allowed\ncurrent_payment_available_allowed[\"read-payment-identity\"]\ncurrent_payment_available --> current_payment_available_denied\ncurrent_payment_available_denied[\"current-payment-available-denied\"]\ncurrent_payment_available --> payment_matches_order\npayment_matches_order[\"payment-matches-order\"]\npayment_matches_order --> payment_matches_order_allowed\npayment_matches_order_allowed[\"read-refund-budget\"]\npayment_matches_order --> payment_matches_order_denied\npayment_matches_order_denied[\"payment-matches-order-denied\"]\npayment_matches_order --> refund_budget_available\nrefund_budget_available[\"refund-budget-available\"]\nrefund_budget_available --> refund_budget_available_allowed\nrefund_budget_available_allowed[\"prepare-refund-intent\"]\nrefund_budget_available --> refund_budget_available_denied\nrefund_budget_available_denied[\"refund-budget-available-denied\"]\nrefund_budget_available --> refund_intent_ready\nrefund_intent_ready[\"refund-intent-ready\"]\nrefund_intent_ready --> refund_intent_ready_allowed\nrefund_intent_ready_allowed[\"send-refund\"]\nrefund_intent_ready --> refund_intent_ready_denied\nrefund_intent_ready_denied[\"refund-intent-ready-denied\"]\nrefund_intent_ready --> refund_call_result\nrefund_call_result[\"refund-call-result\"]\nrefund_call_result --> returned\nreturned[\"settle-new-refund\"]\nrefund_call_result --> unknown\nunknown[\"record-unknown-refund\"]",
+      "semanticProof": {
+        "version": "native-mermaid-semantic-v1",
+        "sdkTopologyVerified": true,
+        "nodeIdentitiesVerified": true,
+        "nodeCount": 22,
+        "edgeCount": 21,
+        "rawSdkSha256": "c82bcb3bf56f91add99c71087573c342e51ae4997be490775a8d91c6636fdd39",
+        "annotatedSha256": "3af709ff7c5fc90da147ac79bd880bae318d0e789b5292ab9e6e2e37dd79be6d",
+        "nodeIdentitySha256": "3e9dc330550c75b66b61a12bea8dcb5c3779cea00bc3b4e22af30e67f8bf3566",
+        "rawEdgeMultisetSha256": "11c76dd1137705838aa0f3a210a90ecd7debee4e46c6302fb16f18fbd464a4d4",
+        "annotatedEdgeMultisetSha256": "11c76dd1137705838aa0f3a210a90ecd7debee4e46c6302fb16f18fbd464a4d4",
+        "nodeIdMap": [
+          {
+            "id": "read-refund-eligibility",
+            "mermaidId": "read_refund_eligibility",
+            "name": "read-refund-eligibility",
+            "kind": "stage"
+          },
+          {
+            "id": "refund-eligible",
+            "mermaidId": "refund_eligible",
+            "name": "refund-eligible",
+            "kind": "decision"
+          },
+          {
+            "id": "refund-eligible-allowed",
+            "mermaidId": "refund_eligible_allowed",
+            "name": "load-refund-order",
+            "kind": "stage"
+          },
+          {
+            "id": "refund-eligible-denied",
+            "mermaidId": "refund_eligible_denied",
+            "name": "refund-eligible-denied",
+            "kind": "stage"
+          },
+          {
+            "id": "cancellation-still-eligible",
+            "mermaidId": "cancellation_still_eligible",
+            "name": "cancellation-still-eligible",
+            "kind": "decision"
+          },
+          {
+            "id": "cancellation-still-eligible-allowed",
+            "mermaidId": "cancellation_still_eligible_allowed",
+            "name": "get-current-payment",
+            "kind": "stage"
+          },
+          {
+            "id": "cancellation-still-eligible-denied",
+            "mermaidId": "cancellation_still_eligible_denied",
+            "name": "cancellation-still-eligible-denied",
+            "kind": "stage"
+          },
+          {
+            "id": "current-payment-available",
+            "mermaidId": "current_payment_available",
+            "name": "current-payment-available",
+            "kind": "decision"
+          },
+          {
+            "id": "current-payment-available-allowed",
+            "mermaidId": "current_payment_available_allowed",
+            "name": "read-payment-identity",
+            "kind": "stage"
+          },
+          {
+            "id": "current-payment-available-denied",
+            "mermaidId": "current_payment_available_denied",
+            "name": "current-payment-available-denied",
+            "kind": "stage"
+          },
+          {
+            "id": "payment-matches-order",
+            "mermaidId": "payment_matches_order",
+            "name": "payment-matches-order",
+            "kind": "decision"
+          },
+          {
+            "id": "payment-matches-order-allowed",
+            "mermaidId": "payment_matches_order_allowed",
+            "name": "read-refund-budget",
+            "kind": "stage"
+          },
+          {
+            "id": "payment-matches-order-denied",
+            "mermaidId": "payment_matches_order_denied",
+            "name": "payment-matches-order-denied",
+            "kind": "stage"
+          },
+          {
+            "id": "refund-budget-available",
+            "mermaidId": "refund_budget_available",
+            "name": "refund-budget-available",
+            "kind": "decision"
+          },
+          {
+            "id": "refund-budget-available-allowed",
+            "mermaidId": "refund_budget_available_allowed",
+            "name": "prepare-refund-intent",
+            "kind": "stage"
+          },
+          {
+            "id": "refund-budget-available-denied",
+            "mermaidId": "refund_budget_available_denied",
+            "name": "refund-budget-available-denied",
+            "kind": "stage"
+          },
+          {
+            "id": "refund-intent-ready",
+            "mermaidId": "refund_intent_ready",
+            "name": "refund-intent-ready",
+            "kind": "decision"
+          },
+          {
+            "id": "refund-intent-ready-allowed",
+            "mermaidId": "refund_intent_ready_allowed",
+            "name": "send-refund",
+            "kind": "stage"
+          },
+          {
+            "id": "refund-intent-ready-denied",
+            "mermaidId": "refund_intent_ready_denied",
+            "name": "refund-intent-ready-denied",
+            "kind": "stage"
+          },
+          {
+            "id": "refund-call-result",
+            "mermaidId": "refund_call_result",
+            "name": "refund-call-result",
+            "kind": "decision"
+          },
+          {
+            "id": "returned",
+            "mermaidId": "returned",
+            "name": "settle-new-refund",
+            "kind": "subflow"
+          },
+          {
+            "id": "unknown",
+            "mermaidId": "unknown",
+            "name": "record-unknown-refund",
+            "kind": "stage"
+          }
+        ],
+        "edges": [
+          {
+            "from": "read_refund_eligibility",
+            "to": "refund_eligible",
+            "kind": "next"
+          },
+          {
+            "from": "refund_eligible",
+            "to": "refund_eligible_allowed",
+            "kind": "branch",
+            "branchKey": "refund-eligible-allowed"
+          },
+          {
+            "from": "refund_eligible",
+            "to": "refund_eligible_denied",
+            "kind": "branch",
+            "branchKey": "refund-eligible-denied"
+          },
+          {
+            "from": "refund_eligible",
+            "to": "cancellation_still_eligible",
+            "kind": "continuation",
+            "continuation": "after selected branch"
+          },
+          {
+            "from": "cancellation_still_eligible",
+            "to": "cancellation_still_eligible_allowed",
+            "kind": "branch",
+            "branchKey": "cancellation-still-eligible-allowed"
+          },
+          {
+            "from": "cancellation_still_eligible",
+            "to": "cancellation_still_eligible_denied",
+            "kind": "branch",
+            "branchKey": "cancellation-still-eligible-denied"
+          },
+          {
+            "from": "cancellation_still_eligible",
+            "to": "current_payment_available",
+            "kind": "continuation",
+            "continuation": "after selected branch"
+          },
+          {
+            "from": "current_payment_available",
+            "to": "current_payment_available_allowed",
+            "kind": "branch",
+            "branchKey": "current-payment-available-allowed"
+          },
+          {
+            "from": "current_payment_available",
+            "to": "current_payment_available_denied",
+            "kind": "branch",
+            "branchKey": "current-payment-available-denied"
+          },
+          {
+            "from": "current_payment_available",
+            "to": "payment_matches_order",
+            "kind": "continuation",
+            "continuation": "after selected branch"
+          },
+          {
+            "from": "payment_matches_order",
+            "to": "payment_matches_order_allowed",
+            "kind": "branch",
+            "branchKey": "payment-matches-order-allowed"
+          },
+          {
+            "from": "payment_matches_order",
+            "to": "payment_matches_order_denied",
+            "kind": "branch",
+            "branchKey": "payment-matches-order-denied"
+          },
+          {
+            "from": "payment_matches_order",
+            "to": "refund_budget_available",
+            "kind": "continuation",
+            "continuation": "after selected branch"
+          },
+          {
+            "from": "refund_budget_available",
+            "to": "refund_budget_available_allowed",
+            "kind": "branch",
+            "branchKey": "refund-budget-available-allowed"
+          },
+          {
+            "from": "refund_budget_available",
+            "to": "refund_budget_available_denied",
+            "kind": "branch",
+            "branchKey": "refund-budget-available-denied"
+          },
+          {
+            "from": "refund_budget_available",
+            "to": "refund_intent_ready",
+            "kind": "continuation",
+            "continuation": "after selected branch"
+          },
+          {
+            "from": "refund_intent_ready",
+            "to": "refund_intent_ready_allowed",
+            "kind": "branch",
+            "branchKey": "refund-intent-ready-allowed"
+          },
+          {
+            "from": "refund_intent_ready",
+            "to": "refund_intent_ready_denied",
+            "kind": "branch",
+            "branchKey": "refund-intent-ready-denied"
+          },
+          {
+            "from": "refund_intent_ready",
+            "to": "refund_call_result",
+            "kind": "continuation",
+            "continuation": "after selected branch"
+          },
+          {
+            "from": "refund_call_result",
+            "to": "returned",
+            "kind": "branch",
+            "branchKey": "returned"
+          },
+          {
+            "from": "refund_call_result",
+            "to": "unknown",
+            "kind": "branch",
+            "branchKey": "unknown"
+          }
+        ]
+      }
     },
     {
-      "id": "read-refund-evidence-presence-0d18dca3cab7",
-      "file": "docs/flows/views/read-refund-evidence-presence-0d18dca3cab7/README.md",
-      "signature": "0d18dca3cab7f4f2e8fda439f5a04a74cd1e1af2ec5ef9fc9e15588ec7803730",
+      "id": "read-refund-evidence-presence-5868253a4104",
+      "file": "docs/flows/views/read-refund-evidence-presence-5868253a4104/README.md",
+      "signature": "5868253a4104295082c1084bdd8820d5d90236803c405eeb1648a5a26bc3ac55",
       "nodeCount": 4,
-      "mermaidSha256": "3a14bdeae0b6c1c0f5b1f6cc9b5a37f0aeeb8bf5a0504c1a117c91580117b36c"
+      "mermaidSha256": "f383647b40ae8b5d629c0ab57c89462cb7f19c5e68c04bfcbae15820a8915e59",
+      "rawSdkMermaid": "flowchart TD\nread_refund_evidence_presence[\"read-refund-evidence-presence\"]\nread_refund_evidence_presence --> refund_evidence_present\nrefund_evidence_present[\"refund-evidence-present\"]\nrefund_evidence_present --> found\nfound[\"settle-reconciled-refund\"]\nrefund_evidence_present --> unknown\nunknown[\"keep-unknown-refund\"]",
+      "semanticProof": {
+        "version": "native-mermaid-semantic-v1",
+        "sdkTopologyVerified": true,
+        "nodeIdentitiesVerified": true,
+        "nodeCount": 4,
+        "edgeCount": 3,
+        "rawSdkSha256": "3a14bdeae0b6c1c0f5b1f6cc9b5a37f0aeeb8bf5a0504c1a117c91580117b36c",
+        "annotatedSha256": "f383647b40ae8b5d629c0ab57c89462cb7f19c5e68c04bfcbae15820a8915e59",
+        "nodeIdentitySha256": "fd12bc82c4ff809e40f098a45347eb9470e42cd1b37f367616d88b932ec83f0b",
+        "rawEdgeMultisetSha256": "4d276bb0487444a237fb7ae88f8577bc2a883c800e8616039826b2fba6097c21",
+        "annotatedEdgeMultisetSha256": "4d276bb0487444a237fb7ae88f8577bc2a883c800e8616039826b2fba6097c21",
+        "nodeIdMap": [
+          {
+            "id": "read-refund-evidence-presence",
+            "mermaidId": "read_refund_evidence_presence",
+            "name": "read-refund-evidence-presence",
+            "kind": "stage"
+          },
+          {
+            "id": "refund-evidence-present",
+            "mermaidId": "refund_evidence_present",
+            "name": "refund-evidence-present",
+            "kind": "decision"
+          },
+          {
+            "id": "found",
+            "mermaidId": "found",
+            "name": "settle-reconciled-refund",
+            "kind": "subflow"
+          },
+          {
+            "id": "unknown",
+            "mermaidId": "unknown",
+            "name": "keep-unknown-refund",
+            "kind": "stage"
+          }
+        ],
+        "edges": [
+          {
+            "from": "read_refund_evidence_presence",
+            "to": "refund_evidence_present",
+            "kind": "next"
+          },
+          {
+            "from": "refund_evidence_present",
+            "to": "found",
+            "kind": "branch",
+            "branchKey": "found"
+          },
+          {
+            "from": "refund_evidence_present",
+            "to": "unknown",
+            "kind": "branch",
+            "branchKey": "unknown"
+          }
+        ]
+      }
     },
     {
-      "id": "read-replay-match-942182656867",
-      "file": "docs/flows/views/read-replay-match-942182656867/README.md",
-      "signature": "94218265686761092d936b9dd628fb344c77357f94db86b9258120e5e74242c6",
+      "id": "read-replay-match-6972564a8d95",
+      "file": "docs/flows/views/read-replay-match-6972564a8d95/README.md",
+      "signature": "6972564a8d95828915561b5d9bf3fe3210e07184c2ebe59828e3e8e2c07c1946",
       "nodeCount": 4,
-      "mermaidSha256": "dcf390bdb72dd0b9c3a87c8e2b56cba68663fb4965f2b3d0e3bd5d82e8bffb31"
+      "mermaidSha256": "3d551bf7a2ddf323146ccd890226db5e6e902d29118070435f9dec7579f0ed0b",
+      "rawSdkMermaid": "flowchart TD\nread_replay_match[\"read-replay-match\"]\nread_replay_match --> request_replay_matches\nrequest_replay_matches[\"request-replay-matches\"]\nrequest_replay_matches --> request_replay_matches_allowed\nrequest_replay_matches_allowed[\"reuse-request\"]\nrequest_replay_matches --> request_replay_matches_denied\nrequest_replay_matches_denied[\"request-replay-matches-denied\"]",
+      "semanticProof": {
+        "version": "native-mermaid-semantic-v1",
+        "sdkTopologyVerified": true,
+        "nodeIdentitiesVerified": true,
+        "nodeCount": 4,
+        "edgeCount": 3,
+        "rawSdkSha256": "dcf390bdb72dd0b9c3a87c8e2b56cba68663fb4965f2b3d0e3bd5d82e8bffb31",
+        "annotatedSha256": "3d551bf7a2ddf323146ccd890226db5e6e902d29118070435f9dec7579f0ed0b",
+        "nodeIdentitySha256": "3221ae1630a33afd9f73951ad7983f459c4e41d2b40c51272e5701fdd982a29b",
+        "rawEdgeMultisetSha256": "e337f904fbd7b9715da3ec9e0cf7405720538dc92019c39a32554359c943bc92",
+        "annotatedEdgeMultisetSha256": "e337f904fbd7b9715da3ec9e0cf7405720538dc92019c39a32554359c943bc92",
+        "nodeIdMap": [
+          {
+            "id": "read-replay-match",
+            "mermaidId": "read_replay_match",
+            "name": "read-replay-match",
+            "kind": "stage"
+          },
+          {
+            "id": "request-replay-matches",
+            "mermaidId": "request_replay_matches",
+            "name": "request-replay-matches",
+            "kind": "decision"
+          },
+          {
+            "id": "request-replay-matches-allowed",
+            "mermaidId": "request_replay_matches_allowed",
+            "name": "reuse-request",
+            "kind": "stage"
+          },
+          {
+            "id": "request-replay-matches-denied",
+            "mermaidId": "request_replay_matches_denied",
+            "name": "request-replay-matches-denied",
+            "kind": "stage"
+          }
+        ],
+        "edges": [
+          {
+            "from": "read_replay_match",
+            "to": "request_replay_matches",
+            "kind": "next"
+          },
+          {
+            "from": "request_replay_matches",
+            "to": "request_replay_matches_allowed",
+            "kind": "branch",
+            "branchKey": "request-replay-matches-allowed"
+          },
+          {
+            "from": "request_replay_matches",
+            "to": "request_replay_matches_denied",
+            "kind": "branch",
+            "branchKey": "request-replay-matches-denied"
+          }
+        ]
+      }
     },
     {
-      "id": "read-restock-eligibility-c4abafcbe261",
-      "file": "docs/flows/views/read-restock-eligibility-c4abafcbe261/README.md",
-      "signature": "c4abafcbe2610497635aa41528cea599134a2aba6255609b99b35267264b0e81",
+      "id": "read-restock-eligibility-271379f9811f",
+      "file": "docs/flows/views/read-restock-eligibility-271379f9811f/README.md",
+      "signature": "271379f9811ff94b90abc74658c779526d953aa9ce1842224ac6557ef02ae971",
       "nodeCount": 10,
-      "mermaidSha256": "92053af86d046a50f1bfdf1460821a61dbe917bfb33f06b5ec670d5aa22755a1"
+      "mermaidSha256": "90e8ce4ec2ebb9c62205472df38b52bc51b434a2b4675d209fe9eb8e5f7fdb7b",
+      "rawSdkMermaid": "flowchart TD\nread_restock_eligibility[\"read-restock-eligibility\"]\nread_restock_eligibility --> restock_eligible\nrestock_eligible[\"restock-eligible\"]\nrestock_eligible --> restock_eligible_allowed\nrestock_eligible_allowed[\"restock-eligible-allowed\"]\nrestock_eligible --> restock_eligible_denied\nrestock_eligible_denied[\"restock-eligible-denied\"]\nrestock_eligible --> initialize_restock_items\ninitialize_restock_items[\"initialize-restock-items\"]\ninitialize_restock_items --> restock_item_loop\nrestock_item_loop[\"restock-item-loop\"]\nrestock_item_loop --> item\nitem[\"inspect-restock-item\"]\nitem --> restock_item_loop\nrestock_item_loop --> reject\nreject[\"reject-restock-item\"]\nrestock_item_loop --> complete\ncomplete[\"commit-restock\"]\nrestock_item_loop --> invalid_bound\ninvalid_bound[\"restock-bound-exceeded\"]",
+      "semanticProof": {
+        "version": "native-mermaid-semantic-v1",
+        "sdkTopologyVerified": true,
+        "nodeIdentitiesVerified": true,
+        "nodeCount": 10,
+        "edgeCount": 10,
+        "rawSdkSha256": "92053af86d046a50f1bfdf1460821a61dbe917bfb33f06b5ec670d5aa22755a1",
+        "annotatedSha256": "90e8ce4ec2ebb9c62205472df38b52bc51b434a2b4675d209fe9eb8e5f7fdb7b",
+        "nodeIdentitySha256": "f10080cd53b36690ebc5e4fb8bb99ba95833990019b39c81f90a6b368977aeb3",
+        "rawEdgeMultisetSha256": "687c27b3cb1eaa91c7c4c3410371291091a387a424b39af3e59dd505fd6d2dd4",
+        "annotatedEdgeMultisetSha256": "687c27b3cb1eaa91c7c4c3410371291091a387a424b39af3e59dd505fd6d2dd4",
+        "nodeIdMap": [
+          {
+            "id": "read-restock-eligibility",
+            "mermaidId": "read_restock_eligibility",
+            "name": "read-restock-eligibility",
+            "kind": "stage"
+          },
+          {
+            "id": "restock-eligible",
+            "mermaidId": "restock_eligible",
+            "name": "restock-eligible",
+            "kind": "decision"
+          },
+          {
+            "id": "restock-eligible-allowed",
+            "mermaidId": "restock_eligible_allowed",
+            "name": "restock-eligible-allowed",
+            "kind": "stage"
+          },
+          {
+            "id": "restock-eligible-denied",
+            "mermaidId": "restock_eligible_denied",
+            "name": "restock-eligible-denied",
+            "kind": "stage"
+          },
+          {
+            "id": "initialize-restock-items",
+            "mermaidId": "initialize_restock_items",
+            "name": "initialize-restock-items",
+            "kind": "stage"
+          },
+          {
+            "id": "restock-item-loop",
+            "mermaidId": "restock_item_loop",
+            "name": "restock-item-loop",
+            "kind": "decision"
+          },
+          {
+            "id": "item",
+            "mermaidId": "item",
+            "name": "inspect-restock-item",
+            "kind": "stage"
+          },
+          {
+            "id": "reject",
+            "mermaidId": "reject",
+            "name": "reject-restock-item",
+            "kind": "stage"
+          },
+          {
+            "id": "complete",
+            "mermaidId": "complete",
+            "name": "commit-restock",
+            "kind": "stage"
+          },
+          {
+            "id": "invalid-bound",
+            "mermaidId": "invalid_bound",
+            "name": "restock-bound-exceeded",
+            "kind": "stage"
+          }
+        ],
+        "edges": [
+          {
+            "from": "read_restock_eligibility",
+            "to": "restock_eligible",
+            "kind": "next"
+          },
+          {
+            "from": "restock_eligible",
+            "to": "restock_eligible_allowed",
+            "kind": "branch",
+            "branchKey": "restock-eligible-allowed"
+          },
+          {
+            "from": "restock_eligible",
+            "to": "restock_eligible_denied",
+            "kind": "branch",
+            "branchKey": "restock-eligible-denied"
+          },
+          {
+            "from": "restock_eligible",
+            "to": "initialize_restock_items",
+            "kind": "continuation",
+            "continuation": "after selected branch"
+          },
+          {
+            "from": "initialize_restock_items",
+            "to": "restock_item_loop",
+            "kind": "next"
+          },
+          {
+            "from": "restock_item_loop",
+            "to": "item",
+            "kind": "branch",
+            "branchKey": "item"
+          },
+          {
+            "from": "item",
+            "to": "restock_item_loop",
+            "kind": "loop"
+          },
+          {
+            "from": "restock_item_loop",
+            "to": "reject",
+            "kind": "branch",
+            "branchKey": "reject"
+          },
+          {
+            "from": "restock_item_loop",
+            "to": "complete",
+            "kind": "branch",
+            "branchKey": "complete"
+          },
+          {
+            "from": "restock_item_loop",
+            "to": "invalid_bound",
+            "kind": "branch",
+            "branchKey": "invalid-bound"
+          }
+        ]
+      }
     },
     {
-      "id": "read-restock-status-7f4ce6d2eaef",
-      "file": "docs/flows/views/read-restock-status-7f4ce6d2eaef/README.md",
-      "signature": "7f4ce6d2eaefa88fec8dd7503e73057143bec119dc53cc9466d90abd6573a893",
+      "id": "read-restock-status-7ce354fd260c",
+      "file": "docs/flows/views/read-restock-status-7ce354fd260c/README.md",
+      "signature": "7ce354fd260c7c798640f6bab9a3f38254ab0b4f5cefb564dde2ca5630ea7318",
       "nodeCount": 4,
-      "mermaidSha256": "697ac38cfe9c2acb78cac03166ec2b5b4933578052a65b808781ee488cd91a10"
+      "mermaidSha256": "143fefe109874ff75af73e8089d56d3787e7f746b7c464bff802d7857a6bdf90",
+      "rawSdkMermaid": "flowchart TD\nread_restock_status[\"read-restock-status\"]\nread_restock_status --> restock_needed\nrestock_needed[\"restock-needed\"]\nrestock_needed --> needed\nneeded[\"apply-restock\"]\nrestock_needed --> complete\ncomplete[\"keep-settled-result\"]",
+      "semanticProof": {
+        "version": "native-mermaid-semantic-v1",
+        "sdkTopologyVerified": true,
+        "nodeIdentitiesVerified": true,
+        "nodeCount": 4,
+        "edgeCount": 3,
+        "rawSdkSha256": "697ac38cfe9c2acb78cac03166ec2b5b4933578052a65b808781ee488cd91a10",
+        "annotatedSha256": "143fefe109874ff75af73e8089d56d3787e7f746b7c464bff802d7857a6bdf90",
+        "nodeIdentitySha256": "8158c2ef6db0bbdedfc331e67b294b4084e86db77668fcc50b35b040c1872e19",
+        "rawEdgeMultisetSha256": "bf2c7361de6685e7cb32b9f43cf7aa394f4f524c76c50f0b3f9b66cefcec34ab",
+        "annotatedEdgeMultisetSha256": "bf2c7361de6685e7cb32b9f43cf7aa394f4f524c76c50f0b3f9b66cefcec34ab",
+        "nodeIdMap": [
+          {
+            "id": "read-restock-status",
+            "mermaidId": "read_restock_status",
+            "name": "read-restock-status",
+            "kind": "stage"
+          },
+          {
+            "id": "restock-needed",
+            "mermaidId": "restock_needed",
+            "name": "restock-needed",
+            "kind": "decision"
+          },
+          {
+            "id": "needed",
+            "mermaidId": "needed",
+            "name": "apply-restock",
+            "kind": "subflow"
+          },
+          {
+            "id": "complete",
+            "mermaidId": "complete",
+            "name": "keep-settled-result",
+            "kind": "stage"
+          }
+        ],
+        "edges": [
+          {
+            "from": "read_restock_status",
+            "to": "restock_needed",
+            "kind": "next"
+          },
+          {
+            "from": "restock_needed",
+            "to": "needed",
+            "kind": "branch",
+            "branchKey": "needed"
+          },
+          {
+            "from": "restock_needed",
+            "to": "complete",
+            "kind": "branch",
+            "branchKey": "complete"
+          }
+        ]
+      }
     },
     {
-      "id": "read-settlement-status-74612c27d557",
-      "file": "docs/flows/views/read-settlement-status-74612c27d557/README.md",
-      "signature": "74612c27d55770c3600ff0891b4804bf2e54b7dfa47b2d78371e83f18ca65a47",
+      "id": "read-settlement-status-388fd1ef688f",
+      "file": "docs/flows/views/read-settlement-status-388fd1ef688f/README.md",
+      "signature": "388fd1ef688f4a29435fb37904e83909ab211b01f7b9a6afe9e685c07de29643",
       "nodeCount": 5,
-      "mermaidSha256": "167ecaa110a1bd68b854dc9006914d6493241a41d2e1f4e401c5d5fa75f707ab"
+      "mermaidSha256": "327de0110519fcb8ff412dfd350e3a13cfa57e4f3afc4f53b5479080ba08c66e",
+      "rawSdkMermaid": "flowchart TD\nread_settlement_status[\"read-settlement-status\"]\nread_settlement_status --> refund_evidence_status\nrefund_evidence_status[\"refund-evidence-status\"]\nrefund_evidence_status --> succeeded\nsucceeded[\"settle-succeeded-refund\"]\nrefund_evidence_status --> pending\npending[\"settle-pending-refund\"]\nrefund_evidence_status --> failed\nfailed[\"settle-failed-refund\"]",
+      "semanticProof": {
+        "version": "native-mermaid-semantic-v1",
+        "sdkTopologyVerified": true,
+        "nodeIdentitiesVerified": true,
+        "nodeCount": 5,
+        "edgeCount": 4,
+        "rawSdkSha256": "ed07ba2ce68bea9b31021d4767b2f72c7fa4cf4b6afa321f60cc9b06c604a0c3",
+        "annotatedSha256": "327de0110519fcb8ff412dfd350e3a13cfa57e4f3afc4f53b5479080ba08c66e",
+        "nodeIdentitySha256": "62fb5a26d75feaf131678c0ea68b41f131747fc8054e7422c3b4300feab1c2fe",
+        "rawEdgeMultisetSha256": "de99633f063b15973e06b60dad03cd865d562b56868dadce1f2cd6bca9613139",
+        "annotatedEdgeMultisetSha256": "de99633f063b15973e06b60dad03cd865d562b56868dadce1f2cd6bca9613139",
+        "nodeIdMap": [
+          {
+            "id": "read-settlement-status",
+            "mermaidId": "read_settlement_status",
+            "name": "read-settlement-status",
+            "kind": "stage"
+          },
+          {
+            "id": "refund-evidence-status",
+            "mermaidId": "refund_evidence_status",
+            "name": "refund-evidence-status",
+            "kind": "decision"
+          },
+          {
+            "id": "succeeded",
+            "mermaidId": "succeeded",
+            "name": "settle-succeeded-refund",
+            "kind": "subflow"
+          },
+          {
+            "id": "pending",
+            "mermaidId": "pending",
+            "name": "settle-pending-refund",
+            "kind": "stage"
+          },
+          {
+            "id": "failed",
+            "mermaidId": "failed",
+            "name": "settle-failed-refund",
+            "kind": "stage"
+          }
+        ],
+        "edges": [
+          {
+            "from": "read_settlement_status",
+            "to": "refund_evidence_status",
+            "kind": "next"
+          },
+          {
+            "from": "refund_evidence_status",
+            "to": "succeeded",
+            "kind": "branch",
+            "branchKey": "succeeded"
+          },
+          {
+            "from": "refund_evidence_status",
+            "to": "pending",
+            "kind": "branch",
+            "branchKey": "pending"
+          },
+          {
+            "from": "refund_evidence_status",
+            "to": "failed",
+            "kind": "branch",
+            "branchKey": "failed"
+          }
+        ]
+      }
     },
     {
-      "id": "read-settlement-status-d9c49e4d6dc9",
-      "file": "docs/flows/views/read-settlement-status-d9c49e4d6dc9/README.md",
-      "signature": "d9c49e4d6dc9d0394b019f76ad97c6dd6164bc8d8c903f286e7baa182885187b",
+      "id": "read-settlement-status-3aa90787446a",
+      "file": "docs/flows/views/read-settlement-status-3aa90787446a/README.md",
+      "signature": "3aa90787446a9980a94cb3d2d65560eecb8fa1ccb7a6dea70b74622902b0e2d1",
       "nodeCount": 5,
-      "mermaidSha256": "ed07ba2ce68bea9b31021d4767b2f72c7fa4cf4b6afa321f60cc9b06c604a0c3"
+      "mermaidSha256": "d8a50c74cce351fe0f0f3f03d04ab00c736436aabfeafa8bd80623d695fb4616",
+      "rawSdkMermaid": "flowchart TD\nread_settlement_status[\"read-settlement-status\"]\nread_settlement_status --> repeated_refund_status\nrepeated_refund_status[\"repeated-refund-status\"]\nrepeated_refund_status --> succeeded\nsucceeded[\"resume-restock\"]\nrepeated_refund_status --> pending\npending[\"reject-regressed-pending-evidence\"]\nrepeated_refund_status --> failed\nfailed[\"record-late-refund-failure\"]",
+      "semanticProof": {
+        "version": "native-mermaid-semantic-v1",
+        "sdkTopologyVerified": true,
+        "nodeIdentitiesVerified": true,
+        "nodeCount": 5,
+        "edgeCount": 4,
+        "rawSdkSha256": "167ecaa110a1bd68b854dc9006914d6493241a41d2e1f4e401c5d5fa75f707ab",
+        "annotatedSha256": "d8a50c74cce351fe0f0f3f03d04ab00c736436aabfeafa8bd80623d695fb4616",
+        "nodeIdentitySha256": "ea785d5144d62585bd99df1a2941067c12e1e4ea6bd28ae465d5f4f855d89432",
+        "rawEdgeMultisetSha256": "d871fa45224b21a2028011c8c50494a5437193db53a00d446b1a720d3e7c2c98",
+        "annotatedEdgeMultisetSha256": "d871fa45224b21a2028011c8c50494a5437193db53a00d446b1a720d3e7c2c98",
+        "nodeIdMap": [
+          {
+            "id": "read-settlement-status",
+            "mermaidId": "read_settlement_status",
+            "name": "read-settlement-status",
+            "kind": "stage"
+          },
+          {
+            "id": "repeated-refund-status",
+            "mermaidId": "repeated_refund_status",
+            "name": "repeated-refund-status",
+            "kind": "decision"
+          },
+          {
+            "id": "succeeded",
+            "mermaidId": "succeeded",
+            "name": "resume-restock",
+            "kind": "subflow"
+          },
+          {
+            "id": "pending",
+            "mermaidId": "pending",
+            "name": "reject-regressed-pending-evidence",
+            "kind": "stage"
+          },
+          {
+            "id": "failed",
+            "mermaidId": "failed",
+            "name": "record-late-refund-failure",
+            "kind": "subflow"
+          }
+        ],
+        "edges": [
+          {
+            "from": "read_settlement_status",
+            "to": "repeated_refund_status",
+            "kind": "next"
+          },
+          {
+            "from": "repeated_refund_status",
+            "to": "succeeded",
+            "kind": "branch",
+            "branchKey": "succeeded"
+          },
+          {
+            "from": "repeated_refund_status",
+            "to": "pending",
+            "kind": "branch",
+            "branchKey": "pending"
+          },
+          {
+            "from": "repeated_refund_status",
+            "to": "failed",
+            "kind": "branch",
+            "branchKey": "failed"
+          }
+        ]
+      }
     },
     {
-      "id": "record-authoritative-reconciliation-444653c80f3e",
-      "file": "docs/flows/views/record-authoritative-reconciliation-444653c80f3e/README.md",
-      "signature": "444653c80f3e820b24221dbffba59f8d55da724a09c3d4b293e4173f810f2613",
+      "id": "record-authoritative-reconciliation-c12c6b46b5bf",
+      "file": "docs/flows/views/record-authoritative-reconciliation-c12c6b46b5bf/README.md",
+      "signature": "c12c6b46b5bf1f21fcd65275a25157d35a5ef54f80fa644114a49c8fba439f06",
       "nodeCount": 11,
-      "mermaidSha256": "b47c40d5282fa7473b4f62f415c34ae55e3a5b03e4bd74b7212cda5b915d5b44"
+      "mermaidSha256": "ea021a7d8c97df644f3efdd207887d5d9bc190df5fd40c183273113c3e0f1fac",
+      "rawSdkMermaid": "flowchart TD\nrecord_authoritative_reconciliation[\"record-authoritative-reconciliation\"]\nrecord_authoritative_reconciliation --> validate_refund_evidence\nvalidate_refund_evidence[\"validate-refund-evidence\"]\nvalidate_refund_evidence --> refund_evidence_matches\nrefund_evidence_matches[\"refund-evidence-matches\"]\nrefund_evidence_matches --> refund_evidence_matches_allowed\nrefund_evidence_matches_allowed[\"refund-evidence-matches-allowed\"]\nrefund_evidence_matches --> refund_evidence_matches_denied\nrefund_evidence_matches_denied[\"refund-evidence-matches-denied\"]\nrefund_evidence_matches --> read_prior_refund_status\nread_prior_refund_status[\"read-prior-refund-status\"]\nread_prior_refund_status --> prior_refund_status\nprior_refund_status[\"prior-refund-status\"]\nprior_refund_status --> FAILED\nFAILED[\"keep-terminal-refund-failure\"]\nprior_refund_status --> SUCCEEDED\nSUCCEEDED[\"check-repeated-refund-evidence\"]\nprior_refund_status --> unsettled\nunsettled[\"record-refund-evidence\"]\nprior_refund_status --> default\ndefault[\"record-refund-evidence\"]",
+      "semanticProof": {
+        "version": "native-mermaid-semantic-v1",
+        "sdkTopologyVerified": true,
+        "nodeIdentitiesVerified": true,
+        "nodeCount": 11,
+        "edgeCount": 10,
+        "rawSdkSha256": "b47c40d5282fa7473b4f62f415c34ae55e3a5b03e4bd74b7212cda5b915d5b44",
+        "annotatedSha256": "ea021a7d8c97df644f3efdd207887d5d9bc190df5fd40c183273113c3e0f1fac",
+        "nodeIdentitySha256": "30654955ae2e0fcbf2a92cd5d9802916febb3b7af979a258a478048e9dbc1ab9",
+        "rawEdgeMultisetSha256": "85e91b1b39775a4e5dc75c031407618481952a9545582a13f9850e66e5a8ddf6",
+        "annotatedEdgeMultisetSha256": "85e91b1b39775a4e5dc75c031407618481952a9545582a13f9850e66e5a8ddf6",
+        "nodeIdMap": [
+          {
+            "id": "record-authoritative-reconciliation",
+            "mermaidId": "record_authoritative_reconciliation",
+            "name": "record-authoritative-reconciliation",
+            "kind": "stage"
+          },
+          {
+            "id": "validate-refund-evidence",
+            "mermaidId": "validate_refund_evidence",
+            "name": "validate-refund-evidence",
+            "kind": "stage"
+          },
+          {
+            "id": "refund-evidence-matches",
+            "mermaidId": "refund_evidence_matches",
+            "name": "refund-evidence-matches",
+            "kind": "decision"
+          },
+          {
+            "id": "refund-evidence-matches-allowed",
+            "mermaidId": "refund_evidence_matches_allowed",
+            "name": "refund-evidence-matches-allowed",
+            "kind": "stage"
+          },
+          {
+            "id": "refund-evidence-matches-denied",
+            "mermaidId": "refund_evidence_matches_denied",
+            "name": "refund-evidence-matches-denied",
+            "kind": "stage"
+          },
+          {
+            "id": "read-prior-refund-status",
+            "mermaidId": "read_prior_refund_status",
+            "name": "read-prior-refund-status",
+            "kind": "stage"
+          },
+          {
+            "id": "prior-refund-status",
+            "mermaidId": "prior_refund_status",
+            "name": "prior-refund-status",
+            "kind": "decision"
+          },
+          {
+            "id": "FAILED",
+            "mermaidId": "FAILED",
+            "name": "keep-terminal-refund-failure",
+            "kind": "stage"
+          },
+          {
+            "id": "SUCCEEDED",
+            "mermaidId": "SUCCEEDED",
+            "name": "check-repeated-refund-evidence",
+            "kind": "subflow"
+          },
+          {
+            "id": "unsettled",
+            "mermaidId": "unsettled",
+            "name": "record-refund-evidence",
+            "kind": "subflow"
+          },
+          {
+            "id": "default",
+            "mermaidId": "default",
+            "name": "record-refund-evidence",
+            "kind": "subflow"
+          }
+        ],
+        "edges": [
+          {
+            "from": "record_authoritative_reconciliation",
+            "to": "validate_refund_evidence",
+            "kind": "next"
+          },
+          {
+            "from": "validate_refund_evidence",
+            "to": "refund_evidence_matches",
+            "kind": "next"
+          },
+          {
+            "from": "refund_evidence_matches",
+            "to": "refund_evidence_matches_allowed",
+            "kind": "branch",
+            "branchKey": "refund-evidence-matches-allowed"
+          },
+          {
+            "from": "refund_evidence_matches",
+            "to": "refund_evidence_matches_denied",
+            "kind": "branch",
+            "branchKey": "refund-evidence-matches-denied"
+          },
+          {
+            "from": "refund_evidence_matches",
+            "to": "read_prior_refund_status",
+            "kind": "continuation",
+            "continuation": "after selected branch"
+          },
+          {
+            "from": "read_prior_refund_status",
+            "to": "prior_refund_status",
+            "kind": "next"
+          },
+          {
+            "from": "prior_refund_status",
+            "to": "FAILED",
+            "kind": "branch",
+            "branchKey": "FAILED"
+          },
+          {
+            "from": "prior_refund_status",
+            "to": "SUCCEEDED",
+            "kind": "branch",
+            "branchKey": "SUCCEEDED"
+          },
+          {
+            "from": "prior_refund_status",
+            "to": "unsettled",
+            "kind": "branch",
+            "branchKey": "unsettled"
+          },
+          {
+            "from": "prior_refund_status",
+            "to": "default",
+            "kind": "branch",
+            "branchKey": "default"
+          }
+        ]
+      }
     },
     {
-      "id": "validate-action-5acb262f04c9",
-      "file": "docs/flows/views/validate-action-5acb262f04c9/README.md",
-      "signature": "5acb262f04c94b5196e3adbdb0b9773ac9ca9bdbf3292de0a5954dd28817662e",
+      "id": "validate-action-3ca46934d91a",
+      "file": "docs/flows/views/validate-action-3ca46934d91a/README.md",
+      "signature": "3ca46934d91a8d578e9fae2d97232ccda2f09934874a49e1533d18117c1b9064",
       "nodeCount": 12,
-      "mermaidSha256": "9feb2f11f19eff5d72ecbcb8dd5bbcfc0925a4a04e15c09d028e7311eb18fdf9"
+      "mermaidSha256": "4dba7acc0ecaeb2eedc788bde83a57532dc835655ffebda12ef89847e09b4704",
+      "rawSdkMermaid": "flowchart TD\nvalidate_action[\"validate-action\"]\nvalidate_action --> authorize_owner\nauthorize_owner[\"authorize-owner\"]\nauthorize_owner --> load_current_case\nload_current_case[\"load-current-case\"]\nload_current_case --> case_version_current\ncase_version_current[\"case-version-current\"]\ncase_version_current --> case_version_current_allowed\ncase_version_current_allowed[\"case-version-current-allowed\"]\ncase_version_current --> case_version_current_denied\ncase_version_current_denied[\"case-version-current-denied\"]\ncase_version_current --> route_owner_action\nroute_owner_action[\"route-owner-action\"]\nroute_owner_action --> approve\napprove[\"owner-approve-flow\"]\nroute_owner_action --> reject\nreject[\"owner-reject-flow\"]\nroute_owner_action --> receive\nreceive[\"owner-receive-flow\"]\nroute_owner_action --> refund\nrefund[\"owner-refund-flow\"]\nroute_owner_action --> reconcile\nreconcile[\"owner-reconcile-flow\"]",
+      "semanticProof": {
+        "version": "native-mermaid-semantic-v1",
+        "sdkTopologyVerified": true,
+        "nodeIdentitiesVerified": true,
+        "nodeCount": 12,
+        "edgeCount": 11,
+        "rawSdkSha256": "9feb2f11f19eff5d72ecbcb8dd5bbcfc0925a4a04e15c09d028e7311eb18fdf9",
+        "annotatedSha256": "4dba7acc0ecaeb2eedc788bde83a57532dc835655ffebda12ef89847e09b4704",
+        "nodeIdentitySha256": "cfe65cef1661f495415f4eecc634c2ce1d4fff344bbc44dc68e272acc551ea4c",
+        "rawEdgeMultisetSha256": "912b28b4fa1933df74adf3adf9c66239d9df8ae820f3659470efacf57321d9c0",
+        "annotatedEdgeMultisetSha256": "912b28b4fa1933df74adf3adf9c66239d9df8ae820f3659470efacf57321d9c0",
+        "nodeIdMap": [
+          {
+            "id": "validate-action",
+            "mermaidId": "validate_action",
+            "name": "validate-action",
+            "kind": "stage"
+          },
+          {
+            "id": "authorize-owner",
+            "mermaidId": "authorize_owner",
+            "name": "authorize-owner",
+            "kind": "stage"
+          },
+          {
+            "id": "load-current-case",
+            "mermaidId": "load_current_case",
+            "name": "load-current-case",
+            "kind": "stage"
+          },
+          {
+            "id": "case-version-current",
+            "mermaidId": "case_version_current",
+            "name": "case-version-current",
+            "kind": "decision"
+          },
+          {
+            "id": "case-version-current-allowed",
+            "mermaidId": "case_version_current_allowed",
+            "name": "case-version-current-allowed",
+            "kind": "stage"
+          },
+          {
+            "id": "case-version-current-denied",
+            "mermaidId": "case_version_current_denied",
+            "name": "case-version-current-denied",
+            "kind": "stage"
+          },
+          {
+            "id": "route-owner-action",
+            "mermaidId": "route_owner_action",
+            "name": "route-owner-action",
+            "kind": "decision"
+          },
+          {
+            "id": "approve",
+            "mermaidId": "approve",
+            "name": "owner-approve-flow",
+            "kind": "subflow"
+          },
+          {
+            "id": "reject",
+            "mermaidId": "reject",
+            "name": "owner-reject-flow",
+            "kind": "subflow"
+          },
+          {
+            "id": "receive",
+            "mermaidId": "receive",
+            "name": "owner-receive-flow",
+            "kind": "subflow"
+          },
+          {
+            "id": "refund",
+            "mermaidId": "refund",
+            "name": "owner-refund-flow",
+            "kind": "subflow"
+          },
+          {
+            "id": "reconcile",
+            "mermaidId": "reconcile",
+            "name": "owner-reconcile-flow",
+            "kind": "subflow"
+          }
+        ],
+        "edges": [
+          {
+            "from": "validate_action",
+            "to": "authorize_owner",
+            "kind": "next"
+          },
+          {
+            "from": "authorize_owner",
+            "to": "load_current_case",
+            "kind": "next"
+          },
+          {
+            "from": "load_current_case",
+            "to": "case_version_current",
+            "kind": "next"
+          },
+          {
+            "from": "case_version_current",
+            "to": "case_version_current_allowed",
+            "kind": "branch",
+            "branchKey": "case-version-current-allowed"
+          },
+          {
+            "from": "case_version_current",
+            "to": "case_version_current_denied",
+            "kind": "branch",
+            "branchKey": "case-version-current-denied"
+          },
+          {
+            "from": "case_version_current",
+            "to": "route_owner_action",
+            "kind": "continuation",
+            "continuation": "after selected branch"
+          },
+          {
+            "from": "route_owner_action",
+            "to": "approve",
+            "kind": "branch",
+            "branchKey": "approve"
+          },
+          {
+            "from": "route_owner_action",
+            "to": "reject",
+            "kind": "branch",
+            "branchKey": "reject"
+          },
+          {
+            "from": "route_owner_action",
+            "to": "receive",
+            "kind": "branch",
+            "branchKey": "receive"
+          },
+          {
+            "from": "route_owner_action",
+            "to": "refund",
+            "kind": "branch",
+            "branchKey": "refund"
+          },
+          {
+            "from": "route_owner_action",
+            "to": "reconcile",
+            "kind": "branch",
+            "branchKey": "reconcile"
+          }
+        ]
+      }
     },
     {
       "id": "validate-command-3af82d0c935a",
       "file": "docs/flows/views/validate-command-3af82d0c935a/README.md",
       "signature": "3af82d0c935afc90dae4e9848be28fae014d9918c4103c65f381dfba2b233471",
       "nodeCount": 3,
-      "mermaidSha256": "e8c50110f74a1032dabf7e60784537846c94ff7944add0eef24b17af5376f5db"
+      "mermaidSha256": "e8c50110f74a1032dabf7e60784537846c94ff7944add0eef24b17af5376f5db",
+      "rawSdkMermaid": "flowchart TD\nvalidate_command[\"Validate-Command\"]\nvalidate_command --> execute_operation\nexecute_operation[\"Execute-Operation\"]\nexecute_operation --> build_output\nbuild_output[\"Build-Output\"]",
+      "semanticProof": {
+        "version": "native-mermaid-semantic-v1",
+        "sdkTopologyVerified": true,
+        "nodeIdentitiesVerified": true,
+        "nodeCount": 3,
+        "edgeCount": 2,
+        "rawSdkSha256": "e8c50110f74a1032dabf7e60784537846c94ff7944add0eef24b17af5376f5db",
+        "annotatedSha256": "e8c50110f74a1032dabf7e60784537846c94ff7944add0eef24b17af5376f5db",
+        "nodeIdentitySha256": "4971aabb7b1249f33399e3c235f0ad29858402206ccb65e631c4b86c40b1e965",
+        "rawEdgeMultisetSha256": "e4878e34706fdf0c0ce076d69b98f471416800eb78ca40e400565e80d5456577",
+        "annotatedEdgeMultisetSha256": "e4878e34706fdf0c0ce076d69b98f471416800eb78ca40e400565e80d5456577",
+        "nodeIdMap": [
+          {
+            "id": "validate-command",
+            "mermaidId": "validate_command",
+            "name": "Validate-Command",
+            "kind": "stage"
+          },
+          {
+            "id": "execute-operation",
+            "mermaidId": "execute_operation",
+            "name": "Execute-Operation",
+            "kind": "stage"
+          },
+          {
+            "id": "build-output",
+            "mermaidId": "build_output",
+            "name": "Build-Output",
+            "kind": "stage"
+          }
+        ],
+        "edges": [
+          {
+            "from": "validate_command",
+            "to": "execute_operation",
+            "kind": "next"
+          },
+          {
+            "from": "execute_operation",
+            "to": "build_output",
+            "kind": "next"
+          }
+        ]
+      }
     },
     {
-      "id": "validate-refund-evidence-02141dfe4ba8",
-      "file": "docs/flows/views/validate-refund-evidence-02141dfe4ba8/README.md",
-      "signature": "02141dfe4ba84f4ae2cce001980d598235627d509406976621aaee4412b5dce5",
+      "id": "validate-refund-evidence-5eb6ea741bb4",
+      "file": "docs/flows/views/validate-refund-evidence-5eb6ea741bb4/README.md",
+      "signature": "5eb6ea741bb4153b13fd6dcc3167de5e34677a3a13a41cb53bd990fe9a804df5",
       "nodeCount": 10,
-      "mermaidSha256": "5e26f1d3e5beb92a90fad1e88f938344c19db1ac2ad2723ff56c72ad5c68542f"
+      "mermaidSha256": "47267af0012d8643a4f7394bdda24b2036d85f54407d50eafed20a4f296996db",
+      "rawSdkMermaid": "flowchart TD\nvalidate_refund_evidence[\"validate-refund-evidence\"]\nvalidate_refund_evidence --> refund_evidence_matches\nrefund_evidence_matches[\"refund-evidence-matches\"]\nrefund_evidence_matches --> refund_evidence_matches_allowed\nrefund_evidence_matches_allowed[\"refund-evidence-matches-allowed\"]\nrefund_evidence_matches --> refund_evidence_matches_denied\nrefund_evidence_matches_denied[\"refund-evidence-matches-denied\"]\nrefund_evidence_matches --> read_prior_refund_status\nread_prior_refund_status[\"read-prior-refund-status\"]\nread_prior_refund_status --> prior_refund_status\nprior_refund_status[\"prior-refund-status\"]\nprior_refund_status --> FAILED\nFAILED[\"keep-terminal-refund-failure\"]\nprior_refund_status --> SUCCEEDED\nSUCCEEDED[\"check-repeated-refund-evidence\"]\nprior_refund_status --> unsettled\nunsettled[\"record-refund-evidence\"]\nprior_refund_status --> default\ndefault[\"record-refund-evidence\"]",
+      "semanticProof": {
+        "version": "native-mermaid-semantic-v1",
+        "sdkTopologyVerified": true,
+        "nodeIdentitiesVerified": true,
+        "nodeCount": 10,
+        "edgeCount": 9,
+        "rawSdkSha256": "5e26f1d3e5beb92a90fad1e88f938344c19db1ac2ad2723ff56c72ad5c68542f",
+        "annotatedSha256": "47267af0012d8643a4f7394bdda24b2036d85f54407d50eafed20a4f296996db",
+        "nodeIdentitySha256": "9b98803d2e823931d4077a7f3afb31bcb51da4c696249794ea7bd6712ee7fd4f",
+        "rawEdgeMultisetSha256": "c79a21295a29e78555c9c5ace8cced4814a02ee6de1596ee31ded55880b9fa1d",
+        "annotatedEdgeMultisetSha256": "c79a21295a29e78555c9c5ace8cced4814a02ee6de1596ee31ded55880b9fa1d",
+        "nodeIdMap": [
+          {
+            "id": "validate-refund-evidence",
+            "mermaidId": "validate_refund_evidence",
+            "name": "validate-refund-evidence",
+            "kind": "stage"
+          },
+          {
+            "id": "refund-evidence-matches",
+            "mermaidId": "refund_evidence_matches",
+            "name": "refund-evidence-matches",
+            "kind": "decision"
+          },
+          {
+            "id": "refund-evidence-matches-allowed",
+            "mermaidId": "refund_evidence_matches_allowed",
+            "name": "refund-evidence-matches-allowed",
+            "kind": "stage"
+          },
+          {
+            "id": "refund-evidence-matches-denied",
+            "mermaidId": "refund_evidence_matches_denied",
+            "name": "refund-evidence-matches-denied",
+            "kind": "stage"
+          },
+          {
+            "id": "read-prior-refund-status",
+            "mermaidId": "read_prior_refund_status",
+            "name": "read-prior-refund-status",
+            "kind": "stage"
+          },
+          {
+            "id": "prior-refund-status",
+            "mermaidId": "prior_refund_status",
+            "name": "prior-refund-status",
+            "kind": "decision"
+          },
+          {
+            "id": "FAILED",
+            "mermaidId": "FAILED",
+            "name": "keep-terminal-refund-failure",
+            "kind": "stage"
+          },
+          {
+            "id": "SUCCEEDED",
+            "mermaidId": "SUCCEEDED",
+            "name": "check-repeated-refund-evidence",
+            "kind": "subflow"
+          },
+          {
+            "id": "unsettled",
+            "mermaidId": "unsettled",
+            "name": "record-refund-evidence",
+            "kind": "subflow"
+          },
+          {
+            "id": "default",
+            "mermaidId": "default",
+            "name": "record-refund-evidence",
+            "kind": "subflow"
+          }
+        ],
+        "edges": [
+          {
+            "from": "validate_refund_evidence",
+            "to": "refund_evidence_matches",
+            "kind": "next"
+          },
+          {
+            "from": "refund_evidence_matches",
+            "to": "refund_evidence_matches_allowed",
+            "kind": "branch",
+            "branchKey": "refund-evidence-matches-allowed"
+          },
+          {
+            "from": "refund_evidence_matches",
+            "to": "refund_evidence_matches_denied",
+            "kind": "branch",
+            "branchKey": "refund-evidence-matches-denied"
+          },
+          {
+            "from": "refund_evidence_matches",
+            "to": "read_prior_refund_status",
+            "kind": "continuation",
+            "continuation": "after selected branch"
+          },
+          {
+            "from": "read_prior_refund_status",
+            "to": "prior_refund_status",
+            "kind": "next"
+          },
+          {
+            "from": "prior_refund_status",
+            "to": "FAILED",
+            "kind": "branch",
+            "branchKey": "FAILED"
+          },
+          {
+            "from": "prior_refund_status",
+            "to": "SUCCEEDED",
+            "kind": "branch",
+            "branchKey": "SUCCEEDED"
+          },
+          {
+            "from": "prior_refund_status",
+            "to": "unsettled",
+            "kind": "branch",
+            "branchKey": "unsettled"
+          },
+          {
+            "from": "prior_refund_status",
+            "to": "default",
+            "kind": "branch",
+            "branchKey": "default"
+          }
+        ]
+      }
     },
     {
-      "id": "validate-request-d41e10cf73a7",
-      "file": "docs/flows/views/validate-request-d41e10cf73a7/README.md",
-      "signature": "d41e10cf73a70d0966fb562b44fb1eab1d5bf11fe7a4615213078a06e82913d8",
+      "id": "validate-request-07c1344f12e1",
+      "file": "docs/flows/views/validate-request-07c1344f12e1/README.md",
+      "signature": "07c1344f12e1bae24b840326ed7ee2210a4fa07d75368b32b6cdaa58a0fb01d6",
       "nodeCount": 6,
-      "mermaidSha256": "dc5c04fa5bc7a1d2f93e58d74424fa8cf82e36db916e557455ac217e8e37590d"
+      "mermaidSha256": "c6775ad95f9b91b03a0c2dfd5a1394e850ceba9863955c87c67a9c052d58d703",
+      "rawSdkMermaid": "flowchart TD\nvalidate_request[\"validate-request\"]\nvalidate_request --> authorize_request\nauthorize_request[\"authorize-request\"]\nauthorize_request --> deduplicate_request\ndeduplicate_request[\"deduplicate-request\"]\ndeduplicate_request --> request_replay\nrequest_replay[\"request-replay\"]\nrequest_replay --> replay\nreplay[\"replay-request\"]\nrequest_replay --> new\nnew[\"new-request\"]",
+      "semanticProof": {
+        "version": "native-mermaid-semantic-v1",
+        "sdkTopologyVerified": true,
+        "nodeIdentitiesVerified": true,
+        "nodeCount": 6,
+        "edgeCount": 5,
+        "rawSdkSha256": "dc5c04fa5bc7a1d2f93e58d74424fa8cf82e36db916e557455ac217e8e37590d",
+        "annotatedSha256": "c6775ad95f9b91b03a0c2dfd5a1394e850ceba9863955c87c67a9c052d58d703",
+        "nodeIdentitySha256": "d73c155a163764db04f29dc09edf9c87ccfdcdf77d689450c85fce33ec7db41f",
+        "rawEdgeMultisetSha256": "1fb3f3278fdcee76f89cb1f485a73c89b033dfcfa52385388ee9ed0159fb71dc",
+        "annotatedEdgeMultisetSha256": "1fb3f3278fdcee76f89cb1f485a73c89b033dfcfa52385388ee9ed0159fb71dc",
+        "nodeIdMap": [
+          {
+            "id": "validate-request",
+            "mermaidId": "validate_request",
+            "name": "validate-request",
+            "kind": "stage"
+          },
+          {
+            "id": "authorize-request",
+            "mermaidId": "authorize_request",
+            "name": "authorize-request",
+            "kind": "stage"
+          },
+          {
+            "id": "deduplicate-request",
+            "mermaidId": "deduplicate_request",
+            "name": "deduplicate-request",
+            "kind": "stage"
+          },
+          {
+            "id": "request-replay",
+            "mermaidId": "request_replay",
+            "name": "request-replay",
+            "kind": "decision"
+          },
+          {
+            "id": "replay",
+            "mermaidId": "replay",
+            "name": "replay-request",
+            "kind": "subflow"
+          },
+          {
+            "id": "new",
+            "mermaidId": "new",
+            "name": "new-request",
+            "kind": "subflow"
+          }
+        ],
+        "edges": [
+          {
+            "from": "validate_request",
+            "to": "authorize_request",
+            "kind": "next"
+          },
+          {
+            "from": "authorize_request",
+            "to": "deduplicate_request",
+            "kind": "next"
+          },
+          {
+            "from": "deduplicate_request",
+            "to": "request_replay",
+            "kind": "next"
+          },
+          {
+            "from": "request_replay",
+            "to": "replay",
+            "kind": "branch",
+            "branchKey": "replay"
+          },
+          {
+            "from": "request_replay",
+            "to": "new",
+            "kind": "branch",
+            "branchKey": "new"
+          }
+        ]
+      }
     }
   ],
   "instances": [
@@ -281,8 +2491,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "",
-      "viewId": "validate-action-5acb262f04c9",
-      "file": "docs/flows/views/validate-action-5acb262f04c9/README.md",
+      "viewId": "validate-action-3ca46934d91a",
+      "file": "docs/flows/views/validate-action-3ca46934d91a/README.md",
       "aliases": [
         {
           "actualId": "validate-action",
@@ -372,8 +2582,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "approve",
-      "viewId": "owner-approve-2ac56700f4e3",
-      "file": "docs/flows/views/owner-approve-2ac56700f4e3/README.md",
+      "viewId": "owner-approve-e136335ffb56",
+      "file": "docs/flows/views/owner-approve-e136335ffb56/README.md",
       "aliases": [
         {
           "actualId": "approve/owner-approve",
@@ -405,8 +2615,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "receive",
-      "viewId": "owner-receive-aad1d7d71fde",
-      "file": "docs/flows/views/owner-receive-aad1d7d71fde/README.md",
+      "viewId": "owner-receive-aa8ce04e60f3",
+      "file": "docs/flows/views/owner-receive-aa8ce04e60f3/README.md",
       "aliases": [
         {
           "actualId": "receive/owner-receive",
@@ -456,8 +2666,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "reconcile",
-      "viewId": "owner-reconcile-10cab679e261",
-      "file": "docs/flows/views/owner-reconcile-10cab679e261/README.md",
+      "viewId": "owner-reconcile-1f5b5c6ce861",
+      "file": "docs/flows/views/owner-reconcile-1f5b5c6ce861/README.md",
       "aliases": [
         {
           "actualId": "reconcile/owner-reconcile",
@@ -479,8 +2689,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "reconcile/owner-reconciliation",
-      "viewId": "read-reconciliation-eligibility-32365b19c35f",
-      "file": "docs/flows/views/read-reconciliation-eligibility-32365b19c35f/README.md",
+      "viewId": "read-reconciliation-eligibility-8e6bd9dfe8ce",
+      "file": "docs/flows/views/read-reconciliation-eligibility-8e6bd9dfe8ce/README.md",
       "aliases": [
         {
           "actualId": "reconcile/owner-reconciliation/read-reconciliation-eligibility",
@@ -538,8 +2748,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "reconcile/owner-reconciliation/lookup",
-      "viewId": "load-reconciliation-order-d27b1994333b",
-      "file": "docs/flows/views/load-reconciliation-order-d27b1994333b/README.md",
+      "viewId": "load-reconciliation-order-12227388301f",
+      "file": "docs/flows/views/load-reconciliation-order-12227388301f/README.md",
       "aliases": [
         {
           "actualId": "reconcile/owner-reconciliation/lookup/load-reconciliation-order",
@@ -591,8 +2801,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "reconcile/owner-reconciliation/lookup/available",
-      "viewId": "read-refund-evidence-presence-0d18dca3cab7",
-      "file": "docs/flows/views/read-refund-evidence-presence-0d18dca3cab7/README.md",
+      "viewId": "read-refund-evidence-presence-5868253a4104",
+      "file": "docs/flows/views/read-refund-evidence-presence-5868253a4104/README.md",
       "aliases": [
         {
           "actualId": "reconcile/owner-reconciliation/lookup/available/read-refund-evidence-presence",
@@ -626,8 +2836,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "reconcile/owner-reconciliation/lookup/available/found",
-      "viewId": "record-authoritative-reconciliation-444653c80f3e",
-      "file": "docs/flows/views/record-authoritative-reconciliation-444653c80f3e/README.md",
+      "viewId": "record-authoritative-reconciliation-c12c6b46b5bf",
+      "file": "docs/flows/views/record-authoritative-reconciliation-c12c6b46b5bf/README.md",
       "aliases": [
         {
           "actualId": "reconcile/owner-reconciliation/lookup/available/found/record-authoritative-reconciliation",
@@ -707,8 +2917,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "reconcile/owner-reconciliation/lookup/available/found/SUCCEEDED",
-      "viewId": "read-settlement-status-74612c27d557",
-      "file": "docs/flows/views/read-settlement-status-74612c27d557/README.md",
+      "viewId": "read-settlement-status-3aa90787446a",
+      "file": "docs/flows/views/read-settlement-status-3aa90787446a/README.md",
       "aliases": [
         {
           "actualId": "reconcile/owner-reconciliation/lookup/available/found/SUCCEEDED/read-settlement-status",
@@ -750,8 +2960,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "reconcile/owner-reconciliation/lookup/available/found/SUCCEEDED/failed",
-      "viewId": "read-settlement-status-d9c49e4d6dc9",
-      "file": "docs/flows/views/read-settlement-status-d9c49e4d6dc9/README.md",
+      "viewId": "read-settlement-status-388fd1ef688f",
+      "file": "docs/flows/views/read-settlement-status-388fd1ef688f/README.md",
       "aliases": [
         {
           "actualId": "reconcile/owner-reconciliation/lookup/available/found/SUCCEEDED/failed/read-settlement-status",
@@ -791,8 +3001,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "reconcile/owner-reconciliation/lookup/available/found/SUCCEEDED/failed/succeeded",
-      "viewId": "read-cancellation-disposition-b82078418116",
-      "file": "docs/flows/views/read-cancellation-disposition-b82078418116/README.md",
+      "viewId": "read-cancellation-disposition-fe5c69c74747",
+      "file": "docs/flows/views/read-cancellation-disposition-fe5c69c74747/README.md",
       "aliases": [
         {
           "actualId": "reconcile/owner-reconciliation/lookup/available/found/SUCCEEDED/failed/succeeded/read-cancellation-disposition",
@@ -834,8 +3044,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "reconcile/owner-reconciliation/lookup/available/found/SUCCEEDED/failed/succeeded/cancellation",
-      "viewId": "read-full-cancellation-93d8689e179a",
-      "file": "docs/flows/views/read-full-cancellation-93d8689e179a/README.md",
+      "viewId": "read-full-cancellation-f74b4bfdff3e",
+      "file": "docs/flows/views/read-full-cancellation-f74b4bfdff3e/README.md",
       "aliases": [
         {
           "actualId": "reconcile/owner-reconciliation/lookup/available/found/SUCCEEDED/failed/succeeded/cancellation/read-full-cancellation",
@@ -867,8 +3077,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "reconcile/owner-reconciliation/lookup/available/found/SUCCEEDED/failed/succeeded/restock-successful-refund",
-      "viewId": "read-restock-status-7f4ce6d2eaef",
-      "file": "docs/flows/views/read-restock-status-7f4ce6d2eaef/README.md",
+      "viewId": "read-restock-status-7ce354fd260c",
+      "file": "docs/flows/views/read-restock-status-7ce354fd260c/README.md",
       "aliases": [
         {
           "actualId": "reconcile/owner-reconciliation/lookup/available/found/SUCCEEDED/failed/succeeded/restock-successful-refund/read-restock-status",
@@ -902,8 +3112,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "reconcile/owner-reconciliation/lookup/available/found/SUCCEEDED/failed/succeeded/restock-successful-refund/needed",
-      "viewId": "read-restock-eligibility-c4abafcbe261",
-      "file": "docs/flows/views/read-restock-eligibility-c4abafcbe261/README.md",
+      "viewId": "read-restock-eligibility-271379f9811f",
+      "file": "docs/flows/views/read-restock-eligibility-271379f9811f/README.md",
       "aliases": [
         {
           "actualId": "reconcile/owner-reconciliation/lookup/available/found/SUCCEEDED/failed/succeeded/restock-successful-refund/needed/read-restock-eligibility",
@@ -977,8 +3187,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "reconcile/owner-reconciliation/lookup/available/found/SUCCEEDED/succeeded",
-      "viewId": "read-restock-status-7f4ce6d2eaef",
-      "file": "docs/flows/views/read-restock-status-7f4ce6d2eaef/README.md",
+      "viewId": "read-restock-status-7ce354fd260c",
+      "file": "docs/flows/views/read-restock-status-7ce354fd260c/README.md",
       "aliases": [
         {
           "actualId": "reconcile/owner-reconciliation/lookup/available/found/SUCCEEDED/succeeded/read-restock-status",
@@ -1012,8 +3222,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "reconcile/owner-reconciliation/lookup/available/found/SUCCEEDED/succeeded/needed",
-      "viewId": "read-restock-eligibility-c4abafcbe261",
-      "file": "docs/flows/views/read-restock-eligibility-c4abafcbe261/README.md",
+      "viewId": "read-restock-eligibility-271379f9811f",
+      "file": "docs/flows/views/read-restock-eligibility-271379f9811f/README.md",
       "aliases": [
         {
           "actualId": "reconcile/owner-reconciliation/lookup/available/found/SUCCEEDED/succeeded/needed/read-restock-eligibility",
@@ -1087,8 +3297,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "reconcile/owner-reconciliation/lookup/available/found/unsettled",
-      "viewId": "read-settlement-status-d9c49e4d6dc9",
-      "file": "docs/flows/views/read-settlement-status-d9c49e4d6dc9/README.md",
+      "viewId": "read-settlement-status-388fd1ef688f",
+      "file": "docs/flows/views/read-settlement-status-388fd1ef688f/README.md",
       "aliases": [
         {
           "actualId": "reconcile/owner-reconciliation/lookup/available/found/unsettled/read-settlement-status",
@@ -1128,8 +3338,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "reconcile/owner-reconciliation/lookup/available/found/unsettled/succeeded",
-      "viewId": "read-cancellation-disposition-b82078418116",
-      "file": "docs/flows/views/read-cancellation-disposition-b82078418116/README.md",
+      "viewId": "read-cancellation-disposition-fe5c69c74747",
+      "file": "docs/flows/views/read-cancellation-disposition-fe5c69c74747/README.md",
       "aliases": [
         {
           "actualId": "reconcile/owner-reconciliation/lookup/available/found/unsettled/succeeded/read-cancellation-disposition",
@@ -1171,8 +3381,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "reconcile/owner-reconciliation/lookup/available/found/unsettled/succeeded/cancellation",
-      "viewId": "read-full-cancellation-93d8689e179a",
-      "file": "docs/flows/views/read-full-cancellation-93d8689e179a/README.md",
+      "viewId": "read-full-cancellation-f74b4bfdff3e",
+      "file": "docs/flows/views/read-full-cancellation-f74b4bfdff3e/README.md",
       "aliases": [
         {
           "actualId": "reconcile/owner-reconciliation/lookup/available/found/unsettled/succeeded/cancellation/read-full-cancellation",
@@ -1204,8 +3414,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "reconcile/owner-reconciliation/lookup/available/found/unsettled/succeeded/restock-successful-refund",
-      "viewId": "read-restock-status-7f4ce6d2eaef",
-      "file": "docs/flows/views/read-restock-status-7f4ce6d2eaef/README.md",
+      "viewId": "read-restock-status-7ce354fd260c",
+      "file": "docs/flows/views/read-restock-status-7ce354fd260c/README.md",
       "aliases": [
         {
           "actualId": "reconcile/owner-reconciliation/lookup/available/found/unsettled/succeeded/restock-successful-refund/read-restock-status",
@@ -1239,8 +3449,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "reconcile/owner-reconciliation/lookup/available/found/unsettled/succeeded/restock-successful-refund/needed",
-      "viewId": "read-restock-eligibility-c4abafcbe261",
-      "file": "docs/flows/views/read-restock-eligibility-c4abafcbe261/README.md",
+      "viewId": "read-restock-eligibility-271379f9811f",
+      "file": "docs/flows/views/read-restock-eligibility-271379f9811f/README.md",
       "aliases": [
         {
           "actualId": "reconcile/owner-reconciliation/lookup/available/found/unsettled/succeeded/restock-successful-refund/needed/read-restock-eligibility",
@@ -1314,8 +3524,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "refund",
-      "viewId": "owner-refund-154bd3c81b12",
-      "file": "docs/flows/views/owner-refund-154bd3c81b12/README.md",
+      "viewId": "owner-refund-9de3fa31913a",
+      "file": "docs/flows/views/owner-refund-9de3fa31913a/README.md",
       "aliases": [
         {
           "actualId": "refund/owner-refund",
@@ -1351,8 +3561,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "refund/existing",
-      "viewId": "read-existing-refund-command-192905395ef8",
-      "file": "docs/flows/views/read-existing-refund-command-192905395ef8/README.md",
+      "viewId": "read-existing-refund-command-831a7bbd0ef1",
+      "file": "docs/flows/views/read-existing-refund-command-831a7bbd0ef1/README.md",
       "aliases": [
         {
           "actualId": "refund/existing/read-existing-refund-command",
@@ -1398,8 +3608,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "refund/existing/matching-refund-reconciliation",
-      "viewId": "read-reconciliation-eligibility-32365b19c35f",
-      "file": "docs/flows/views/read-reconciliation-eligibility-32365b19c35f/README.md",
+      "viewId": "read-reconciliation-eligibility-8e6bd9dfe8ce",
+      "file": "docs/flows/views/read-reconciliation-eligibility-8e6bd9dfe8ce/README.md",
       "aliases": [
         {
           "actualId": "refund/existing/matching-refund-reconciliation/read-reconciliation-eligibility",
@@ -1457,8 +3667,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "refund/existing/matching-refund-reconciliation/lookup",
-      "viewId": "load-reconciliation-order-d27b1994333b",
-      "file": "docs/flows/views/load-reconciliation-order-d27b1994333b/README.md",
+      "viewId": "load-reconciliation-order-12227388301f",
+      "file": "docs/flows/views/load-reconciliation-order-12227388301f/README.md",
       "aliases": [
         {
           "actualId": "refund/existing/matching-refund-reconciliation/lookup/load-reconciliation-order",
@@ -1510,8 +3720,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "refund/existing/matching-refund-reconciliation/lookup/available",
-      "viewId": "read-refund-evidence-presence-0d18dca3cab7",
-      "file": "docs/flows/views/read-refund-evidence-presence-0d18dca3cab7/README.md",
+      "viewId": "read-refund-evidence-presence-5868253a4104",
+      "file": "docs/flows/views/read-refund-evidence-presence-5868253a4104/README.md",
       "aliases": [
         {
           "actualId": "refund/existing/matching-refund-reconciliation/lookup/available/read-refund-evidence-presence",
@@ -1545,8 +3755,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "refund/existing/matching-refund-reconciliation/lookup/available/found",
-      "viewId": "record-authoritative-reconciliation-444653c80f3e",
-      "file": "docs/flows/views/record-authoritative-reconciliation-444653c80f3e/README.md",
+      "viewId": "record-authoritative-reconciliation-c12c6b46b5bf",
+      "file": "docs/flows/views/record-authoritative-reconciliation-c12c6b46b5bf/README.md",
       "aliases": [
         {
           "actualId": "refund/existing/matching-refund-reconciliation/lookup/available/found/record-authoritative-reconciliation",
@@ -1626,8 +3836,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "refund/existing/matching-refund-reconciliation/lookup/available/found/SUCCEEDED",
-      "viewId": "read-settlement-status-74612c27d557",
-      "file": "docs/flows/views/read-settlement-status-74612c27d557/README.md",
+      "viewId": "read-settlement-status-3aa90787446a",
+      "file": "docs/flows/views/read-settlement-status-3aa90787446a/README.md",
       "aliases": [
         {
           "actualId": "refund/existing/matching-refund-reconciliation/lookup/available/found/SUCCEEDED/read-settlement-status",
@@ -1669,8 +3879,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "refund/existing/matching-refund-reconciliation/lookup/available/found/SUCCEEDED/failed",
-      "viewId": "read-settlement-status-d9c49e4d6dc9",
-      "file": "docs/flows/views/read-settlement-status-d9c49e4d6dc9/README.md",
+      "viewId": "read-settlement-status-388fd1ef688f",
+      "file": "docs/flows/views/read-settlement-status-388fd1ef688f/README.md",
       "aliases": [
         {
           "actualId": "refund/existing/matching-refund-reconciliation/lookup/available/found/SUCCEEDED/failed/read-settlement-status",
@@ -1710,8 +3920,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "refund/existing/matching-refund-reconciliation/lookup/available/found/SUCCEEDED/failed/succeeded",
-      "viewId": "read-cancellation-disposition-b82078418116",
-      "file": "docs/flows/views/read-cancellation-disposition-b82078418116/README.md",
+      "viewId": "read-cancellation-disposition-fe5c69c74747",
+      "file": "docs/flows/views/read-cancellation-disposition-fe5c69c74747/README.md",
       "aliases": [
         {
           "actualId": "refund/existing/matching-refund-reconciliation/lookup/available/found/SUCCEEDED/failed/succeeded/read-cancellation-disposition",
@@ -1753,8 +3963,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "refund/existing/matching-refund-reconciliation/lookup/available/found/SUCCEEDED/failed/succeeded/cancellation",
-      "viewId": "read-full-cancellation-93d8689e179a",
-      "file": "docs/flows/views/read-full-cancellation-93d8689e179a/README.md",
+      "viewId": "read-full-cancellation-f74b4bfdff3e",
+      "file": "docs/flows/views/read-full-cancellation-f74b4bfdff3e/README.md",
       "aliases": [
         {
           "actualId": "refund/existing/matching-refund-reconciliation/lookup/available/found/SUCCEEDED/failed/succeeded/cancellation/read-full-cancellation",
@@ -1786,8 +3996,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "refund/existing/matching-refund-reconciliation/lookup/available/found/SUCCEEDED/failed/succeeded/restock-successful-refund",
-      "viewId": "read-restock-status-7f4ce6d2eaef",
-      "file": "docs/flows/views/read-restock-status-7f4ce6d2eaef/README.md",
+      "viewId": "read-restock-status-7ce354fd260c",
+      "file": "docs/flows/views/read-restock-status-7ce354fd260c/README.md",
       "aliases": [
         {
           "actualId": "refund/existing/matching-refund-reconciliation/lookup/available/found/SUCCEEDED/failed/succeeded/restock-successful-refund/read-restock-status",
@@ -1821,8 +4031,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "refund/existing/matching-refund-reconciliation/lookup/available/found/SUCCEEDED/failed/succeeded/restock-successful-refund/needed",
-      "viewId": "read-restock-eligibility-c4abafcbe261",
-      "file": "docs/flows/views/read-restock-eligibility-c4abafcbe261/README.md",
+      "viewId": "read-restock-eligibility-271379f9811f",
+      "file": "docs/flows/views/read-restock-eligibility-271379f9811f/README.md",
       "aliases": [
         {
           "actualId": "refund/existing/matching-refund-reconciliation/lookup/available/found/SUCCEEDED/failed/succeeded/restock-successful-refund/needed/read-restock-eligibility",
@@ -1896,8 +4106,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "refund/existing/matching-refund-reconciliation/lookup/available/found/SUCCEEDED/succeeded",
-      "viewId": "read-restock-status-7f4ce6d2eaef",
-      "file": "docs/flows/views/read-restock-status-7f4ce6d2eaef/README.md",
+      "viewId": "read-restock-status-7ce354fd260c",
+      "file": "docs/flows/views/read-restock-status-7ce354fd260c/README.md",
       "aliases": [
         {
           "actualId": "refund/existing/matching-refund-reconciliation/lookup/available/found/SUCCEEDED/succeeded/read-restock-status",
@@ -1931,8 +4141,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "refund/existing/matching-refund-reconciliation/lookup/available/found/SUCCEEDED/succeeded/needed",
-      "viewId": "read-restock-eligibility-c4abafcbe261",
-      "file": "docs/flows/views/read-restock-eligibility-c4abafcbe261/README.md",
+      "viewId": "read-restock-eligibility-271379f9811f",
+      "file": "docs/flows/views/read-restock-eligibility-271379f9811f/README.md",
       "aliases": [
         {
           "actualId": "refund/existing/matching-refund-reconciliation/lookup/available/found/SUCCEEDED/succeeded/needed/read-restock-eligibility",
@@ -2006,8 +4216,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "refund/existing/matching-refund-reconciliation/lookup/available/found/unsettled",
-      "viewId": "read-settlement-status-d9c49e4d6dc9",
-      "file": "docs/flows/views/read-settlement-status-d9c49e4d6dc9/README.md",
+      "viewId": "read-settlement-status-388fd1ef688f",
+      "file": "docs/flows/views/read-settlement-status-388fd1ef688f/README.md",
       "aliases": [
         {
           "actualId": "refund/existing/matching-refund-reconciliation/lookup/available/found/unsettled/read-settlement-status",
@@ -2047,8 +4257,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "refund/existing/matching-refund-reconciliation/lookup/available/found/unsettled/succeeded",
-      "viewId": "read-cancellation-disposition-b82078418116",
-      "file": "docs/flows/views/read-cancellation-disposition-b82078418116/README.md",
+      "viewId": "read-cancellation-disposition-fe5c69c74747",
+      "file": "docs/flows/views/read-cancellation-disposition-fe5c69c74747/README.md",
       "aliases": [
         {
           "actualId": "refund/existing/matching-refund-reconciliation/lookup/available/found/unsettled/succeeded/read-cancellation-disposition",
@@ -2090,8 +4300,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "refund/existing/matching-refund-reconciliation/lookup/available/found/unsettled/succeeded/cancellation",
-      "viewId": "read-full-cancellation-93d8689e179a",
-      "file": "docs/flows/views/read-full-cancellation-93d8689e179a/README.md",
+      "viewId": "read-full-cancellation-f74b4bfdff3e",
+      "file": "docs/flows/views/read-full-cancellation-f74b4bfdff3e/README.md",
       "aliases": [
         {
           "actualId": "refund/existing/matching-refund-reconciliation/lookup/available/found/unsettled/succeeded/cancellation/read-full-cancellation",
@@ -2123,8 +4333,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "refund/existing/matching-refund-reconciliation/lookup/available/found/unsettled/succeeded/restock-successful-refund",
-      "viewId": "read-restock-status-7f4ce6d2eaef",
-      "file": "docs/flows/views/read-restock-status-7f4ce6d2eaef/README.md",
+      "viewId": "read-restock-status-7ce354fd260c",
+      "file": "docs/flows/views/read-restock-status-7ce354fd260c/README.md",
       "aliases": [
         {
           "actualId": "refund/existing/matching-refund-reconciliation/lookup/available/found/unsettled/succeeded/restock-successful-refund/read-restock-status",
@@ -2158,8 +4368,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "refund/existing/matching-refund-reconciliation/lookup/available/found/unsettled/succeeded/restock-successful-refund/needed",
-      "viewId": "read-restock-eligibility-c4abafcbe261",
-      "file": "docs/flows/views/read-restock-eligibility-c4abafcbe261/README.md",
+      "viewId": "read-restock-eligibility-271379f9811f",
+      "file": "docs/flows/views/read-restock-eligibility-271379f9811f/README.md",
       "aliases": [
         {
           "actualId": "refund/existing/matching-refund-reconciliation/lookup/available/found/unsettled/succeeded/restock-successful-refund/needed/read-restock-eligibility",
@@ -2233,8 +4443,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "refund/new",
-      "viewId": "read-refund-eligibility-947fe9e6ab83",
-      "file": "docs/flows/views/read-refund-eligibility-947fe9e6ab83/README.md",
+      "viewId": "read-refund-eligibility-9bf14817441a",
+      "file": "docs/flows/views/read-refund-eligibility-9bf14817441a/README.md",
       "aliases": [
         {
           "actualId": "refund/new/read-refund-eligibility",
@@ -2376,8 +4586,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "refund/new/returned",
-      "viewId": "validate-refund-evidence-02141dfe4ba8",
-      "file": "docs/flows/views/validate-refund-evidence-02141dfe4ba8/README.md",
+      "viewId": "validate-refund-evidence-5eb6ea741bb4",
+      "file": "docs/flows/views/validate-refund-evidence-5eb6ea741bb4/README.md",
       "aliases": [
         {
           "actualId": "refund/new/returned/validate-refund-evidence",
@@ -2451,8 +4661,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "refund/new/returned/SUCCEEDED",
-      "viewId": "read-settlement-status-74612c27d557",
-      "file": "docs/flows/views/read-settlement-status-74612c27d557/README.md",
+      "viewId": "read-settlement-status-3aa90787446a",
+      "file": "docs/flows/views/read-settlement-status-3aa90787446a/README.md",
       "aliases": [
         {
           "actualId": "refund/new/returned/SUCCEEDED/read-settlement-status",
@@ -2494,8 +4704,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "refund/new/returned/SUCCEEDED/failed",
-      "viewId": "read-settlement-status-d9c49e4d6dc9",
-      "file": "docs/flows/views/read-settlement-status-d9c49e4d6dc9/README.md",
+      "viewId": "read-settlement-status-388fd1ef688f",
+      "file": "docs/flows/views/read-settlement-status-388fd1ef688f/README.md",
       "aliases": [
         {
           "actualId": "refund/new/returned/SUCCEEDED/failed/read-settlement-status",
@@ -2535,8 +4745,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "refund/new/returned/SUCCEEDED/failed/succeeded",
-      "viewId": "read-cancellation-disposition-b82078418116",
-      "file": "docs/flows/views/read-cancellation-disposition-b82078418116/README.md",
+      "viewId": "read-cancellation-disposition-fe5c69c74747",
+      "file": "docs/flows/views/read-cancellation-disposition-fe5c69c74747/README.md",
       "aliases": [
         {
           "actualId": "refund/new/returned/SUCCEEDED/failed/succeeded/read-cancellation-disposition",
@@ -2578,8 +4788,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "refund/new/returned/SUCCEEDED/failed/succeeded/cancellation",
-      "viewId": "read-full-cancellation-93d8689e179a",
-      "file": "docs/flows/views/read-full-cancellation-93d8689e179a/README.md",
+      "viewId": "read-full-cancellation-f74b4bfdff3e",
+      "file": "docs/flows/views/read-full-cancellation-f74b4bfdff3e/README.md",
       "aliases": [
         {
           "actualId": "refund/new/returned/SUCCEEDED/failed/succeeded/cancellation/read-full-cancellation",
@@ -2611,8 +4821,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "refund/new/returned/SUCCEEDED/failed/succeeded/restock-successful-refund",
-      "viewId": "read-restock-status-7f4ce6d2eaef",
-      "file": "docs/flows/views/read-restock-status-7f4ce6d2eaef/README.md",
+      "viewId": "read-restock-status-7ce354fd260c",
+      "file": "docs/flows/views/read-restock-status-7ce354fd260c/README.md",
       "aliases": [
         {
           "actualId": "refund/new/returned/SUCCEEDED/failed/succeeded/restock-successful-refund/read-restock-status",
@@ -2646,8 +4856,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "refund/new/returned/SUCCEEDED/failed/succeeded/restock-successful-refund/needed",
-      "viewId": "read-restock-eligibility-c4abafcbe261",
-      "file": "docs/flows/views/read-restock-eligibility-c4abafcbe261/README.md",
+      "viewId": "read-restock-eligibility-271379f9811f",
+      "file": "docs/flows/views/read-restock-eligibility-271379f9811f/README.md",
       "aliases": [
         {
           "actualId": "refund/new/returned/SUCCEEDED/failed/succeeded/restock-successful-refund/needed/read-restock-eligibility",
@@ -2721,8 +4931,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "refund/new/returned/SUCCEEDED/succeeded",
-      "viewId": "read-restock-status-7f4ce6d2eaef",
-      "file": "docs/flows/views/read-restock-status-7f4ce6d2eaef/README.md",
+      "viewId": "read-restock-status-7ce354fd260c",
+      "file": "docs/flows/views/read-restock-status-7ce354fd260c/README.md",
       "aliases": [
         {
           "actualId": "refund/new/returned/SUCCEEDED/succeeded/read-restock-status",
@@ -2756,8 +4966,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "refund/new/returned/SUCCEEDED/succeeded/needed",
-      "viewId": "read-restock-eligibility-c4abafcbe261",
-      "file": "docs/flows/views/read-restock-eligibility-c4abafcbe261/README.md",
+      "viewId": "read-restock-eligibility-271379f9811f",
+      "file": "docs/flows/views/read-restock-eligibility-271379f9811f/README.md",
       "aliases": [
         {
           "actualId": "refund/new/returned/SUCCEEDED/succeeded/needed/read-restock-eligibility",
@@ -2831,8 +5041,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "refund/new/returned/unsettled",
-      "viewId": "read-settlement-status-d9c49e4d6dc9",
-      "file": "docs/flows/views/read-settlement-status-d9c49e4d6dc9/README.md",
+      "viewId": "read-settlement-status-388fd1ef688f",
+      "file": "docs/flows/views/read-settlement-status-388fd1ef688f/README.md",
       "aliases": [
         {
           "actualId": "refund/new/returned/unsettled/read-settlement-status",
@@ -2872,8 +5082,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "refund/new/returned/unsettled/succeeded",
-      "viewId": "read-cancellation-disposition-b82078418116",
-      "file": "docs/flows/views/read-cancellation-disposition-b82078418116/README.md",
+      "viewId": "read-cancellation-disposition-fe5c69c74747",
+      "file": "docs/flows/views/read-cancellation-disposition-fe5c69c74747/README.md",
       "aliases": [
         {
           "actualId": "refund/new/returned/unsettled/succeeded/read-cancellation-disposition",
@@ -2915,8 +5125,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "refund/new/returned/unsettled/succeeded/cancellation",
-      "viewId": "read-full-cancellation-93d8689e179a",
-      "file": "docs/flows/views/read-full-cancellation-93d8689e179a/README.md",
+      "viewId": "read-full-cancellation-f74b4bfdff3e",
+      "file": "docs/flows/views/read-full-cancellation-f74b4bfdff3e/README.md",
       "aliases": [
         {
           "actualId": "refund/new/returned/unsettled/succeeded/cancellation/read-full-cancellation",
@@ -2948,8 +5158,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "refund/new/returned/unsettled/succeeded/restock-successful-refund",
-      "viewId": "read-restock-status-7f4ce6d2eaef",
-      "file": "docs/flows/views/read-restock-status-7f4ce6d2eaef/README.md",
+      "viewId": "read-restock-status-7ce354fd260c",
+      "file": "docs/flows/views/read-restock-status-7ce354fd260c/README.md",
       "aliases": [
         {
           "actualId": "refund/new/returned/unsettled/succeeded/restock-successful-refund/read-restock-status",
@@ -2983,8 +5193,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "refund/new/returned/unsettled/succeeded/restock-successful-refund/needed",
-      "viewId": "read-restock-eligibility-c4abafcbe261",
-      "file": "docs/flows/views/read-restock-eligibility-c4abafcbe261/README.md",
+      "viewId": "read-restock-eligibility-271379f9811f",
+      "file": "docs/flows/views/read-restock-eligibility-271379f9811f/README.md",
       "aliases": [
         {
           "actualId": "refund/new/returned/unsettled/succeeded/restock-successful-refund/needed/read-restock-eligibility",
@@ -3058,8 +5268,8 @@
       "flowId": "aftersales-action",
       "kind": "after-sales",
       "mountPath": "reject",
-      "viewId": "owner-reject-f16df0ead3ee",
-      "file": "docs/flows/views/owner-reject-f16df0ead3ee/README.md",
+      "viewId": "owner-reject-b6a624cd344a",
+      "file": "docs/flows/views/owner-reject-b6a624cd344a/README.md",
       "aliases": [
         {
           "actualId": "reject/owner-reject",
@@ -3091,8 +5301,8 @@
       "flowId": "aftersales-request",
       "kind": "after-sales",
       "mountPath": "",
-      "viewId": "validate-request-d41e10cf73a7",
-      "file": "docs/flows/views/validate-request-d41e10cf73a7/README.md",
+      "viewId": "validate-request-07c1344f12e1",
+      "file": "docs/flows/views/validate-request-07c1344f12e1/README.md",
       "aliases": [
         {
           "actualId": "validate-request",
@@ -3140,8 +5350,8 @@
       "flowId": "aftersales-request",
       "kind": "after-sales",
       "mountPath": "new",
-      "viewId": "load-request-order-a127820a90ea",
-      "file": "docs/flows/views/load-request-order-a127820a90ea/README.md",
+      "viewId": "load-request-order-3241bb124094",
+      "file": "docs/flows/views/load-request-order-3241bb124094/README.md",
       "aliases": [
         {
           "actualId": "new/load-request-order",
@@ -3263,8 +5473,8 @@
       "flowId": "aftersales-request",
       "kind": "after-sales",
       "mountPath": "replay",
-      "viewId": "read-replay-match-942182656867",
-      "file": "docs/flows/views/read-replay-match-942182656867/README.md",
+      "viewId": "read-replay-match-6972564a8d95",
+      "file": "docs/flows/views/read-replay-match-6972564a8d95/README.md",
       "aliases": [
         {
           "actualId": "replay/read-replay-match",
@@ -5516,29 +7726,29 @@
     "docs/flows/aftersales/README.md",
     "docs/flows/manifest.json",
     "docs/flows/services/README.md",
-    "docs/flows/views/load-reconciliation-order-d27b1994333b/README.md",
-    "docs/flows/views/load-request-order-a127820a90ea/README.md",
-    "docs/flows/views/owner-approve-2ac56700f4e3/README.md",
-    "docs/flows/views/owner-receive-aad1d7d71fde/README.md",
-    "docs/flows/views/owner-reconcile-10cab679e261/README.md",
-    "docs/flows/views/owner-refund-154bd3c81b12/README.md",
-    "docs/flows/views/owner-reject-f16df0ead3ee/README.md",
-    "docs/flows/views/read-cancellation-disposition-b82078418116/README.md",
-    "docs/flows/views/read-existing-refund-command-192905395ef8/README.md",
-    "docs/flows/views/read-full-cancellation-93d8689e179a/README.md",
-    "docs/flows/views/read-reconciliation-eligibility-32365b19c35f/README.md",
-    "docs/flows/views/read-refund-eligibility-947fe9e6ab83/README.md",
-    "docs/flows/views/read-refund-evidence-presence-0d18dca3cab7/README.md",
-    "docs/flows/views/read-replay-match-942182656867/README.md",
-    "docs/flows/views/read-restock-eligibility-c4abafcbe261/README.md",
-    "docs/flows/views/read-restock-status-7f4ce6d2eaef/README.md",
-    "docs/flows/views/read-settlement-status-74612c27d557/README.md",
-    "docs/flows/views/read-settlement-status-d9c49e4d6dc9/README.md",
-    "docs/flows/views/record-authoritative-reconciliation-444653c80f3e/README.md",
-    "docs/flows/views/validate-action-5acb262f04c9/README.md",
+    "docs/flows/views/load-reconciliation-order-12227388301f/README.md",
+    "docs/flows/views/load-request-order-3241bb124094/README.md",
+    "docs/flows/views/owner-approve-e136335ffb56/README.md",
+    "docs/flows/views/owner-receive-aa8ce04e60f3/README.md",
+    "docs/flows/views/owner-reconcile-1f5b5c6ce861/README.md",
+    "docs/flows/views/owner-refund-9de3fa31913a/README.md",
+    "docs/flows/views/owner-reject-b6a624cd344a/README.md",
+    "docs/flows/views/read-cancellation-disposition-fe5c69c74747/README.md",
+    "docs/flows/views/read-existing-refund-command-831a7bbd0ef1/README.md",
+    "docs/flows/views/read-full-cancellation-f74b4bfdff3e/README.md",
+    "docs/flows/views/read-reconciliation-eligibility-8e6bd9dfe8ce/README.md",
+    "docs/flows/views/read-refund-eligibility-9bf14817441a/README.md",
+    "docs/flows/views/read-refund-evidence-presence-5868253a4104/README.md",
+    "docs/flows/views/read-replay-match-6972564a8d95/README.md",
+    "docs/flows/views/read-restock-eligibility-271379f9811f/README.md",
+    "docs/flows/views/read-restock-status-7ce354fd260c/README.md",
+    "docs/flows/views/read-settlement-status-388fd1ef688f/README.md",
+    "docs/flows/views/read-settlement-status-3aa90787446a/README.md",
+    "docs/flows/views/record-authoritative-reconciliation-c12c6b46b5bf/README.md",
+    "docs/flows/views/validate-action-3ca46934d91a/README.md",
     "docs/flows/views/validate-command-3af82d0c935a/README.md",
-    "docs/flows/views/validate-refund-evidence-02141dfe4ba8/README.md",
-    "docs/flows/views/validate-request-d41e10cf73a7/README.md",
+    "docs/flows/views/validate-refund-evidence-5eb6ea741bb4/README.md",
+    "docs/flows/views/validate-request-07c1344f12e1/README.md",
     "src/aftersales/README.md",
     "src/flows/README.md"
   ]

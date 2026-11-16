@@ -77,7 +77,7 @@ Use [the agent guide](AGENT-GUIDE.md) to combine current source with actual reta
 
 ## Generate README chart views from runtime definitions
 
-The working candidate also builds [the registered flow index](flows/README.md), compact root/folder README sections and linked full subflow README pages from the actual runtime builders. After-sales runtime and documentation use one internal chart registry; standard service views enumerate the actual default registry. FootPrintJS's native `toMermaid()` draws the graphs. No stage, application operation, provider, custom builder or lazy resolver is run.
+The working candidate also builds [the registered flow index](flows/README.md), compact root/folder README sections and linked full subflow README pages from the actual runtime builders. After-sales runtime and documentation use one internal chart registry; standard service views enumerate the actual default registry. FootPrintJS's native `toMermaid()` supplies the topology. Verified native node metadata adds decision diamonds, actual branch-key labels, subflow boxes and explicitly dashed continuations after branch completion. Both node identities and the complete edge multiset are checked against the raw SDK output; annotations change no topology. No stage, application operation, provider, custom builder or lazy resolver is run.
 
 `npm run build` refreshes these views. `npm run docs:flows` writes them explicitly, and `npm run check:flow-docs` freshly compiles source in a temporary directory and fails if any generated section/page or membership is stale. CI runs that check before build so generation cannot silently hide an outdated committed diagram. Handwritten README text outside the generated markers is preserved.
 

@@ -7,6 +7,7 @@ import {fileURLToPath,pathToFileURL} from 'node:url';
 import {execFileSync} from 'node:child_process';
 import {parse} from '@babel/parser';
 import {productionSources} from './build-manifest.mjs';
+import {annotateNativeMermaid,SEMANTIC_CAPTION} from './native-mermaid.mjs';
 
 const HERE=path.dirname(fileURLToPath(import.meta.url));
 const START='<!-- BEGIN GENERATED FLOW INDEX -->',END='<!-- END GENERATED FLOW INDEX -->';
@@ -128,7 +129,7 @@ export async function generateChartDocs(root,{mode='check',compiledRoot}={}) {
   const texts={},sourceHashes={};
   for(const file of await productionSources(root)){const bytes=await fs.readFile(path.join(root,file));texts[file]=bytes.toString('utf8');sourceHashes[file]=sha(bytes);}
   const facts=sourceFacts(texts),require=createRequire(path.join(root,'package.json')),sdkPackage=JSON.parse(await fs.readFile(require.resolve('footprintjs/package.json'),'utf8'));
-  const generatorFiles={};for(const name of ['flow-docs.mjs','build-manifest.mjs','build.mjs'])generatorFiles['scripts/developer/'+name]=sha(await fs.readFile(path.join(root,'scripts/developer',name)));
+  const generatorFiles={};for(const name of ['flow-docs.mjs','native-mermaid.mjs','build-manifest.mjs','build.mjs'])generatorFiles['scripts/developer/'+name]=sha(await fs.readFile(path.join(root,'scripts/developer',name)));
   const inputs={productionSources:sourceHashes,generatorFiles,packageSha256:sha(await fs.readFile(path.join(root,'package.json'))),sdk:{name:'footprintjs',version:sdkPackage.version},typescriptVersion:JSON.parse(await fs.readFile(require.resolve('typescript/package.json'),'utf8')).version};
   const inputSha256=sha(JSON.stringify(inputs));
   const compilation=compiledRoot?{directory:compiledRoot,cleanup:async()=>{}}:await compileFresh(root);
@@ -154,11 +155,11 @@ export async function generateChartDocs(root,{mode='check',compiledRoot}={}) {
     for(const flow of flows) {
       const all=[['',flow.chart.root],...Object.entries(flow.chart.subflows??{}).sort(([a],[b])=>a.localeCompare(b)).map(([mount,item])=>[mount,item.root])];
       for(const[mountPath,rootNode]of all) {
-        const local=localGraph(rootNode,mountPath),mermaid=renderNative(flow.chart,local.root),nodes=nodesOf(local.root);
+        const local=localGraph(rootNode,mountPath),rawSdkMermaid=renderNative(flow.chart,local.root),annotated=annotateNativeMermaid(local.root,rawSdkMermaid),mermaid=annotated.mermaid,nodes=nodesOf(local.root);
         const signature=sha(JSON.stringify({mermaid,nodes:nodes.map(node=>({id:node.id,branchId:node.branchId,hook:node.fn?.[HOOK],decider:Boolean(node.deciderFn),selector:Boolean(node.selectorFn),loop:Boolean(node.isLoopRef),mount:node.subflowId,mapper:node.subflowMountOptions?Object.fromEntries(Object.entries(node.subflowMountOptions).map(([key,value])=>[key,typeof value==='function'?String(value):value])):undefined}))}));
         const viewId=slug(local.root.name)+'-'+signature.slice(0,12),file='docs/flows/views/'+viewId+'/README.md';
         let view=views.get(signature);
-        if(!view){view={id:viewId,file,mermaid,signature,nodes,instances:[]};views.set(signature,view);}
+        if(!view){view={id:viewId,file,mermaid,rawSdkMermaid,semanticProof:annotated.proof,signature,nodes,instances:[]};views.set(signature,view);}
         const instance={flowId:flow.id,kind:flow.kind,mountPath,viewId:view.id,file,aliases:local.aliases};view.instances.push(instance);instances.push(instance);
         for(const node of nodes)if(node.subflowResolver||node.subflowDef)unknowns.push({flowId:flow.id,mountPath,nodeId:node.id,reason:'Dynamic/lazy subflow not executed or expanded'});
       }
@@ -167,7 +168,7 @@ export async function generateChartDocs(root,{mode='check',compiledRoot}={}) {
     const outputs=new Map(),overviewRows=flows.map(flow=>{
       const instance=instances.find(i=>i.flowId===flow.id&&!i.mountPath);return {flow,instance};
     });
-    const stamp=`Production/generator input SHA-256: \`${inputSha256}\`. Generated from actual registered builders using FootPrintJS ${sdkPackage.version} \`toMermaid()\`; callbacks/providers are not run.`;
+    const stamp=`Production/generator input SHA-256: \`${inputSha256}\`. Actual registered builders: FootPrintJS ${sdkPackage.version} \`toMermaid()\` topology plus native control metadata; callbacks/providers are not run.`;
     const sourceNote='Chart links target checkout sources. In an installed package use developer/node with the logical `src/...` ID; its manifest resolves `dist/source/...`. Hashes/line spans bind views to source. Static diagrams are not runtime evidence or complete host semantics.';
     for(const view of [...views.values()].sort((a,b)=>a.file.localeCompare(b.file))) {
       const file=view.file,branchRows=[],sourceRows=[],mountRows=[];
@@ -185,7 +186,7 @@ export async function generateChartDocs(root,{mode='check',compiledRoot}={}) {
           const target=targets[0];mountRows.push(`| ${html(node.id)} | ${target?'['+html(node.subflowName??node.name)+']('+relativeLink(file,target.file)+')':'unknown/unexpanded'} | ${node.subflowMountOptions?Object.keys(node.subflowMountOptions).sort().join(', '):'not declared'} |`);
         }
       }
-      let content=[OWNER,'# '+view.nodes[0].name,'',stamp,'',sourceNote,'','```mermaid',view.mermaid,'```','',`This native topology view is used by ${view.instances.length} registered mount instance(s). Stable local aliases remove only the actual mount prefix; the complete actual-ID mapping and contexts are in [the manifest](${relativeLink(file,'docs/flows/manifest.json')}). Shared diagrams assert matching topology only, not identical private helper semantics.`];
+      let content=[OWNER,'# '+view.nodes[0].name,'',stamp,'',sourceNote,'','```mermaid',view.mermaid,'```','',SEMANTIC_CAPTION,'',`This native topology view is used by ${view.instances.length} registered mount instance(s). Stable local aliases remove only the actual mount prefix; the complete actual-ID mapping, raw SDK text and edge-multiset proof are in [the manifest](${relativeLink(file,'docs/flows/manifest.json')}). Shared diagrams assert matching topology only, not identical private helper semantics.`];
       if(branchRows.length)content.push('','## Decisions and loops','','| Stage | Branch / control | Destination |','| --- | --- | --- |',...branchRows);
       if(mountRows.length)content.push('','## Open a subflow','','| Mount | Native subflow view | Mapping declarations |','| --- | --- | --- |',...mountRows);
       if(sourceRows.length)content.push('','## Guard and hook source','','| Stage | Role | Source / boundary |','| --- | --- | --- |',...sourceRows);
@@ -196,7 +197,7 @@ export async function generateChartDocs(root,{mode='check',compiledRoot}={}) {
     }
     const rootBody=['## Generated flow index','',`**${flows.length} built-in registered flows · ${instances.length} root/mount instances · ${views.size} native topology views.**`,'','| Open | Scope |','| --- | --- |',...overviewRows.filter(({flow})=>flow.kind==='after-sales').map(({flow,instance})=>`| [${flow.id}](${instance.file}) | Actual decisions, loops and linked subflows |`),`| [${serviceIds.length} default service wrappers](docs/flows/services/README.md) | Library envelopes; host operations opaque |`,'','[Complete flow inventory](docs/flows/README.md). Run `npm run docs:flows` after source changes; `npm run check:flow-docs` fails on stale/missing views.','','Input SHA-256: `'+inputSha256+'`. Static build views, not execution or causal proof.'].join('\n');
     if(rootBody.length>DOC_LIMITS.rootSection)throw new Error('Root generated flow index exceeds its character budget');
-    const afterSalesOverview=(file)=>['## Generated after-sales chart views','',stamp,'',...overviewRows.filter(({flow})=>flow.kind==='after-sales').flatMap(({flow,instance})=>{const view=[...views.values()].find(v=>v.id===instance.viewId);return [`### [${flow.id}](${relativeLink(file,instance.file)})`,'','```mermaid',view.mermaid,'```',''];}),'Open each root view for every actual mounted subflow, guard and hook source. Host ports/private payloads remain opaque; no callback is executed.'].join('\n');
+    const afterSalesOverview=(file)=>['## Generated after-sales chart views','',stamp,'',...overviewRows.filter(({flow})=>flow.kind==='after-sales').flatMap(({flow,instance})=>{const view=[...views.values()].find(v=>v.id===instance.viewId);return [`### [${flow.id}](${relativeLink(file,instance.file)})`,'','```mermaid',view.mermaid,'```',''];}),SEMANTIC_CAPTION,'','Open each root view for every actual mounted subflow, guard and hook source. Host ports/private payloads remain opaque; no callback is executed.'].join('\n');
     const serviceOverview=(file)=>{
       const roots=overviewRows.filter(({flow})=>flow.kind==='library-envelope'),unique=[...new Set(roots.map(r=>r.instance.viewId))];
       return ['## Generated default service charts','',stamp,'',...unique.flatMap(id=>{const view=[...views.values()].find(v=>v.id===id);return ['```mermaid',view.mermaid,'```',''];}),'Actual default registry membership: '+roots.map(({flow,instance})=>`[${flow.id}](${relativeLink(file,instance.file)})`).join(', ')+'.','','These are library request envelopes. The configured authoritative host operation is opaque. Custom application registries/builders are not executed or inferred.'].join('\n');
@@ -209,7 +210,7 @@ export async function generateChartDocs(root,{mode='check',compiledRoot}={}) {
     outputs.set('docs/flows/aftersales/README.md',OWNER+'\n# After-sales chart navigation\n\n'+afterSalesOverview('docs/flows/aftersales/README.md')+'\n');
     outputs.set('docs/flows/services/README.md',OWNER+'\n# Default service chart navigation\n\n'+serviceOverview('docs/flows/services/README.md')+'\n');
     outputs.set('docs/flows/README.md',[OWNER,'# Registered chart index','',stamp,'',sourceNote,'',`All ${flows.length} current registry entries are below. ${instances.length} actual root/mount instances share ${views.size} complete native topology views. Identical topology may share a page; private helper semantics are not equated.`,'','| Registered flow | Actual root view | Scope |','| --- | --- | --- |',...overviewRows.map(({flow,instance})=>`| ${flow.id} | [Open](${relativeLink('docs/flows/README.md',instance.file)}) | ${flow.kind} |`),'','[After-sales overview](aftersales/README.md) · [Service wrappers](services/README.md) · [Exact manifest](manifest.json)','','Unknown/unexpanded dynamic sites: '+unknowns.length+'. No custom registry, lazy resolver or provider is invoked.','',`Generation limits: root section ${DOC_LIMITS.rootSection}, folder overview ${DOC_LIMITS.folderSection}, individual view ${DOC_LIMITS.viewNodes} nodes/${DOC_LIMITS.viewCharacters} characters, ${DOC_LIMITS.views} views. Exceeding a limit fails generation; no nodes are silently omitted.`,''].join('\n'));
-    const manifest={schemaVersion:1,representation:'native-footprint-mermaid-with-stable-local-prefix-aliases',inputSha256,inputs,limits:DOC_LIMITS,coverage:{registeredFlows:flows.length,actualRootAndMountInstances:instances.length,topologyViews:views.size,completeApplication:false,executedCallbacks,customBuildersExecuted:false},registry:{afterSales:Object.keys(native.AFTER_SALES_CHARTS).sort(),defaultServices:serviceIds},views:[...views.values()].map(view=>({id:view.id,file:view.file,signature:view.signature,nodeCount:view.nodes.filter(n=>!n.isLoopRef).length,mermaidSha256:sha(view.mermaid)})).sort((a,b)=>a.file.localeCompare(b.file)),instances,sourceFacts:facts,unknowns,generatedFiles:[...outputs.keys(),'docs/flows/manifest.json'].sort()};
+    const manifest={schemaVersion:2,representation:'native-footprint-topology-with-verified-control-annotations',inputSha256,inputs,limits:DOC_LIMITS,coverage:{registeredFlows:flows.length,actualRootAndMountInstances:instances.length,topologyViews:views.size,completeApplication:false,executedCallbacks,customBuildersExecuted:false},registry:{afterSales:Object.keys(native.AFTER_SALES_CHARTS).sort(),defaultServices:serviceIds},views:[...views.values()].map(view=>({id:view.id,file:view.file,signature:view.signature,nodeCount:view.nodes.filter(n=>!n.isLoopRef).length,mermaidSha256:sha(view.mermaid),rawSdkMermaid:view.rawSdkMermaid,semanticProof:view.semanticProof})).sort((a,b)=>a.file.localeCompare(b.file)),instances,sourceFacts:facts,unknowns,generatedFiles:[...outputs.keys(),'docs/flows/manifest.json'].sort()};
     outputs.set('docs/flows/manifest.json',json(manifest));
     const stale=[];
     for(const[file,expected]of outputs) {let current;try{current=await fs.readFile(path.join(root,file),'utf8');}catch(error){if(error.code!=='ENOENT')throw error;}if(current!==expected)stale.push(file);}

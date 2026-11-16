@@ -11,13 +11,13 @@ Commerce configuration, scoped actions and recorded workflows for applications t
 
 | Open | Scope |
 | --- | --- |
-| [aftersales-action](docs/flows/views/validate-action-5acb262f04c9/README.md) | Actual decisions, loops and linked subflows |
-| [aftersales-request](docs/flows/views/validate-request-d41e10cf73a7/README.md) | Actual decisions, loops and linked subflows |
+| [aftersales-action](docs/flows/views/validate-action-3ca46934d91a/README.md) | Actual decisions, loops and linked subflows |
+| [aftersales-request](docs/flows/views/validate-request-07c1344f12e1/README.md) | Actual decisions, loops and linked subflows |
 | [12 default service wrappers](docs/flows/services/README.md) | Library envelopes; host operations opaque |
 
 [Complete flow inventory](docs/flows/README.md). Run `npm run docs:flows` after source changes; `npm run check:flow-docs` fails on stale/missing views.
 
-Input SHA-256: `0e120058e4b1c4edb368f3cb91abbea2f775ad545a0887b41d8eec057a831963`. Static build views, not execution or causal proof.
+Input SHA-256: `cad5181e473e3001f6b55752f12d9f9509786436f2743080765e0238b3e43dde`. Static build views, not execution or causal proof.
 <!-- END GENERATED FLOW INDEX -->
 
 ## Install the current published API
