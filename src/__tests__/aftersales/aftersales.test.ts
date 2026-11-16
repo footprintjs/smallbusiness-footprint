@@ -5,6 +5,7 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 import { memorySink, type RecordSink } from 'foottrace/write';
 import { readStoredRecord } from 'foottrace';
 import { diagnoseFailureRecording, type FailureRecording } from 'footprint-blueprint/diagnostics';
+import { createAfterSalesCauseReader, recordedAfterSalesCauseScopes } from '../../diagnostics/aftersalesCause.js';
 import type { AfterSalesBoundaryPort, AfterSalesDependencies } from '../../aftersales/runtime.js';
 import { AfterSalesError, DEFAULT_AFTER_SALES_POLICY, validateAfterSalesPolicy,
   type AfterSalesCase, type AfterSalesOrder, type AfterSalesPayments, type AfterSalesRepository,
@@ -139,6 +140,24 @@ const recordedAfterSales = (trace: AfterSalesTrace): FailureRecording => {
     nativeSnapshot: trace.nativeSnapshot, boundaryEvidence: sidecar.boundaryEvidence,
     physicalEvidence: sidecar.physicalEvidence, coverage: sidecar.coverage, diagnostics: { persistence: 'stored', ...sidecar.diagnostics } }));
 };
+async function savedScopedEvidence(trace: AfterSalesTrace, key: string) {
+  const saved = JSON.parse(JSON.stringify(trace)) as AfterSalesTrace;
+  const source = recordedAfterSalesCauseScopes(saved);
+  const nativeStages = new Set(source.scopes.flatMap(scope => scope.commitLog.map(row => row.runtimeStageId)));
+  const boundary = saved.boundaryDiagnostics!;
+  for (const row of boundary.boundaryEvidence) expect(nativeStages.has(row.runtimeStageId)).toBe(true);
+  const logicalAttempts = new Set(boundary.boundaryEvidence.map(row => row.attemptId));
+  for (const row of boundary.physicalEvidence) expect(logicalAttempts.has(row.parentAttemptId)).toBe(true);
+  const reader = createAfterSalesCauseReader(saved);
+  const selected = reader.nodes.find(node => node.selection.key === key);
+  expect(selected).toBeDefined();
+  const finding = await reader.explain(selected!.id);
+  // This reader explains actual native contributions, not an opaque provider's
+  // internal cause or the outcome of its uncertain financial write.
+  if (finding.rootCause) expect(reader.nodes.some(node => node.id === finding.rootCause)).toBe(true);
+  expect(finding.gaps.some(gap => gap.code === 'invalid-data')).toBe(false);
+  return { reader, finding, boundary };
+}
 
 describe('optional after-sales native boundary scope', () => {
   it('records actual per-write provenance and an independent control capture for each after-sales execution', async () => {
@@ -168,10 +187,14 @@ describe('optional after-sales native boundary scope', () => {
     expect(unknown.refund?.status).toBe('UNKNOWN'); expect(f.refundCalls).toBe(1);
     const trace = instrumented.traces.at(-1)!;
     expect(trace.boundaryDiagnostics?.runId).toBe(trace.runId);
-    const record = recordedAfterSales(trace), report = diagnoseFailureRecording(record);
+    const record = recordedAfterSales(trace);
     expect(record.boundaryEvidence.some(row => row.target === 'payment' && row.operation === 'refund' && row.effect === 'unknown')).toBe(true);
-    expect(report.status).toBe('unknown'); expect(report.coverage.externalEffect).toBe('unknown');
-    expect(report.coverage.logicalSDKCalls).toBeGreaterThan(0); expect(report.coverage.physicalTransportAttempts).toBeGreaterThan(0);
+    // The legacy generic failure schema admits only root-scope native binding.
+    // It must refuse these real nested scopes rather than flatten or guess.
+    expect(() => diagnoseFailureRecording(record)).toThrowError(expect.objectContaining({ code: 'FAILURE_RECORD_INVALID' }));
+    const scoped = await savedScopedEvidence(trace, 'refundCallReturned');
+    expect(scoped.boundary.boundaryEvidence.length).toBeGreaterThan(0);
+    expect(scoped.boundary.physicalEvidence.length).toBeGreaterThan(0);
     expect(JSON.stringify(trace)).not.toContain(PRIVATE);
     const providerKey = unknown.refund!.idempotencyKey;
     expect(providerKey.length).toBeGreaterThan(0);
@@ -200,7 +223,8 @@ describe('optional after-sales native boundary scope', () => {
       expect(trace.boundaryDiagnostics?.runId).toBe(trace.runId);
       expect(trace.boundaryDiagnostics?.coverage.unboundObservations).toBe(0);
       expect(recordedAfterSales(trace).boundaryEvidence.length).toBeGreaterThan(0);
-      expect(() => diagnoseFailureRecording(recordedAfterSales(trace))).not.toThrow();
+      expect(() => diagnoseFailureRecording(recordedAfterSales(trace))).toThrowError(expect.objectContaining({ code: 'FAILURE_RECORD_INVALID' }));
+      await savedScopedEvidence(trace, 'existingCase');
       expect(JSON.stringify(trace)).not.toContain(PRIVATE);
     }
   });
@@ -233,8 +257,9 @@ describe('optional after-sales native durable record port', () => {
     expect(request.recordId).toMatch(/^[a-f0-9-]{36}$/);
     expect(sink.entries.some(entry => entry.kind === 'opened')).toBe(true);
     expect(sink.entries.some(entry => entry.kind === 'commit')).toBe(true);
-    expect(sink.entries.some(entry => entry.kind === 'closed')).toBe(false);
     const opened = sink.entries.find(entry => entry.kind === 'opened')!;
+    // Completed child scopes may close while the authoritative root is still suspended.
+    expect(sink.entries.some(entry => entry.kind === 'closed' && JSON.stringify(entry.address) === JSON.stringify(opened.address))).toBe(false);
     const interrupted = readStoredRecord(sink.entries).root(opened.address.logRunId)!;
     expect(interrupted.complete).toBe(false);
     expect(recorded.traces).toHaveLength(0);
@@ -276,7 +301,9 @@ describe('optional after-sales native durable record port', () => {
     expect(sink.entries.every(entry => entry.address.logRunId === trace.runId)).toBe(true);
     expect(JSON.stringify(sink.entries)).not.toContain(result.refund!.idempotencyKey);
     expect(JSON.stringify(sink.entries)).not.toContain(PRIVATE);
-    expect(diagnoseFailureRecording(recordedAfterSales(trace)).coverage.externalEffect).toBe('unknown');
+    expect(recordedAfterSales(trace).boundaryEvidence.some(row => row.target === 'payment' && row.operation === 'refund' && row.effect === 'unknown')).toBe(true);
+    expect(() => diagnoseFailureRecording(recordedAfterSales(trace))).toThrowError(expect.objectContaining({ code: 'FAILURE_RECORD_INVALID' }));
+    await savedScopedEvidence(trace, 'refundCallReturned');
   });
   it('bounds a never-settling final drain without retrying the acknowledged refund', async () => {
     const f = fixture(), approved = await f.act(await f.request(), 'approve'), sink = memorySink();

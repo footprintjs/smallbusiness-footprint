@@ -1,5 +1,7 @@
 # Expected commerce work and missing evidence
 
+Use this guide when an expected cancellation, refund, stock update or shipment step is absent from an authorized saved record. First identify the exact run and declared scope; then compare expected stage IDs with retained commits. For source navigation, use [the agent guide](AGENT-GUIDE.md) and [source map](SOURCE-MAP.md). For actual provider observations, use [provider evidence](PROVIDER-EVIDENCE.md).
+
 Use `footprint-blueprint/diagnostics/coverage` beside the existing cause reader. Both use the shared Foottrace record and requirement contracts; coverage does not create causal nodes or replace the cause walker.
 
 The host supplies a trusted, bounded declaration of the expected stage IDs for the exact run and scope. Supply descriptions from application code, never from customer text or arbitrary saved trace prose. Inspect only an authorized record. Descriptions are context, not proof.
@@ -11,3 +13,5 @@ Branch, loop and nested-flow coverage needs actual stable scope bindings and ret
 The expected-work inventory stays separate from the actual cause graph. Preserve unknown payment or refund outcomes and use the existing provider reconciliation workflow. The optional investigator may explain recorded findings and gaps, but cannot fill those gaps by guessing or approve a financial action.
 
 A host adds safe descriptions and renders this separate coverage panel in its admin view. Other brands supply their own descriptions, policies, storage and provider adapters. No model is needed for coverage classification.
+
+Keep the inventory explicit about wrapper boundaries. Declaring `execute-operation` says that the wrapper is expected to call a configured operation; it does not enumerate that opaque host function's database writes or SDK attempts. A static source/producer descriptor can locate the next file to inspect, but cannot fill a missing runtime decision or prove why an expected step is absent.

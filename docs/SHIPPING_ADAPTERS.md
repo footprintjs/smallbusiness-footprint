@@ -1,5 +1,7 @@
 # Bring your own shipping adapter
 
+Use this guide when adding or replacing a vendor without changing shared commerce contracts. Install using [the current quickstart](QUICKSTART.md); review [integration ownership](INTEGRATION.md) before wiring the adapter. To trace a quote/label/tracking failure, inspect the host call site and [actual provider evidence](PROVIDER-EVIDENCE.md), not just this registry's declaration.
+
 `smallbusiness-footprint/shipping` is a dependency-free entry point with shared shipping types, safe link handling and an explicit registry. It loads no React, Node, AWS, provider SDK or Footprint executor. Frontend code can import its public contracts without importing any server implementation.
 
 The host application owns the quote, label-purchase and tracking flows. A shipping adapter owns vendor authentication, requests, response normalization and webhook authentication. Changing the registered vendor does not require rewriting the flow or the customer and owner interfaces. The registry does not load plugins from user input or turn configuration values into module paths.
