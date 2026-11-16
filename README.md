@@ -20,6 +20,8 @@ Commerce configuration, scoped actions and recorded workflows for applications t
 Input SHA-256: `cad5181e473e3001f6b55752f12d9f9509786436f2743080765e0238b3e43dde`. Static build views, not execution or causal proof.
 <!-- END GENERATED FLOW INDEX -->
 
+For your own application, use [the application chart/build recipe](docs/APPLICATION-FLOW-BUILD.md): share its runtime factory with an explicit app index and wire a host-owned writer/checker into build and CI. The commands above cover this library's registries; they do not discover host workflows.
+
 ## Install the current published API
 
 ```sh

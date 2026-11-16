@@ -20,3 +20,5 @@ This working source candidate extends the published 1.1.0 API. New developer/sou
 The source map uses clearly labeled repository paths. They are not promises that a published tarball contains a local `src/` tree. Public imports use `smallbusiness-footprint` exports. The unreleased source pack uses the package paths in its generated manifest, not guessed relative links.
 
 Examples and local scenarios use fixtures, not real payment, shipping or cloud accounts. Their results cannot establish provider behavior or a production root cause. Source checks, publication and application deployment remain separate actions.
+
+- [Application chart/build recipe](APPLICATION-FLOW-BUILD.md): one runtime factory and construction-only app index, with a host-owned generated README writer/checker and pre-build CI freshness check.
