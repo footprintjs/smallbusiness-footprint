@@ -1,5 +1,5 @@
 import { FlowChartExecutor, type TypedScope, type RecordFlushResult } from 'footprintjs';
-import { buildActionChart, buildRequestChart, type AfterSalesChart, type AfterSalesFacts, type AfterSalesHooks, type AfterSalesStage, type AfterSalesWrap } from './flowCharts.js';
+import { AFTER_SALES_CHARTS, type AfterSalesFacts, type AfterSalesHooks, type AfterSalesStage } from './flowCharts.js';
 import type { RecordSink } from 'foottrace/write';
 import { createCauseCapture } from 'footprint-blueprint/diagnostics/cause';
 import { footprintRuntimeVersion } from '../runtimeVersion.js';
@@ -136,7 +136,7 @@ export function createAfterSalesService(deps: AfterSalesDependencies) {
     if (!value) fail('AFTERSALES_NOT_FOUND', 'The order or case was not found');
     return checkedCase(value, caseId);
   };
-  async function execute(flowId: AfterSalesTrace['flowId'], build: (wrap: AfterSalesWrap) => AfterSalesChart, decisions: string[]) {
+  async function execute(flowId: AfterSalesTrace['flowId'], hooks: AfterSalesHooks, decisions: string[]) {
     const stages: string[] = [];
     const boundaries = deps.withBoundaryScope ? createCommerceBoundaryRecorder() : undefined;
     const wrap = (name: string, handler: AfterSalesStage) => async (scope: TypedScope<AfterSalesFacts>) => {
@@ -151,7 +151,7 @@ export function createAfterSalesService(deps: AfterSalesDependencies) {
       } catch (error) { throw safeFailure(error); }
       finally { scope.decisions = [...decisions]; }
     };
-    const chart = build(wrap);
+    const chart = AFTER_SALES_CHARTS[flowId](hooks, wrap);
     const capture = { readTracking: 'full', writeTracking: 'full', commitValues: 'full', writeProvenance: 'reads-prefix' } as const;
     const causeCapture = createCauseCapture();
     // A diagnostic factory gets no command, case, payment or customer data. A separate UUID also prevents
@@ -256,7 +256,7 @@ export function createAfterSalesService(deps: AfterSalesDependencies) {
         },
         'request-persisted'(scope) { scope.outcome = 'REQUESTED'; decisions.push('request.persisted-owner-approval-required'); },
       };
-      await execute('aftersales-request', wrap => buildRequestChart(hooks, wrap), decisions);
+      await execute('aftersales-request', hooks, decisions);
       return structuredClone(result!);
     },
     async action(input: AfterSalesAction, context: AfterSalesContext): Promise<AfterSalesCase> {
@@ -388,7 +388,7 @@ export function createAfterSalesService(deps: AfterSalesDependencies) {
         },
         async 'commit-restock'(scope) { result = checkedCase(await repository.restock({ record: next(restocking, { restock: { requested: true, completedAt: now() } }), expectedVersion: restocking.version, items: selectedRestock }), restocking.caseId); scope.outcome = 'RESTOCKED'; },
       };
-      await execute('aftersales-action', wrap => buildActionChart(hooks, wrap), decisions);
+      await execute('aftersales-action', hooks, decisions);
       return structuredClone(result!);
     },
   });

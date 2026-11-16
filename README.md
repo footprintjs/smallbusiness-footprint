@@ -4,6 +4,22 @@ Commerce configuration, scoped actions and recorded workflows for applications t
 
 **Start with [the quickstart](docs/QUICKSTART.md)** or choose a task in [the documentation index](docs/README.md). For source navigation and root-cause investigation, read [the agent guide](docs/AGENT-GUIDE.md) and [source map](docs/SOURCE-MAP.md).
 
+<!-- BEGIN GENERATED FLOW INDEX -->
+## Generated flow index
+
+**14 built-in registered flows · 71 root/mount instances · 23 native topology views.**
+
+| Open | Scope |
+| --- | --- |
+| [aftersales-action](docs/flows/views/validate-action-5acb262f04c9/README.md) | Actual decisions, loops and linked subflows |
+| [aftersales-request](docs/flows/views/validate-request-d41e10cf73a7/README.md) | Actual decisions, loops and linked subflows |
+| [12 default service wrappers](docs/flows/services/README.md) | Library envelopes; host operations opaque |
+
+[Complete flow inventory](docs/flows/README.md). Run `npm run docs:flows` after source changes; `npm run check:flow-docs` fails on stale/missing views.
+
+Input SHA-256: `0e120058e4b1c4edb368f3cb91abbea2f775ad545a0887b41d8eec057a831963`. Static build views, not execution or causal proof.
+<!-- END GENERATED FLOW INDEX -->
+
 ## Install the current published API
 
 ```sh

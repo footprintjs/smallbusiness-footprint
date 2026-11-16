@@ -7,6 +7,7 @@ This working source candidate extends the published 1.1.0 API. New developer/sou
 | Install and run a complete local example | [Quickstart](QUICKSTART.md) | [Integration](INTEGRATION.md) |
 | Select public imports and ownership boundaries | [Main README](../README.md) | [Integration](INTEGRATION.md) |
 | Locate code or follow a failed result backward | [Agent guide](AGENT-GUIDE.md) | [Source map](SOURCE-MAP.md) |
+| Open charts generated from actual runtime definitions | [Registered flow index](flows/README.md) | Relevant root/subflow README, then its exact source links |
 | Open optional static catalog/source tooling in this candidate | [Developer context](DEVELOPER.md) | Current manifest and explicit Node reader |
 | Configure profiles, modules, scope and operations | [Integration](INTEGRATION.md) | Source map configuration section |
 | Implement cancellation, return and refund ports | [After-sales](AFTERSALES.md) | [Provider evidence](PROVIDER-EVIDENCE.md) |

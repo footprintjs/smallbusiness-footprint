@@ -74,3 +74,13 @@ The static catalog and explicit Node reader are separate optional imports; they 
 Benchmarks, reports, raw model logs and application variants belong in a separate research repository. This library does not bundle those artifacts or claim a model-development performance gain from these source tools.
 
 Use [the agent guide](AGENT-GUIDE.md) to combine current source with actual retained runtime evidence. Provider internals, durable effects, absent branches and incomplete recordings remain outside what a static source catalog can prove.
+
+## Generate README chart views from runtime definitions
+
+The working candidate also builds [the registered flow index](flows/README.md), compact root/folder README sections and linked full subflow README pages from the actual runtime builders. After-sales runtime and documentation use one internal chart registry; standard service views enumerate the actual default registry. FootPrintJS's native `toMermaid()` draws the graphs. No stage, application operation, provider, custom builder or lazy resolver is run.
+
+`npm run build` refreshes these views. `npm run docs:flows` writes them explicitly, and `npm run check:flow-docs` freshly compiles source in a temporary directory and fails if any generated section/page or membership is stale. CI runs that check before build so generation cannot silently hide an outdated committed diagram. Handwritten README text outside the generated markers is preserved.
+
+The root section is bounded at 2,000 characters and folder overviews at 4,000; all subflow views remain available through drill links. Larger individual graphs fail their documented budget instead of losing nodes. Repeated pages share matching native topology only. The manifest retains every actual mount context and the stable prefix-alias mapping; it does not equate private helper semantics. Production inputs, generator files and SDK/compiler versions are hashed without hashing generated documentation back into itself.
+
+Chart links target canonical checkout sources, so GitHub follows the same branch being reviewed. In an installed package use `developer/node` with the logical `src/...` ID; the manifest resolves its single retained `dist/source/...` copy. Rebuild after editing source. These static diagrams and possible field writers are navigation aids, not runtime lineage or measured token savings. The existing public source reader still cannot select every object-method hook body; ordinary source reads remain appropriate.

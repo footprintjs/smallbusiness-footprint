@@ -12,7 +12,10 @@
     "prepack": "npm run build",
     "quickstart:booking": "node examples/shared-evidence/booking.mjs",
     "quickstart:publication": "node examples/shared-evidence/publication.mjs",
-    "test:developer-package": "node --test scripts/developer/pack.test.mjs"
+    "test:developer-package": "node --test scripts/developer/pack.test.mjs",
+    "docs:flows": "node scripts/developer/flow-docs.mjs --write",
+    "check:flow-docs": "node scripts/developer/flow-docs.mjs --check",
+    "test:flow-docs": "node --test scripts/developer/flow-docs.test.mjs"
   },
   "dependencies": {
     "footprint-blueprint": "1.1.0",

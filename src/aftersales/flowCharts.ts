@@ -187,3 +187,9 @@ export function buildActionChart(hooks: AfterSalesHooks, wrap: AfterSalesWrap): 
       .addSubFlowChartBranch('reconcile', reconcile, 'owner-reconcile-flow', isolated)
     .end().build();
 }
+
+/** Shared internal inventory for runtime selection and generated chart documentation. */
+export const AFTER_SALES_CHARTS = Object.freeze({
+  'aftersales-request': buildRequestChart,
+  'aftersales-action': buildActionChart,
+});
