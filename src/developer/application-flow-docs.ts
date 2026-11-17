@@ -4,6 +4,8 @@ import { constants } from 'node:fs';
 import path from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
 import type { DeveloperSourceSelector } from './types.js';
+import { validateApplicationSourceWiring } from './application-wiring.js';
+import type { ApplicationSourceWiring, ApplicationSourceWiringSelection } from './application-wiring.js';
 
 export type ApplicationDocumentationChart = {
   toMermaid(): string;
@@ -20,6 +22,8 @@ export type ApplicationDocumentationFlow = {
   /** Optional caller-declared purpose; generated chart algorithm remains separately attributed. */
   readonly description?: string;
   readonly sources?: readonly DeveloperSourceSelector[];
+  /** Current byte-bound source excerpts from the explicit application source catalog. */
+  readonly sourceWiring?: ApplicationSourceWiring;
   /** Explicit construction-time mount relationship, not inferred from matching names. */
   readonly parentId?: string; readonly mountId?: string;
   readonly opaqueBoundaries?: readonly string[];
@@ -40,6 +44,7 @@ export type ApplicationFlowDocumentation = {
       readonly id: string; readonly file: string; readonly parentId?: string; readonly mountId?: string;
       readonly chartSha256: string; readonly algorithmSha256: string;
       readonly algorithmOrigin: 'chart-metadata' | 'constructed-topology' | 'mcp-export-description' | 'unavailable';
+      readonly sourceWiring?: { readonly start: number; readonly end: number; readonly sha256: string; readonly entries: number; readonly format?: 'compact'; readonly selections: readonly ApplicationSourceWiringSelection[] };
     }[];
     readonly files: Readonly<Record<string, { readonly sha256: string; readonly characters: number }>>;
     readonly coverage: { readonly scope: 'explicitly-registered-construction-time-charts'; readonly completeApplication: false; readonly executedCallbacks: false; readonly semantics: 'metadata-and-topology-not-runtime-proof' };
@@ -152,6 +157,10 @@ export async function buildApplicationFlowDocumentation(options: { readonly root
     if (f.mountId !== undefined) text(f.mountId, 'construction mount ID', 1024);
     if (f.sources !== undefined && (!Array.isArray(f.sources) || f.sources.length > 512)) fail('INVALID_FLOW_DOCUMENTATION', 'Source owners must be a bounded explicit array');
     for (const s of f.sources ?? []) { if (!plain(s) || !sourceFiles.includes(relative(s.file, true)) || Object.keys(s).some(k => !['file', 'symbol', 'unitId', 'stageId', 'role'].includes(k))) fail('SOURCE_NOT_ADMITTED', 'Flow source must identify admitted source'); for (const k of ['symbol', 'unitId', 'stageId', 'role'] as const) if (s[k] !== undefined) text(s[k], 'source selector', 512); }
+    if (f.sourceWiring !== undefined) {
+      await validateApplicationSourceWiring({ root, wiring: f.sourceWiring });
+      if (Object.keys(f.sourceWiring.manifest.sourceHashes).some(file => !sourceFiles.includes(file))) fail('SOURCE_NOT_ADMITTED', 'Flow wiring must use admitted application source');
+    }
   }
   for (const f of flows) {
     const seen = new Set([f.id]); let parent = f.parentId;
@@ -185,11 +194,17 @@ export async function buildApplicationFlowDocumentation(options: { readonly root
     if (description && description !== algorithm) page += `## Builder description (verbatim)\n\n${fence(description, 'text')}\n\n`;
     if (stageLines.length) page += `## Stage descriptions\n\n| Stage | Declared description |\n| --- | --- |\n${stageLines.join('\n')}\n\n`;
     if (constructed.length) page += `## Constructed stage inventory\n\nTraversal order below locates actual nodes; it is not an execution trace.\n\n| Stage ID | Name | Control | Outgoing edges |\n| --- | --- | --- | --- |\n${constructed.map(n => `| ${html(n.id)} | ${html(n.name)} | ${html(n.kind)} | ${html(n.edges)} |`).join('\n')}\n\n`;
+    let sourceWiring: ApplicationFlowDocumentation['manifest']['flows'][number]['sourceWiring'];
+    if (f.sourceWiring) {
+      page += '## Source-bound caller and field wiring\n\nThese are current source excerpts and caller-trusted syntax bindings, not executed data flow or inferred business effects.\n\n';
+      const start = page.length; page += f.sourceWiring.text; const end = page.length; page += '\n\n';
+      sourceWiring = { start, end, sha256: sha(f.sourceWiring.text), entries: f.sourceWiring.entries.length, ...(f.sourceWiring.manifest.format ? { format: f.sourceWiring.manifest.format } : {}), selections: f.sourceWiring.entries.map(entry => ({ id: entry.id, source: entry.selector, ...(entry.flowId ? { flowId: entry.flowId } : {}) })) };
+    }
     page += `## Contracts\n\n${exported ? 'Tool name: ' + html(exported.name) + '. Formatted metadata only.\n\n' + (exported.description !== algorithm ? 'MCP-exported description:\n\n' + fence(exported.description, 'text') + '\n\n' : '') : ''}Input schema:\n\n${schema(exported?.inputSchema ?? f.chart.inputSchema)}\n\nOutput schema:\n\n${schema(f.chart.outputSchema)}\n\n## Child flows\n\nRelationships are explicitly declared by the construction-time application index.\n\n${children.length ? '| Flow | Mount |\n| --- | --- |\n' + children.map(c => `| [${html(c.id)}](${link(c.id)}) | ${html(c.mountId ?? '(not supplied)')} |`).join('\n') : 'No child flow registered for this view; this is not proof that dynamic or host-owned work is absent.'}\n\n## Owning source\n\n`;
     page += (f.sources?.length ? f.sources.map(s => `- [${html(s.file)}](${path.posix.relative(path.posix.dirname(`${outputDir}/${file}`), s.file)})${s.symbol ? ' — declared symbol ' + html(s.symbol) : ''}; SHA-256 \`${sourceHashes[s.file]}\`.`).join('\n') : 'No owning source declared for this view; implementation remains unresolved.') + '\n\n';
     page += `## Boundaries\n\n${(f.opaqueBoundaries ?? []).map(b => '- ' + html(b)).join('\n') || 'Only explicitly admitted sources and registered chart exports are covered.'}\n\nSource tree: \`${sourceTreeSha256}\`. Topology is static; no stage, provider or executor was run.\n`;
     if (page.length > 2000000) fail('DOCUMENTATION_LIMIT', 'Complete flow page exceeds two million characters; nothing was clipped');
-    files[file] = page; proofs.push({ id: f.id, file, ...(f.parentId ? { parentId: f.parentId } : {}), ...(f.mountId ? { mountId: f.mountId } : {}), chartSha256: sha(diagram), algorithmSha256: sha(algorithm), algorithmOrigin: origin });
+    files[file] = page; proofs.push({ id: f.id, file, ...(f.parentId ? { parentId: f.parentId } : {}), ...(f.mountId ? { mountId: f.mountId } : {}), chartSha256: sha(diagram), algorithmSha256: sha(algorithm), algorithmOrigin: origin, ...(sourceWiring ? { sourceWiring } : {}) });
   }
   files['README.md'] = `${HEADER}\n# ${html(name)}: generated algorithms\n\nStart with an entry flow, then open only the relevant child flow and owning source. Summaries come from chart metadata unless a caller-declared purpose is supplied; full algorithms and diagrams are on each page.\n\n| Flow | Summary | Parent |\n| --- | --- | --- |\n${rows.join('\n')}\n\nSource tree: \`${sourceTreeSha256}\`. Rebuild charts freshly using the runtime factories before generating or checking these pages. Metadata freshness does not establish semantic accuracy or runtime behavior.\n`;
   const total = Object.values(files).reduce((n, s) => n + s.length, 0); if (total > 16000000) fail('DOCUMENTATION_LIMIT', 'Generated documentation exceeds sixteen million characters; nothing was omitted');
@@ -205,6 +220,10 @@ async function validate(root: string, d: ApplicationFlowDocumentation): Promise<
   if (!files.length || JSON.stringify(files) !== JSON.stringify(declared) || !files.includes('README.md')) fail('INVALID_DOCUMENTATION_PROOF', 'Generated file inventory differs');
   for (const f of files) if (!pagePath(f) || typeof d.files[f] !== 'string' || !d.files[f]!.startsWith(HEADER) || sha(d.files[f]!) !== m.files[f]?.sha256 || d.files[f]!.length !== m.files[f]?.characters) fail('INVALID_DOCUMENTATION_PROOF', 'Generated page differs from its bounded proof');
   if (m.flows.length < 1 || m.flows.length > 512 || new Set(m.flows.map(f => f.id)).size !== m.flows.length || m.flows.some(f => flowFile(f.id) !== f.file || !files.includes(f.file)) || files.length !== m.flows.length + 1) fail('INVALID_DOCUMENTATION_PROOF', 'Flow page membership differs');
+  for (const flow of m.flows) if (flow.sourceWiring !== undefined) {
+    const p = flow.sourceWiring, page = d.files[flow.file]!;
+    if (!plain(p) || !Number.isSafeInteger(p.start) || !Number.isSafeInteger(p.end) || p.start < 0 || p.end < p.start || p.end > page.length || !Number.isSafeInteger(p.entries) || p.entries < 1 || sha(page.slice(p.start, p.end)) !== p.sha256 || p.format !== undefined && p.format !== 'compact' || !Array.isArray(p.selections) || p.selections.length !== p.entries || new Set(p.selections.map(s => s.id)).size !== p.entries || p.selections.some(s => !plain(s) || !plain(s.source) || typeof s.id !== 'string' || !s.id || typeof s.source.file !== 'string' || !Object.hasOwn(m.sourceHashes, s.source.file))) fail('INVALID_DOCUMENTATION_PROOF', 'Source wiring page range or selectors differ from its proof');
+  }
   const sources = Object.keys(m.sourceHashes).sort(compare); if (!sources.length || sources.length > 512) fail('INVALID_DOCUMENTATION_PROOF', 'Expected explicitly admitted source inventory');
   for (const f of sources) { relative(f, true); const value = await read(root, f); hashes[f] = sha(value); if (hashes[f] !== m.sourceHashes[f]) fail('STALE_APPLICATION_FLOW_DOCUMENTATION', `Admitted source changed: ${f}`); }
   if (sha(JSON.stringify(Object.entries(hashes))) !== m.sourceTreeSha256) fail('INVALID_DOCUMENTATION_PROOF', 'Source tree proof differs');

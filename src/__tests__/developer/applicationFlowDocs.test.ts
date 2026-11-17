@@ -3,6 +3,8 @@ import fs from 'node:fs/promises';
 import { writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { createHash } from 'node:crypto';
+import { buildApplicationSourceWiring } from '../../developer/application.js';
 import { flowChart } from 'footprintjs';
 import { buildApplicationFlowDocumentation, checkApplicationFlowDocumentation, writeApplicationFlowDocumentation, type ApplicationFlowDocumentationIndex, type ApplicationDocumentationChart } from '../../developer/application.js';
 
@@ -133,5 +135,27 @@ describe('build-time chart algorithm READMEs', () => {
     const f = await fixture(); let called = 0;
     await expect(buildApplicationFlowDocumentation({ root: f.root, index: { ...f.index, get applicationName() { called++; return 'side effect'; } } })).rejects.toMatchObject({ code: 'INVALID_FLOW_DOCUMENTATION' });
     expect(called).toBe(0);
+  });
+});
+
+
+describe('source-bound wiring in generated flow pages', () => {
+  it('renders exact current source without execution and rejects stale wiring or tampered range proof', async () => {
+    const f = await fixture(), file = 'src/app.mjs', content = await fs.readFile(path.join(f.root, file), 'utf8');
+    const sha = (value: string) => createHash('sha256').update(value).digest('hex');
+    const body = '() => false', start = content.indexOf(body), end = start + body.length;
+    const unit = {id: 'callable:run', kind: 'function' as const, symbol: 'run', start, end, byteStart: Buffer.byteLength(content.slice(0,start)), byteEnd: Buffer.byteLength(content.slice(0,end)), startLine: content.slice(0,start).split('\n').length, endLine: content.slice(0,end).split('\n').length, textSha256: sha(body)};
+    const sourceManifest = {schemaVersion: 1 as const, scope: 'source-only-static-syntax' as const, package: {name: 'test', version: 'source'}, parser: {name: 'test-static-catalog', version: '1'}, sourceTreeSha256: sha(JSON.stringify([[file,sha(content)]])), files: {[file]: {sha256: sha(content), characters: content.length, lines: content.split('\n').length, packagePath: 'dist/source/app.mjs', parseStatus: 'parsed' as const, units: [unit]}}};
+    const wiring = await buildApplicationSourceWiring({root: f.root, sourceFiles: [file], sourceManifest, selections: [{id: 'entry', source: {file, symbol: 'run'}}]});
+    const index = {...f.index, flows: f.index.flows.map(x => x.id === 'dispatch' ? {...x, sourceWiring: wiring} : x)};
+    const docs = await buildApplicationFlowDocumentation({root: f.root, index});
+    expect(f.callbacks()).toBe(0);
+    const proof = docs.manifest.flows.find(x => x.id === 'dispatch')!, range = proof.sourceWiring!;
+    expect(docs.files[proof.file]!.slice(range.start,range.end)).toBe(wiring.text);
+    expect(docs.files[proof.file]).toContain('Source-bound caller and field wiring');
+    const tampered = structuredClone(docs); (tampered.manifest.flows.find(x => x.id === 'dispatch')!.sourceWiring as {start:number}).start++;
+    await expect(writeApplicationFlowDocumentation({root: f.root, documentation: tampered})).rejects.toMatchObject({code: 'INVALID_DOCUMENTATION_PROOF'});
+    await fs.appendFile(path.join(f.root,file), '// source changed\n');
+    await expect(buildApplicationFlowDocumentation({root: f.root, index})).rejects.toMatchObject({code: 'STALE_APPLICATION_SOURCE_WIRING'});
   });
 });

@@ -472,3 +472,6 @@ export async function writeApplicationDeveloperContext(options: ApplicationDevel
   } finally { for (const item of staged) await fs.rm(item.temp, { force: true }); }
   return { changed, files: Object.keys(expected.outputs).sort(compare) };
 }
+
+export { buildApplicationSourceWiring, validateApplicationSourceWiring, ApplicationSourceWiringError } from './application-wiring.js';
+export type { ApplicationSourceWiring, ApplicationSourceWiringSelection, ApplicationSourceWiringEntry, ApplicationSourceWiringProof } from './application-wiring.js';

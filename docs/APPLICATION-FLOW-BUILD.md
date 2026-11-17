@@ -135,3 +135,32 @@ Start with the generated application flow index and the relevant child/source li
 ```
 
 The chart-page writer updates its explicitly configured README marker block; it does not create or overwrite either agent instruction file. The source/test context writer's optional `agentFile` block is a separate integration. Agent instructions guide compatible tools; they do not guarantee that every client loads these files or follows the navigation strategy. Verify actual reader behavior in development benchmarks.
+
+## Bind callers and fields to current source
+
+The unreleased `buildApplicationSourceWiring` API accepts an explicitly admitted source catalog and precise selectors. It reads current UTF-8 files, verifies module/unit hashes and UTF-16/UTF-8/line geometry, and renders exact complete callback/call/assignment excerpts. Catalog roles, owners and flow membership are caller-trusted static syntax. They are not observed runtime data flow, inferred provider effects or parser authenticity proofs.
+
+The package includes a build-only reference adapter at `examples/developer/application-source-catalog.mjs`. Copy it into the application's development scripts and declare the tested `@babel/parser@8.1.2` as an application **dev dependency**. It reuses the canonical source-unit analyzer and adds conservative native handler/mapper and caller bindings. It does not import application modules, execute callbacks or become a default runtime dependency. Unsupported factories/aliases/grammar remain unresolved rather than invented.
+
+```js
+import { buildApplicationSourceWiring } from 'smallbusiness-footprint/developer/application';
+import { buildApplicationSourceManifest } from './source-catalog.mjs';
+
+const sourceFiles = ['src/workflow.mjs'];
+const sourceManifest = await buildApplicationSourceManifest(root, sourceFiles);
+const sourceWiring = await buildApplicationSourceWiring({
+  root, sourceFiles, sourceManifest, format: 'compact',
+  selections: [{
+    id: 'request-input',
+    source: {file: 'src/workflow.mjs', stageId: 'check-request', role: 'stage-callback'},
+  }],
+});
+// Add sourceWiring to the corresponding explicitly registered documentation flow.
+// Rebuild it from current source on every build/check; keep complete callback units.
+```
+
+Each flow may supply `sourceWiring`; the chart-page builder revalidates current proofs and embeds the source view with its exact page range/hash. Parent/source links locate missing definitions. Build one wiring object per independently readable page so deduplication does not hide a body printed only on another page.
+
+`knownSpans` can identify source physically supplied elsewhere, such as the current initial source/test packet. Matching bodies are omitted from that particular view and marked already supplied. This verifies current bytes against the caller's exposure declaration; it does not prove model memory. Persistent README pages should normally keep their own source bodies. A packet can separately request compact wiring using its verified known spans. A concrete changed, truncated or unresolved detail remains a reason to reread.
+
+For further inspection, `developer/node.inspectBatch` can return a bounded callable/stage or a batch and omit current known spans. Prefer this to printing an entire omitted module. A consuming application's reader can record these spans, but direct source reads remain available for correctness. Agents should use the supplied/current relevant flow README and wiring first, state the remaining source gap, and then inspect the smallest complete unit that resolves it.

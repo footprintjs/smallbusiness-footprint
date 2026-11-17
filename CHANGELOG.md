@@ -2,6 +2,8 @@
 
 ## Unreleased candidate — application development context
 
+- Add current-byte-bound caller/callback wiring excerpts, compact views and known-span reuse to optional application flow documentation. Ship a development-only source-catalog reference adapter; no default runtime parser dependency is added.
+
 - Generate application algorithm READMEs from explicitly registered runtime charts, existing builder/MCP descriptions and native topology, with parent/child links, declared schemas, current source hashes, ownership-aware writes and read-only freshness checks. Built-in catalogs now include registered action summaries/contracts and exact local control algorithms.
 
 - Add the opt-in Node application source/test packet builder, ownership-aware writer/read-only checker and JSON build/check command.

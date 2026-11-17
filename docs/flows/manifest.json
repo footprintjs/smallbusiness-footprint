@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "representation": "native-footprint-topology-with-verified-control-annotations",
-  "inputSha256": "13517c9c684a32e0c2c721ce13e169b03e23eecc32e8fc99366938a759fd3439",
+  "inputSha256": "54ba490387d9ff380883910fbc0d35f5972f48e24193d35e980959ef15ed7649",
   "inputs": {
     "productionSources": {
       "src/actions/businessActions.ts": "2e0fc4ba910c49f91d2c48013e6bf8aafe56bd9c0f66c32fcbf02003404e3300",
@@ -23,8 +23,9 @@
       "src/checkoutPort.ts": "e2ddea605cc39eed9ce46688231643ba8dcfa536fea5e1c2bd2962e665742b5e",
       "src/commandValidation.ts": "f41696440c7fcbf9a373767d133f0f28fa42cdeaebca8b0bee265d746786b6b2",
       "src/developer/application-cli.ts": "9e79f2df6780693f0371f63f94009ae3bdfd87f1dfedb11d833b16cbf918803e",
-      "src/developer/application-flow-docs.ts": "813081d01970db976407d5b7687199dd20d4a07f9f08265a3b5bebc53a20896e",
-      "src/developer/application.ts": "9d2c95bd1e7b6a1574d13ef05fb269d64e3b670e865b68d628d86a72b2612c92",
+      "src/developer/application-flow-docs.ts": "4421bc751395b82b0a24ac13302efa82ce0b2bfa748dd0686e65c7cd57601910",
+      "src/developer/application-wiring.ts": "70b4ff68fe30a3cc74d6b36493299031ab42a3e8cc3102003ad8b3b7722708bd",
+      "src/developer/application.ts": "3547713375ab043bb1fc8471e7a02c92679b2b2f1305e4d7326cac33be2f38a1",
       "src/developer/index.ts": "b4830f7ab8c8decc6e8c8d2328128b48bc65e7ec6a3741539e94c053a5296130",
       "src/developer/node.ts": "4cd3417ca4a0279b96830b09911ec1c586612614cad47a1af1f7bcb72333017b",
       "src/developer/types.ts": "0c112d3e8ed910e56f3852c5942bf52a8c66c89d0595c12341f866d930adbd57",
@@ -76,7 +77,7 @@
       "scripts/developer/build-manifest.mjs": "24cde0ab9e6046dd36c1b6b8dcac68b9ba43d007c8a70dedffe9f9a7fde259c9",
       "scripts/developer/build.mjs": "9424bf6db7ce5780579dd8e2fee3d6cc75845c318aaa110bd92bd1e5109e11c0"
     },
-    "packageSha256": "4006e4677e38f6e8a305a8229433e75e912fd3a08f412038cb7f9f49a6546bfd",
+    "packageSha256": "439617c59e060c741c2eeb50bea31833b27d2662e6b3d154fbffa22a78dc86e5",
     "sdk": {
       "name": "footprintjs",
       "version": "12.0.0"

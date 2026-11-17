@@ -15,7 +15,7 @@
     "test:developer-package": "node --test scripts/developer/pack.test.mjs",
     "docs:flows": "node scripts/developer/flow-docs.mjs --write",
     "check:flow-docs": "node scripts/developer/flow-docs.mjs --check",
-    "test:flow-docs": "node --test scripts/developer/flow-docs.test.mjs"
+    "test:flow-docs": "node --test scripts/developer/flow-docs.test.mjs scripts/developer/application-catalog.test.mjs"
   },
   "dependencies": {
     "footprint-blueprint": "1.1.0",
@@ -42,7 +42,8 @@
     "LICENSE",
     "docs",
     "CHANGELOG.md",
-    "examples/shared-evidence/*.mjs"
+    "examples/shared-evidence/*.mjs",
+    "examples/developer/*.mjs"
   ],
   "sideEffects": false,
   "exports": {
