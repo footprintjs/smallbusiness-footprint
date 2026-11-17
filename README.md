@@ -4,6 +4,8 @@ Commerce configuration, scoped actions and recorded workflows for applications t
 
 **Start with [the quickstart](docs/QUICKSTART.md)** or choose a task in [the documentation index](docs/README.md). For source navigation and root-cause investigation, read [the agent guide](docs/AGENT-GUIDE.md) and [source map](docs/SOURCE-MAP.md).
 
+**Coding agents:** repository entry instructions are in `AGENTS.md` and `CLAUDE.md`, with one [shared workflow guide](docs/AGENT-GUIDE.md). Use the [generated flow index](docs/flows/README.md) and relevant child/source links. For consuming projects, add the [application instruction templates](docs/APPLICATION-FLOW-BUILD.md#tell-coding-agents-where-to-start) explicitly.
+
 <!-- BEGIN GENERATED FLOW INDEX -->
 ## Generated flow index
 

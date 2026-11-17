@@ -102,3 +102,36 @@ With the integration above, an application can use scripts like these; adapt `co
 ```
 
 CI must run `npm run check:flow-docs` **before** a build that writes diagrams, then run the normal build and tests. Otherwise regeneration could hide stale committed documentation. Alternatively compare the expected generated output with committed bytes in a clean checkout. A release should retain the generated source/version manifest alongside the documentation. These checks establish freshness and navigability, not reduced model tokens or automatically complete application semantics.
+
+## Tell coding agents where to start
+
+Add the following section to the application's existing `AGENTS.md`, preserving other project instructions. The paths and commands below match the example above; adapt them to the application's actual generated index and package scripts. The library's root instruction files are repository guidance, not files installed into every consuming app.
+
+```md
+## Workflow development
+
+Start at [the generated application flow index](docs/application-flows/README.md).
+Choose the relevant flow, follow its child links, and inspect owning source for
+missing predicate, mapping or effect details. Reuse supplied current source when
+sufficient; read any additional code needed for correctness.
+
+Edit the runtime flow factories/callbacks and accurate stage descriptions together.
+Regenerate with `npm run docs:flows` or `npm run build`, then verify with
+`npm run check:flow-docs`. Review and commit source and generated documentation
+changes together. Keep handwritten edits outside generated regions.
+
+CI checks freshness before a writing build. Do not assume a documentation watcher
+exists unless this project explicitly configures one. Static metadata and source
+hashes do not prove runtime effects or complete callback semantics.
+```
+
+For a root `CLAUDE.md`, add a short pointer to the same instructions:
+
+```md
+# Project instructions
+
+Follow [AGENTS.md](AGENTS.md), including its workflow-development instructions.
+Start with the generated application flow index and the relevant child/source links.
+```
+
+The chart-page writer updates its explicitly configured README marker block; it does not create or overwrite either agent instruction file. The source/test context writer's optional `agentFile` block is a separate integration. Agent instructions guide compatible tools; they do not guarantee that every client loads these files or follows the navigation strategy. Verify actual reader behavior in development benchmarks.

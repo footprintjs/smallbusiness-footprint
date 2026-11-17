@@ -2,6 +2,16 @@
 
 Use this guide when an application task or saved run points to SMB code. The goal is a correct change supported by current source and actual execution facts. Reusing supplied source can save reconstruction, but reading additional code is always appropriate when a gap remains.
 
+## Read the chart and keep its documentation current
+
+Start at the [generated flow index](flows/README.md), select the action/flow, and open its algorithm/contract page. Follow only the relevant child-flow links, then inspect actual predicates, mappers, callers and writers for concrete implementation gaps. Supplied current source can already satisfy an initial read; use it directly when sufficient. The index is a navigation aid, not a requirement to read every chart or a ban on broader inspection needed for correctness.
+
+Maintain the runtime chart factory, callback logic and accurate stage descriptions/contracts together. Generate README algorithms from those definitions; do not maintain a second handwritten algorithm inside generated regions. After a chart/source/metadata edit, run `npm run docs:flows` or the normal `npm run build`, then `npm run check:flow-docs`. Review and commit generated changes with the source. The read-only check can identify uncertain freshness before a change. When it fails, reconstruct charts from current source, regenerate, review the source/documentation diff and check again.
+
+Build regeneration and freshness checks are implemented. File-change watching and a Vitest documentation plugin are not implemented yet; agents must not assume that saving a file updates its README. CI runs the read-only check before any build that writes docs. The generated text follows chart metadata/topology and source identities; manually supplied descriptions still need review against callback semantics.
+
+These root instructions cover this repository. An npm installation does not create `AGENTS.md` or `CLAUDE.md` in a host project. Add the [application templates](APPLICATION-FLOW-BUILD.md#tell-coding-agents-where-to-start) explicitly, using that application's generated index and actual package scripts. The optional source/test packet writer can manage its own instruction block; the chart-page writer manages the configured README block and does not create either agent instruction file.
+
 ## Choose the boundary
 
 Identify the public action/flow ID, trusted scope and API used by the application. `executeAction` and `executeServiceFlow` are different recording paths. After-sales has its own request/action runtime. Start with the [source map](SOURCE-MAP.md), then the owning callable rather than an unrelated package-wide scan.
