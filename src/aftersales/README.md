@@ -11,7 +11,7 @@ Read [the after-sales contract](../../docs/AFTERSALES.md) and [saved scoped caus
 <!-- BEGIN GENERATED FLOW INDEX -->
 ## Generated after-sales chart views
 
-Production/generator input SHA-256: `c3dda52a438dccdb496760bcb029b297e28aeda31e7a4a13e3462ea8aa410b27`. Actual registered builders: FootPrintJS 12.0.0 `toMermaid()` topology plus native control metadata; callbacks/providers are not run.
+Production/generator input SHA-256: `d104c5c94cac5a9af6308d3376c02ec00be4922a34f0bc25d00e8b421368c8d5`. Actual registered builders: FootPrintJS 12.0.0 `toMermaid()` topology plus native control metadata; callbacks/providers are not run.
 
 ### [aftersales-action](../../docs/flows/views/validate-action-3ca46934d91a/README.md)
 

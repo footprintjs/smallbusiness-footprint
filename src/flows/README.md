@@ -9,7 +9,7 @@ Test with `src/__tests__/scenario/serviceComposer.test.ts`, `actionTracing.test.
 <!-- BEGIN GENERATED FLOW INDEX -->
 ## Generated default service charts
 
-Production/generator input SHA-256: `c3dda52a438dccdb496760bcb029b297e28aeda31e7a4a13e3462ea8aa410b27`. Actual registered builders: FootPrintJS 12.0.0 `toMermaid()` topology plus native control metadata; callbacks/providers are not run.
+Production/generator input SHA-256: `d104c5c94cac5a9af6308d3376c02ec00be4922a34f0bc25d00e8b421368c8d5`. Actual registered builders: FootPrintJS 12.0.0 `toMermaid()` topology plus native control metadata; callbacks/providers are not run.
 
 ```mermaid
 flowchart TD

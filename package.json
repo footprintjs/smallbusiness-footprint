@@ -102,6 +102,11 @@
       "import": "./dist/diagnostics/aftersalesCause.js",
       "default": "./dist/diagnostics/aftersalesCause.js"
     },
+    "./native": {
+      "types": "./dist/native.d.ts",
+      "import": "./dist/native.js",
+      "default": "./dist/native.js"
+    },
     "./developer/application": {
       "types": "./dist/developer/application.d.ts",
       "import": "./dist/developer/application.js",

@@ -17,7 +17,7 @@ Commerce configuration, scoped actions and recorded workflows for applications t
 
 [Complete flow inventory](docs/flows/README.md). Run `npm run docs:flows` after source changes; `npm run check:flow-docs` fails on stale/missing views.
 
-Input SHA-256: `c3dda52a438dccdb496760bcb029b297e28aeda31e7a4a13e3462ea8aa410b27`. Static build views, not execution or causal proof.
+Input SHA-256: `d104c5c94cac5a9af6308d3376c02ec00be4922a34f0bc25d00e8b421368c8d5`. Static build views, not execution or causal proof.
 <!-- END GENERATED FLOW INDEX -->
 
 For your own application, use [the application chart/build recipe](docs/APPLICATION-FLOW-BUILD.md): share its runtime factory with an explicit app index and wire a host-owned writer/checker into build and CI. The commands above cover this library's registries; they do not discover host workflows.
@@ -76,6 +76,8 @@ This reads configuration; it does not authorize an operation. Execution defaults
 ## Integrate an authoritative operation
 
 `executeAction(context, actionId, input)` uses Blueprint action preparation and can return shared execution evidence. `executeServiceFlow(context, actionId, input)` prepares the same action, then runs a native chart and returns its snapshot, manifest and narrative. These are separate recording paths; an option for one does not automatically instrument the other.
+
+Applications can put their own business decisions and loops inside that registry using the unreleased optional [`/native` composition entry](docs/NATIVE-FLOWS.md). It mounts actual native stages, keeps request data private, and requires an explicit authoritative receipt. Existing host-operation builders remain available.
 
 Supply a bound scope, trusted request context, profile store, authorizer and real operation. Exact `operations[actionId]` override default CRUD. Typed checkout, inventory and publication ports validate commands and receipts; the application implements the transaction behind each port. `pending` is not payment completion, and `accepted` is not delivery.
 

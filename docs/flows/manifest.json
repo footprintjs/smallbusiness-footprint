@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "representation": "native-footprint-topology-with-verified-control-annotations",
-  "inputSha256": "c3dda52a438dccdb496760bcb029b297e28aeda31e7a4a13e3462ea8aa410b27",
+  "inputSha256": "d104c5c94cac5a9af6308d3376c02ec00be4922a34f0bc25d00e8b421368c8d5",
   "inputs": {
     "productionSources": {
       "src/actions/businessActions.ts": "2e0fc4ba910c49f91d2c48013e6bf8aafe56bd9c0f66c32fcbf02003404e3300",
@@ -54,6 +54,7 @@
       "src/modules/payments.ts": "6f2ce21b97a226e338b18681ca5fb849b37daa8e777b3c92f5e75e0a926271f2",
       "src/modules/storefront.ts": "a455d7d7e2e0836ab9d139e5159b7915428be1989e78b679100690c098ccf374",
       "src/modules/subscribers.ts": "46599821d232db3057deb357bf5a9c36a4e4810c49d7f58f250067a23926ad90",
+      "src/native.ts": "284051f1dff6e488afd5cbb68c1e6119fe2eaeb9f2943193781294c10371ed2c",
       "src/operations.ts": "54c89e2fb460a81067aff07320c5ebac4581d1183eb73a234dc8c6f185174b92",
       "src/overrides/unitOverrides.ts": "691c340455f6cf82c385a6636681c986dd82e52a79655030a85556a8c300f559",
       "src/profiles/businessProfiles.ts": "33d9b30afff9a723acc492163ee4d75fb9802301fb946d09a55ad625d1f64e37",
@@ -74,7 +75,7 @@
       "scripts/developer/build-manifest.mjs": "24cde0ab9e6046dd36c1b6b8dcac68b9ba43d007c8a70dedffe9f9a7fde259c9",
       "scripts/developer/build.mjs": "9424bf6db7ce5780579dd8e2fee3d6cc75845c318aaa110bd92bd1e5109e11c0"
     },
-    "packageSha256": "04a8d927aef9adc7a0231495490cfb9a3f0bc782bfdf86207161858abb37e4b5",
+    "packageSha256": "4006e4677e38f6e8a305a8229433e75e912fd3a08f412038cb7f9f49a6546bfd",
     "sdk": {
       "name": "footprintjs",
       "version": "12.0.0"

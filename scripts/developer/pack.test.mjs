@@ -43,6 +43,32 @@ test('actual packed source maps and manifest resolve to one exact production sou
    const developer=await import('smallbusiness-footprint/developer');
    const source=await import('smallbusiness-footprint/developer/node');
    const application=await import('smallbusiness-footprint/developer/application');
+   const native=await import('smallbusiness-footprint/native');
+   assert.equal(typeof native.createNativeBusinessFlow,'function');
+   assert.equal(typeof native.safeNativeStage,'function');
+   assert.equal(typeof native.getNativeBusinessPolicy,'function');
+   const nativeAction='packed-native-policy';
+   const nativeScope={tenantId:'packed-tenant',unitId:'packed-unit'};
+   const nativeContext={...nativeScope,businessType:'field-service'};
+   const wrapped=fn=>native.safeNativeStage(nativeAction,fn);
+   const nativeRegistry=main.createBusinessServiceRegistry(undefined,{
+    scope:nativeScope,includeResponse:true,
+    prepare:async()=>({input:{},context:nativeContext}),
+    flowRegistry:{[nativeAction]:{default:dependencies=>native.createNativeBusinessFlow(nativeAction,dependencies,{
+     build:request=>native.flowChart('Initialize native iteration',wrapped(scope=>scope.setValue('position',0)),'packed-loop-start')
+      .addDeciderFunction('Check native loop',wrapped(scope=>scope.getValue('position')<2?'packed-more':'packed-complete'),'packed-loop')
+       .addFunctionBranch('packed-more','Advance native iteration',wrapped(scope=>scope.setValue('position',scope.getValue('position')+1))).loopTo('packed-loop')
+       .addFunctionBranch('packed-complete','Acknowledge native result',wrapped(scope=>{request(scope).acknowledge({acknowledgement:'accepted',output:{status:'done'},response:{ok:true}});})).end().build(),
+    })}},
+   });
+   const packedNativeChart=nativeRegistry.buildServiceFlow(nativeAction,nativeContext).flow;
+   const packedPolicy=native.getNativeBusinessPolicy(packedNativeChart);
+   assert.ok(packedPolicy.toMermaid().includes('Check native loop'));
+   const nativeResult=await nativeRegistry.executeService(nativeAction,{},nativeContext);
+   assert.equal(nativeResult.status,'success');assert.equal(nativeResult.acknowledgement,'accepted');
+   assert.deepEqual(nativeResult.response,{ok:true});assert.equal(nativeResult.result.status,'done');
+   assert.equal(nativeResult.observationError,undefined);
+   assert.ok(JSON.stringify(nativeResult.executionSnapshot).includes('packed-loop'));
    assert.equal(typeof application.buildApplicationDeveloperContext,'function');
    assert.equal(typeof application.writeApplicationDeveloperContext,'function');
    assert.equal(typeof application.checkApplicationDeveloperContext,'function');
