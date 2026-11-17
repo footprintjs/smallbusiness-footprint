@@ -3,6 +3,7 @@
 ## Unreleased candidate — application development context
 
 - Add the opt-in Node application source/test packet builder, ownership-aware writer/read-only checker and JSON build/check command.
+- Add an optional compact packet with complete editable modules, explicit protected-source contracts/references, current approved test tooling and relative test-entry facts. Keep the original default packet format and runtime imports unchanged.
 - Add precise method/property source units and atomic batch inspection with explicit known-span reuse; preserve existing source identities and single-reader APIs.
 - Keep application source admission, host opacity and generated instruction changes explicit. No main-runtime/browser imports or business behavior are changed; no runtime or model-efficiency claim is made.
 

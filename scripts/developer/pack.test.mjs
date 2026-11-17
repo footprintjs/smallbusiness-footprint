@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {execFileSync} from 'node:child_process';
+import {execFileSync,spawnSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {buildDeveloperManifest} from './build-manifest.mjs';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..'),sha=b=>createHash('sha256').update(b).digest('hex');
@@ -74,6 +74,25 @@ test('actual packed source maps and manifest resolve to one exact production sou
   const cli=mode=>JSON.parse(execFileSync(process.execPath,[bin,mode,'--root',app,'--config','context.json'],{encoding:'utf8'}));
   assert.ok(cli('build').changed.length>0);assert.equal(cli('check').valid,true);assert.deepEqual(cli('build').changed,[]);
   assert.ok((await fs.readFile(path.join(app,'docs/application-context/packet.md'),'utf8')).includes('export function run(input)'));
+  // The optional task packet must also work through the actual packed CLI,
+  // with source and approved test tooling treated as bytes rather than imports.
+  await fs.mkdir(path.join(app,'scripts'));
+  const protectedEntry='throw new Error("protected entry must not execute");\nexport {run} from "./rules.mjs";\n';
+  const editable='export function run(input){return input;}\n';
+  const support='throw new Error("approved support must not execute");\n';
+  await fs.writeFile(path.join(app,'src/app.mjs'),protectedEntry);
+  await fs.writeFile(path.join(app,'src/rules.mjs'),editable);
+  await fs.writeFile(path.join(app,'scripts/test.mjs'),support);
+  const compactConfig={...config,index:{...config.index,sourceFiles:['src/app.mjs','src/rules.mjs'],flows:[{id:'run',sources:[{file:'src/app.mjs'},{file:'src/rules.mjs'}]}],development:{...config.index.development,regressionTestDirectory:'src/__tests__',protectedFiles:['src/app.mjs','scripts/'],supportFiles:[{file:'scripts/test.mjs',purpose:'Approved test runner'}]}},packetOptions:{format:'compact',referenceSources:[{file:'src/app.mjs',contract:'Protected public entry re-exports run from the editable rules module; full entry remains available.'}]}};
+  await fs.writeFile(path.join(app,'context.json'),JSON.stringify(compactConfig));
+  assert.ok(cli('build').changed.length>0);assert.equal(cli('check').valid,true);assert.deepEqual(cli('build').changed,[]);
+  const compact=await fs.readFile(path.join(app,'docs/application-context/packet.md'),'utf8');
+  assert.ok(compact.includes(editable)&&compact.includes(support)&&!compact.includes(protectedEntry));
+  const compactManifest=JSON.parse(await fs.readFile(path.join(app,'docs/application-context/manifest.json'),'utf8'));
+  assert.equal(compactManifest.coverage.allAdmittedSourceDelivered,false);
+  await fs.appendFile(path.join(app,'scripts/test.mjs'),'// changed support\n');
+  const stale=spawnSync(process.execPath,[bin,'check','--root',app,'--config','context.json'],{encoding:'utf8'});
+  assert.equal(stale.status,1);assert.equal(JSON.parse(stale.stdout).valid,false);
   const info={archiveBytes:(await fs.stat(archive)).size,installedBytes:packed.unpackedSize,sourceFiles:Object.keys(manifest.files).length,mapsValidated:maps.length,manifestBytes:(await fs.stat(path.join(pkgRoot,'dist/developer/source-manifest.json'))).size,sourceTreeSha256:manifest.sourceTreeSha256};
   console.log(JSON.stringify(info));
  }finally{await fs.rm(temp,{recursive:true,force:true});}

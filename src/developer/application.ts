@@ -25,9 +25,26 @@ export type ApplicationDeveloperIndex = {
     readonly commands: { readonly test: string; readonly build?: string; readonly typecheck?: string };
     /** This is an explicit approval to include this public example. A declared file is read and hash-bound. */
     readonly smokeTest: { readonly file?: string; readonly text?: string; readonly sha256?: string };
+    /** Explicit approval to supply current public tooling/configuration bytes, never execute them. */
+    readonly supportFiles?: readonly { readonly file: string; readonly purpose: string }[];
     readonly regressionTestDirectory?: string;
     readonly protectedFiles?: readonly string[];
   };
+};
+export type ApplicationDeveloperPacketOptions = {
+  readonly format: 'compact';
+  /** Caller-declared contracts for admitted, explicitly protected source whose body may be omitted. */
+  readonly referenceSources?: readonly { readonly file: string; readonly contract: string }[];
+};
+export type ApplicationDeveloperSupportProof = {
+  readonly file: string; readonly purpose: string; readonly sha256: string; readonly characters: number;
+  readonly packetStart: number; readonly packetEnd: number;
+};
+export type ApplicationDeveloperReferenceProof = {
+  readonly file: string; readonly moduleSha256: string; readonly moduleCharacters: number;
+  readonly contract: string; readonly contractOrigin: 'caller-declared'; readonly sourceDelivered: false;
+  readonly packetStart: number; readonly packetEnd: number;
+  readonly requestedSelectors: readonly DeveloperSourceSelector[]; readonly resolvedUnits: readonly DeveloperSourceUnit[];
 };
 export type ApplicationDeveloperSourceProof = {
   readonly file: string; readonly moduleSha256: string; readonly sourceSha256: string;
@@ -46,6 +63,14 @@ export type ApplicationDeveloperContext = {
     readonly indexCharacters: number; readonly packetCharacters: number; readonly characterBudget: number;
     readonly selectedFlowIds: readonly string[]; readonly selection: readonly { readonly id: string; readonly score: number; readonly selected: boolean }[];
     readonly sources: readonly ApplicationDeveloperSourceProof[];
+    readonly packetFormat?: 'compact';
+    readonly sourceReferences?: readonly ApplicationDeveloperReferenceProof[];
+    readonly supportFiles?: readonly ApplicationDeveloperSupportProof[];
+    readonly developmentFacts?: {
+      readonly entry: ApplicationDeveloperIndex['development']['entry']; readonly commands: ApplicationDeveloperIndex['development']['commands'];
+      readonly regressionTestDirectory?: string; readonly regressionEntryImport?: string;
+      readonly packetStart: number; readonly packetEnd: number; readonly textSha256: string;
+    };
     readonly publicSmoke: { readonly origin: 'current-file' | 'caller-approved-literal'; readonly file?: string; readonly sha256: string; readonly characters: number; readonly packetStart: number; readonly packetEnd: number };
     readonly packageFile?: { readonly file: string; readonly sha256: string };
     readonly coverage: { readonly scope: 'admitted-application-source'; readonly allAdmittedSourceDelivered: boolean; readonly completeApplication: false; readonly semantics: 'source-not-runtime-proof' };
@@ -104,6 +129,27 @@ function selector(value: DeveloperSourceSelector, admitted: Set<string>): Develo
   for (const key of ['symbol', 'unitId', 'stageId', 'role'] as const) if (value[key] !== undefined) text(value[key], key, 512);
   return { ...value, file };
 }
+function supportPath(value: unknown): string {
+  const file = relative(value, 'approved public support file');
+  const blocked = new Set(['src', 'source', 'sources', 'lib', 'app', 'apps', '__tests__', 'test', 'tests', 'fixture', 'fixtures', '__fixtures__', 'private', 'secrets', 'credentials', 'node_modules', 'dist', 'coverage', 'vendor']);
+  if (file.split('/').some(p => blocked.has(p.toLowerCase())) || /\.(?:test|spec)\.[^.]+$/i.test(file)) fail('UNSAFE_SUPPORT_SOURCE', 'Support files must be explicitly public tooling/configuration, outside production, private test and fixture scopes');
+  return file;
+}
+function protectedSource(file: string, protectedPaths: readonly string[]): boolean {
+  const value = file.toLowerCase();
+  return protectedPaths.some(p => { const root = p.replace(/\/$/, '').toLowerCase(); return value === root || p.endsWith('/') && value.startsWith(root + '/'); });
+}
+function compactDevelopmentFacts(dev: Pick<ApplicationDeveloperIndex['development'], 'entry' | 'commands' | 'regressionTestDirectory'>): { text: string; regressionEntryImport?: string } {
+  let regressionEntryImport: string | undefined;
+  if (dev.regressionTestDirectory) {
+    regressionEntryImport = path.posix.relative(dev.regressionTestDirectory, dev.entry.file);
+    if (!regressionEntryImport.startsWith('.')) regressionEntryImport = './' + regressionEntryImport;
+  }
+  return {
+    text: `PUBLIC DEVELOPMENT FACTS (caller-declared contracts; commands not executed)\nEntry: ${dev.entry.file}#${dev.entry.exportName}${dev.entry.signature ? ' — ' + dev.entry.signature : ''}\nCommands: ${JSON.stringify(dev.commands)}\n${dev.regressionTestDirectory ? 'New regression tests: ' + dev.regressionTestDirectory + '\n' : ''}${regressionEntryImport ? 'Path-derived import for a test directly in that directory: ' + JSON.stringify(regressionEntryImport) + ', export ' + dev.entry.exportName + ' (path fact, not execution verification)\n' : ''}`,
+    ...(regressionEntryImport ? { regressionEntryImport } : {}),
+  };
+}
 async function target(root: string, file: string, missing = false): Promise<string> {
   let current = root;
   const parts = file.split('/');
@@ -161,6 +207,7 @@ function resolvedUnits(manifest: DeveloperSourceManifest | undefined, selected: 
 export async function buildApplicationDeveloperContext(options: {
   readonly root: string; readonly index: ApplicationDeveloperIndex; readonly goal: string;
   readonly sourceManifest?: DeveloperSourceManifest; readonly characterBudget?: number;
+  readonly packetOptions?: ApplicationDeveloperPacketOptions;
 }): Promise<ApplicationDeveloperContext> {
   staticData(options);
   const root = await fs.realpath(options.root), index = options.index;
@@ -195,6 +242,33 @@ export async function buildApplicationDeveloperContext(options: {
     const prefix = f.endsWith('/');
     return relative(prefix ? f.slice(0, -1) : f, 'protected file') + (prefix ? '/' : '');
   }))].sort(compare);
+  const compact = options.packetOptions !== undefined;
+  const referenceContracts = new Map<string, string>();
+  if (compact) {
+    const presentation = options.packetOptions!;
+    if (!plain(presentation) || presentation.format !== 'compact' || Object.keys(presentation).some(k => !['format', 'referenceSources'].includes(k)) || presentation.referenceSources !== undefined && (!Array.isArray(presentation.referenceSources) || presentation.referenceSources.length > 512)) fail('INVALID_PACKET_OPTIONS', 'Expected explicit compact packet options and bounded protected source references');
+    for (const reference of presentation.referenceSources ?? []) {
+      if (!plain(reference) || Object.keys(reference).some(k => !['file', 'contract'].includes(k))) fail('INVALID_PACKET_OPTIONS', 'Source references require only an admitted file and caller-declared contract');
+      const file = relative(reference.file, 'referenced source', true);
+      if (!admitted.has(file)) fail('SOURCE_NOT_ADMITTED', `Referenced source is not admitted: ${file}`);
+      if (!protectedSource(file, protectedPaths)) fail('UNPROTECTED_SOURCE_REFERENCE', `Editable source cannot be replaced by a reference: ${file}`);
+      if (referenceContracts.has(file)) fail('INVALID_PACKET_OPTIONS', 'Duplicate protected source reference');
+      referenceContracts.set(file, text(reference.contract, 'protected source contract', 8192));
+    }
+  }
+  if (dev.supportFiles !== undefined && (!Array.isArray(dev.supportFiles) || dev.supportFiles.length > 32)) fail('INVALID_INDEX', 'Approved public support files must be a bounded explicit array');
+  const support = new Map<string, { text: string; sha256: string; purpose: string }>();
+  const supportNames = new Set<string>();
+  let supportCharacters = 0;
+  for (const approved of dev.supportFiles ?? []) {
+    if (!plain(approved) || Object.keys(approved).some(k => !['file', 'purpose'].includes(k))) fail('INVALID_INDEX', 'Approved support files require only a file and public purpose');
+    const file = supportPath(approved.file), purpose = text(approved.purpose, 'public support purpose', 2048);
+    if (supportNames.has(file.toLowerCase()) || files.some(f => f.toLowerCase() === file.toLowerCase()) || file.toLowerCase() === dev.smokeTest.file?.toLowerCase() || file.toLowerCase() === 'package.json') fail('DUPLICATE_SUPPORT_SOURCE', 'Support source must not duplicate admitted source, package metadata or public smoke');
+    const value = await read(root, file); supportCharacters += value.text.length;
+    if (value.text.length > 32000 || supportCharacters > 128000) fail('PUBLIC_SUPPORT_LIMIT', 'Approved support source exceeds the bounded public-tooling limit');
+    support.set(file, { ...value, purpose });
+    supportNames.add(file.toLowerCase());
+  }
   const current = new Map<string, { text: string; sha256: string }>(); let total = 0;
   for (const file of files) { const value = await read(root, file); total += value.text.length; if (total > 10000000) fail('SOURCE_ADMISSION_LIMIT', 'Admitted source exceeds the declared ten-million-character build limit'); current.set(file, value); }
   const hashes = Object.fromEntries(files.map(file => [file, current.get(file)!.sha256])), tree = sha(JSON.stringify(Object.entries(hashes)));
@@ -216,6 +290,8 @@ export async function buildApplicationDeveloperContext(options: {
   const expand = [...selectedIds]; for (let i = 0; i < expand.length; i++) for (const id of flows.find(f => f.id === expand[i])!.relatedFlowIds ?? []) if (!selectedIds.has(id)) { selectedIds.add(id); expand.push(id); }
   const chosen = flows.filter(flow => selectedIds.has(flow.id)), selectors = [...chosen.flatMap(f => [...f.sources, ...(f.relatedSources ?? [])]), { file: entry }];
   const selectedFiles = [...new Set(selectors.map(s => s.file))].sort(compare), boundaries = [...new Set(chosen.flatMap(f => [...(f.opaqueBoundaries ?? []), ...(f.sources.length ? [] : [`No implementation source declared for ${f.id}`])]))];
+  const deliveredFiles = selectedFiles.filter(file => !referenceContracts.has(file));
+  if (!deliveredFiles.length) fail('NO_DELIVERED_SOURCE', 'A source packet must retain at least one complete selected module; protected references are not editable code');
   const topology: ApplicationDeveloperContext['manifest']['topology'][number][] = [], diagrams = new Map<string, string>();
   for (const flow of flows) {
     let diagram: string | undefined, origin: 'caller-trusted-chart-export' | 'caller-declared' | 'not-supplied' = 'not-supplied';
@@ -227,26 +303,55 @@ export async function buildApplicationDeveloperContext(options: {
   const indexLines = [`# ${name}: application context index`, '', 'Explicit admitted application sources; diagrams are caller-trusted static topology, not execution evidence.', `Source identity: ${tree}`, '', ...flows.map(f => `- ${f.id}: ${f.description ?? ''} — ${f.sources.map(s => `${s.file}${s.symbol ? '#' + s.symbol : ''}`).join(', ') || 'opaque implementation'}`), '', 'Admitted source files:', ...files.map(f => `- ${f}`), '', 'Use the goal-scoped packet for current editable code and the approved public test example. Other source inspection remains available for missing detail.'];
   const indexText = indexLines.join('\n') + '\n';
   if (indexText.length > 1000000) fail('APPLICATION_INDEX_LIMIT', 'Complete application index exceeds one million characters; nothing was clipped');
-  let packetText = `# ${name}: current source and development packet\n\nGoal: ${goal}\nSelected flows: ${chosen.map(f => f.id).join(', ')}\n\nPROJECT FACTS\nPublic entry (caller-declared contract): ${entry}#${dev.entry.exportName}${dev.entry.signature ? ' — ' + dev.entry.signature : ''}\nCommands (not executed): ${JSON.stringify(dev.commands)}\n${packageFacts ? 'Current package facts (dependency specs are declarations, not installed-version proof): ' + JSON.stringify(packageFacts) + '\n' : ''}${dev.regressionTestDirectory ? 'New regression tests: ' + dev.regressionTestDirectory + '\n' : ''}${dev.protectedFiles?.length ? 'Protected/generated-file rules supplied by application: ' + dev.protectedFiles.join(', ') + '\n' : ''}Admitted files: ${files.join(', ')}\nSource identity: ${tree}\n\n`;
-  for (const flow of chosen) if (diagrams.has(flow.id)) packetText += `${flow.id} (${topology.find(t => t.flowId === flow.id)!.origin}; no runtime-effect claim)\n${fence(diagrams.get(flow.id)!, 'mermaid')}\n\n`;
+  let packetText = compact
+    ? `# ${name}: source/test packet\n\nSelected flows: ${chosen.map(f => f.id).join(', ')}\nGoal SHA-256: ${sha(goal)} (full goal retained in manifest).\n\n`
+    : `# ${name}: current source and development packet\n\nGoal: ${goal}\nSelected flows: ${chosen.map(f => f.id).join(', ')}\n\nPROJECT FACTS\nPublic entry (caller-declared contract): ${entry}#${dev.entry.exportName}${dev.entry.signature ? ' — ' + dev.entry.signature : ''}\nCommands (not executed): ${JSON.stringify(dev.commands)}\n${packageFacts ? 'Current package facts (dependency specs are declarations, not installed-version proof): ' + JSON.stringify(packageFacts) + '\n' : ''}${dev.regressionTestDirectory ? 'New regression tests: ' + dev.regressionTestDirectory + '\n' : ''}${dev.protectedFiles?.length ? 'Protected/generated-file rules supplied by application: ' + dev.protectedFiles.join(', ') + '\n' : ''}Admitted files: ${files.join(', ')}\nSource identity: ${tree}\n\n`;
+  const appendDiagrams = () => { for (const flow of chosen) if (diagrams.has(flow.id)) packetText += `${flow.id} (${topology.find(t => t.flowId === flow.id)!.origin}; no runtime-effect claim)\n${fence(diagrams.get(flow.id)!, 'mermaid')}\n\n`; };
+  if (!compact) appendDiagrams();
   const sourceProofs: ApplicationDeveloperSourceProof[] = [];
-  for (const file of selectedFiles) {
+  for (const file of deliveredFiles) {
     const value = current.get(file)!, requests = selectors.filter(s => s.file === file), units = resolvedUnits(options.sourceManifest, requests, file, value);
     packetText += `${file} [COMPLETE MODULE; current imports/local helpers included]\n`;
     const mark = '`'.repeat(Math.max(3, ...[...value.text.matchAll(/`+/g)].map(m => m[0].length + 1))); packetText += mark + (/\.tsx?$/.test(file) ? 'ts' : 'js') + '\n';
     const start = packetText.length; packetText += value.text; const end = packetText.length; packetText += '\n' + mark + '\n\n';
     sourceProofs.push({ file, moduleSha256: value.sha256, sourceSha256: value.sha256, start: 0, end: value.text.length, startLine: 1, endLine: value.text.split('\n').length, packetStart: start, packetEnd: end, sourceForm: 'complete-module', requestedSelectors: requests, resolvedUnits: units });
   }
+  let developmentFacts: ApplicationDeveloperContext['manifest']['developmentFacts'];
+  const sourceReferences: ApplicationDeveloperReferenceProof[] = [];
+  if (compact) {
+    const { text: facts, regressionEntryImport } = compactDevelopmentFacts(dev);
+    const start = packetText.length; packetText += facts; const end = packetText.length; packetText += '\n';
+    developmentFacts = { entry: { file: entry, exportName: dev.entry.exportName, ...(dev.entry.signature ? { signature: dev.entry.signature } : {}) }, commands: { ...dev.commands }, ...(dev.regressionTestDirectory ? { regressionTestDirectory: dev.regressionTestDirectory } : {}), ...(regressionEntryImport ? { regressionEntryImport } : {}), packetStart: start, packetEnd: end, textSha256: sha(facts) };
+    if (packageFacts?.scripts) packetText += `Current package script declarations: ${JSON.stringify(packageFacts.scripts)}\n`;
+    packetText += `Protected paths: ${protectedPaths.join(', ') || '(none)'}\nAdmitted files: ${files.join(', ')}\nSource identity: ${tree}\n\n`;
+    for (const file of selectedFiles.filter(file => referenceContracts.has(file))) {
+      const value = current.get(file)!, contract = referenceContracts.get(file)!, requests = selectors.filter(s => s.file === file), units = resolvedUnits(options.sourceManifest, requests, file, value);
+      packetText += `PROTECTED SOURCE REFERENCE: ${file} (body NOT supplied; current SHA-256 ${value.sha256})\nCaller-declared contract: `;
+      const start = packetText.length; packetText += contract; const end = packetText.length; packetText += '\nInspect this file when its implementation is needed; its hash does not verify the contract.\n\n';
+      sourceReferences.push({ file, moduleSha256: value.sha256, moduleCharacters: value.text.length, contract, contractOrigin: 'caller-declared', sourceDelivered: false, packetStart: start, packetEnd: end, requestedSelectors: requests, resolvedUnits: units });
+    }
+    appendDiagrams();
+  }
   packetText += `APPROVED PUBLIC SMOKE EXAMPLE (${smoke.origin}${smoke.file ? ': ' + smoke.file : ''})\n`;
   const smokeFence = '`'.repeat(Math.max(3, ...[...smoke.text.matchAll(/`+/g)].map(m => m[0].length + 1)));
   packetText += smokeFence + 'js\n'; const smokeStart = packetText.length; packetText += smoke.text; const smokeEnd = packetText.length; packetText += '\n' + smokeFence + '\n\n';
+  const supportProofs: ApplicationDeveloperSupportProof[] = [];
+  for (const [file, value] of [...support].sort(([a], [b]) => compare(a, b))) {
+    packetText += `APPROVED PUBLIC SUPPORT: ${file} — ${value.purpose}\n`;
+    const mark = '`'.repeat(Math.max(3, ...[...value.text.matchAll(/`+/g)].map(m => m[0].length + 1))); packetText += mark + '\n';
+    const start = packetText.length; packetText += value.text; const end = packetText.length; packetText += '\n' + mark + '\n\n';
+    supportProofs.push({ file, purpose: value.purpose, sha256: value.sha256, characters: value.text.length, packetStart: start, packetEnd: end });
+  }
   if (boundaries.length) packetText += `EXPLICIT OPAQUE BOUNDARIES\n${boundaries.map(b => '- ' + b).join('\n')}\n\n`;
-  packetText += 'These are current complete selected modules, not a proof of all external dependencies or runtime business effects. Imports into unshown/host/provider implementations remain boundaries. Use supplied current code for the first patch when sufficient; inspect only concrete missing or changed details. No hidden grader, runtime customer values or application callback is collected.\n';
+  packetText += compact
+    ? 'Supplied bodies are complete current modules. Protected references are not supplied source or verified semantics. Unshown imports and host/provider effects remain boundaries; inspect missing or changed detail when needed.\n'
+    : 'These are current complete selected modules, not a proof of all external dependencies or runtime business effects. Imports into unshown/host/provider implementations remain boundaries. Use supplied current code for the first patch when sufficient; inspect only concrete missing or changed details. No hidden grader, runtime customer values or application callback is collected.\n';
   if (packetText.length > budget) fail('APPLICATION_CONTEXT_BUDGET_EXCEEDED', `Complete packet requires ${packetText.length} characters; budget is ${budget}. Nothing was truncated. Refine the declared flow/source selection or explicitly increase the budget.`);
   // A chart exporter or concurrent editor may have changed inputs while building the packet.
   for (const file of files) if ((await read(root, file)).sha256 !== hashes[file]) fail('SOURCE_CHANGED_DURING_CONTEXT_BUILD', `Application source changed during context build: ${file}`);
   if (smoke.file && (await read(root, smoke.file)).sha256 !== smoke.sha256 || packageFile && (await read(root, packageFile.file)).sha256 !== packageFile.sha256) fail('SOURCE_CHANGED_DURING_CONTEXT_BUILD', 'Public development inputs changed during context build');
-  return { indexText, packetText, manifest: { schemaVersion: 1, producer: PRODUCER, applicationName: name, goal, sourceTreeSha256: tree, sourceHashes: hashes, indexSha256: sha(indexText), packetSha256: sha(packetText), indexCharacters: indexText.length, packetCharacters: packetText.length, characterBudget: budget, selectedFlowIds: chosen.map(f => f.id), selection: ranking.map(r => ({ ...r, selected: selectedIds.has(r.id) })), sources: sourceProofs, publicSmoke: { origin: smoke.origin, ...(smoke.file ? { file: smoke.file } : {}), sha256: smoke.sha256, characters: smoke.text.length, packetStart: smokeStart, packetEnd: smokeEnd }, ...(packageFile ? { packageFile } : {}), coverage: { scope: 'admitted-application-source', allAdmittedSourceDelivered: selectedFiles.length === files.length, completeApplication: false, semantics: 'source-not-runtime-proof' }, topology, protectedPaths, boundaries } };
+  for (const [file, value] of support) if ((await read(root, file)).sha256 !== value.sha256) fail('SOURCE_CHANGED_DURING_CONTEXT_BUILD', `Approved public support changed during context build: ${file}`);
+  return { indexText, packetText, manifest: { schemaVersion: 1, producer: PRODUCER, applicationName: name, goal, sourceTreeSha256: tree, sourceHashes: hashes, indexSha256: sha(indexText), packetSha256: sha(packetText), indexCharacters: indexText.length, packetCharacters: packetText.length, characterBudget: budget, selectedFlowIds: chosen.map(f => f.id), selection: ranking.map(r => ({ ...r, selected: selectedIds.has(r.id) })), sources: sourceProofs, ...(compact ? { packetFormat: 'compact' as const, sourceReferences, developmentFacts } : {}), ...(dev.supportFiles !== undefined ? { supportFiles: supportProofs } : {}), publicSmoke: { origin: smoke.origin, ...(smoke.file ? { file: smoke.file } : {}), sha256: smoke.sha256, characters: smoke.text.length, packetStart: smokeStart, packetEnd: smokeEnd }, ...(packageFile ? { packageFile } : {}), coverage: { scope: 'admitted-application-source', allAdmittedSourceDelivered: deliveredFiles.length === files.length, completeApplication: false, semantics: 'source-not-runtime-proof' }, topology, protectedPaths, boundaries } };
 }
 
 export type ApplicationDeveloperOutputOptions = {
@@ -270,6 +375,35 @@ async function validateContext(root: string, context: ApplicationDeveloperContex
   const files = Object.keys(m.sourceHashes).sort(compare), hashes: Record<string, string> = {};
   for (const file of files) { relative(file, 'manifest source', true); const value = await read(root, file); hashes[file] = value.sha256; if (value.sha256 !== m.sourceHashes[file]) fail('STALE_APPLICATION_CONTEXT', `Application context is stale: ${file}`); for (const proof of m.sources.filter(s => s.file === file)) if (proof.start !== 0 || proof.end !== value.text.length || proof.sourceForm !== 'complete-module' || proof.sourceSha256 !== value.sha256 || proof.moduleSha256 !== value.sha256 || context.packetText.slice(proof.packetStart, proof.packetEnd) !== value.text) fail('INVALID_CONTEXT_PROOF', 'Packet source span does not match current complete module'); }
   if (sha(JSON.stringify(Object.entries(hashes))) !== m.sourceTreeSha256 || m.sources.some(s => !files.includes(s.file))) fail('INVALID_CONTEXT_PROOF', 'Admitted source identity differs');
+  if (!plain(m.coverage) || m.coverage.scope !== 'admitted-application-source' || m.coverage.semantics !== 'source-not-runtime-proof' || m.coverage.completeApplication !== false || m.coverage.allAdmittedSourceDelivered !== (m.sources.length === files.length)) fail('INVALID_CONTEXT_PROOF', 'Coverage must match physically supplied admitted source, never complete application semantics');
+  if (m.packetFormat !== undefined && m.packetFormat !== 'compact' || m.sourceReferences !== undefined && !Array.isArray(m.sourceReferences) || m.supportFiles !== undefined && !Array.isArray(m.supportFiles)) fail('INVALID_CONTEXT_PROOF', 'Optional packet proofs must retain their declared formats');
+  const references = m.sourceReferences ?? [], support = m.supportFiles ?? [];
+  if (references.length > 512 || new Set(references.map(s => s.file)).size !== references.length || references.length && m.coverage.allAdmittedSourceDelivered) fail('INVALID_CONTEXT_PROOF', 'Protected references are distinct omissions, not delivered source');
+  for (const reference of references) {
+    const file = relative(reference.file, 'referenced source', true), value = await read(root, file);
+    if (m.packetFormat !== 'compact' || !files.includes(file) || m.sources.some(s => s.file === file) || !protectedSource(file, m.protectedPaths) || reference.sourceDelivered !== false || reference.contractOrigin !== 'caller-declared' || reference.moduleSha256 !== value.sha256 || reference.moduleCharacters !== value.text.length || !Number.isSafeInteger(reference.packetStart) || !Number.isSafeInteger(reference.packetEnd) || reference.packetStart < 0 || reference.packetEnd > context.packetText.length || reference.packetEnd <= reference.packetStart || context.packetText.slice(reference.packetStart, reference.packetEnd) !== text(reference.contract, 'referenced contract', 8192)) fail('INVALID_CONTEXT_PROOF', 'Protected source reference does not match its declared omission/current source');
+  }
+  if (m.packetFormat === 'compact') {
+    const facts = m.developmentFacts!;
+    if (!Array.isArray(m.sourceReferences)) fail('INVALID_CONTEXT_PROOF', 'Compact contexts must retain their protected-reference inventory, including an empty one');
+    if (!facts || !Number.isSafeInteger(facts.packetStart) || !Number.isSafeInteger(facts.packetEnd) || facts.packetStart < 0 || facts.packetEnd <= facts.packetStart || facts.packetEnd > context.packetText.length || sha(context.packetText.slice(facts.packetStart, facts.packetEnd)) !== facts.textSha256) fail('INVALID_CONTEXT_PROOF', 'Compact development facts must be physically supplied');
+    if (!plain(facts.entry) || !plain(facts.commands) || !files.includes(relative(facts.entry.file, 'development entry', true))) fail('INVALID_CONTEXT_PROOF', 'Compact entry facts must refer to admitted source');
+    if (!m.sources.some(s => s.file === facts.entry.file) && !references.some(s => s.file === facts.entry.file)) fail('INVALID_CONTEXT_PROOF', 'Compact public entry must retain its body or explicit protected reference');
+    text(facts.entry.exportName, 'development entry export', 160); if (facts.entry.signature !== undefined) text(facts.entry.signature, 'development entry signature', 2048);
+    for (const [key, value] of Object.entries(facts.commands)) if (!['test', 'build', 'typecheck'].includes(key) || typeof value !== 'string' || !value.length || value.length > 2048 || /[\n\r\0]/.test(value)) fail('INVALID_CONTEXT_PROOF', 'Compact command facts must retain their bounded declarations');
+    text(facts.commands.test, 'development test command', 2048); if (facts.regressionTestDirectory !== undefined) relative(facts.regressionTestDirectory, 'regression test directory');
+    const rendered = compactDevelopmentFacts(facts);
+    if (rendered.text !== context.packetText.slice(facts.packetStart, facts.packetEnd) || rendered.regressionEntryImport !== facts.regressionEntryImport) fail('INVALID_CONTEXT_PROOF', 'Compact declaration metadata differs from its rendered facts');
+  } else if (m.developmentFacts !== undefined) fail('INVALID_CONTEXT_PROOF', 'Compact development facts require the explicit compact format');
+  if (support.length > 32 || new Set(support.map(s => s.file.toLowerCase())).size !== support.length) fail('INVALID_CONTEXT_PROOF', 'Approved support proofs must retain distinct public files');
+  let supportCharacters = 0;
+  for (const proof of support) {
+    const file = supportPath(proof.file), value = await read(root, file);
+    supportCharacters += value.text.length;
+    text(proof.purpose, 'public support purpose', 2048);
+    if (value.sha256 !== proof.sha256) fail('STALE_APPLICATION_CONTEXT', `Approved public support is stale: ${file}`);
+    if (files.some(f => f.toLowerCase() === file.toLowerCase()) || file.toLowerCase() === m.publicSmoke.file?.toLowerCase() || file.toLowerCase() === 'package.json' || value.text.length > 32000 || supportCharacters > 128000 || proof.characters !== value.text.length || !Number.isSafeInteger(proof.packetStart) || !Number.isSafeInteger(proof.packetEnd) || proof.packetStart < 0 || proof.packetEnd > context.packetText.length || proof.packetEnd - proof.packetStart !== value.text.length || context.packetText.slice(proof.packetStart, proof.packetEnd) !== value.text) fail('INVALID_CONTEXT_PROOF', 'Approved public support bytes are not physically supplied');
+  }
   if (m.publicSmoke.packetEnd - m.publicSmoke.packetStart !== m.publicSmoke.characters || sha(context.packetText.slice(m.publicSmoke.packetStart, m.publicSmoke.packetEnd)) !== m.publicSmoke.sha256) fail('INVALID_CONTEXT_PROOF', 'Approved smoke source is not physically supplied in packet');
   if (m.publicSmoke.file && (await read(root, relative(m.publicSmoke.file, 'public smoke'))).sha256 !== m.publicSmoke.sha256 || m.packageFile && (await read(root, relative(m.packageFile.file, 'package file'))).sha256 !== m.packageFile.sha256) fail('STALE_APPLICATION_CONTEXT', 'Public development context is stale');
 }
@@ -281,7 +415,7 @@ function pathOverlaps(a: string, b: string): boolean {
 }
 function overlapsProtectedInput(file: string, context: ApplicationDeveloperContext): boolean {
   const m = context.manifest;
-  const inputs = [...Object.keys(m.sourceHashes), ...(m.publicSmoke.file ? [m.publicSmoke.file] : []), ...(m.packageFile ? [m.packageFile.file] : []), ...m.protectedPaths];
+  const inputs = [...Object.keys(m.sourceHashes), ...(m.publicSmoke.file ? [m.publicSmoke.file] : []), ...(m.packageFile ? [m.packageFile.file] : []), ...(m.supportFiles ?? []).map(s => s.file), ...m.protectedPaths];
   return inputs.some(input => pathOverlaps(file, input));
 }
 function instructionTarget(file: string, context: ApplicationDeveloperContext): void {

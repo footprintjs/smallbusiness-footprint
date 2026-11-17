@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "representation": "native-footprint-topology-with-verified-control-annotations",
-  "inputSha256": "63cd739980109052a9bfa607a1cf3aff1566ff3bd6677ccf64dd974142ecb3e0",
+  "inputSha256": "c3dda52a438dccdb496760bcb029b297e28aeda31e7a4a13e3462ea8aa410b27",
   "inputs": {
     "productionSources": {
       "src/actions/businessActions.ts": "2e0fc4ba910c49f91d2c48013e6bf8aafe56bd9c0f66c32fcbf02003404e3300",
@@ -22,8 +22,8 @@
       "src/capabilities/index.ts": "0fec51caa5c08b21819488970fe72c30daac5de757e6ddaaa77c8d54b6032ab8",
       "src/checkoutPort.ts": "e2ddea605cc39eed9ce46688231643ba8dcfa536fea5e1c2bd2962e665742b5e",
       "src/commandValidation.ts": "f41696440c7fcbf9a373767d133f0f28fa42cdeaebca8b0bee265d746786b6b2",
-      "src/developer/application-cli.ts": "ac10c002b238bd159b89227033a0bf4699d4d14053bc7e5aaa428c917199f164",
-      "src/developer/application.ts": "a53a102b00ef20162292f467535d7223e055571bab24815c92f0397704ad7481",
+      "src/developer/application-cli.ts": "9e79f2df6780693f0371f63f94009ae3bdfd87f1dfedb11d833b16cbf918803e",
+      "src/developer/application.ts": "74e3f228ae0ae63be10bb300bca91a7cc960a7540f4a567fa175c79d145e20a5",
       "src/developer/index.ts": "b4830f7ab8c8decc6e8c8d2328128b48bc65e7ec6a3741539e94c053a5296130",
       "src/developer/node.ts": "4cd3417ca4a0279b96830b09911ec1c586612614cad47a1af1f7bcb72333017b",
       "src/developer/types.ts": "0c112d3e8ed910e56f3852c5942bf52a8c66c89d0595c12341f866d930adbd57",

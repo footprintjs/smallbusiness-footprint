@@ -104,6 +104,123 @@ describe('explicit application source context', () => {
   });
 });
 
+describe('opt-in compact source/test packets', () => {
+  const packetOptions = { format: 'compact' as const, referenceSources: [{ file: 'src/app.mjs', contract: 'Public run delegates to reserve; protected integration source remains available for inspection.' }] };
+  it('keeps complete editable source first, actual topology and honest hash-bound protected references', async () => {
+    const f = await fixture();
+    const chart = flowChart('Validate', () => { throw new Error('NEVER_EXECUTE'); }, 'validate').build();
+    const index = { ...f.index, flows: [{ ...f.index.flows[0]!, chart }, f.index.flows[1]!], development: { ...f.index.development, protectedFiles: [...f.index.development.protectedFiles!, 'src/app.mjs'] } };
+    const complete = await buildApplicationDeveloperContext({ root: f.root, index, goal });
+    const a = await buildApplicationDeveloperContext({ root: f.root, index, goal, packetOptions });
+    expect(a.manifest.goal).toBe(goal); expect(a.packetText).toContain(sha(goal)); expect(a.packetText).not.toContain(`Goal: ${goal}`);
+    expect(a.packetText).not.toContain(f.source['src/app.mjs']); expect(a.packetText).toContain(f.source['src/logic.mjs']); expect(a.packetText).toContain(chart.toMermaid());
+    expect(a.packetText.indexOf(f.source['src/logic.mjs'])).toBeLessThan(a.packetText.indexOf('PUBLIC DEVELOPMENT FACTS'));
+    expect(a.manifest.sources.map(s => s.file)).toEqual(['src/logic.mjs']); expect(a.manifest.coverage.allAdmittedSourceDelivered).toBe(false);
+    expect(a.manifest.sourceHashes).toEqual(complete.manifest.sourceHashes); expect(a.indexText).toBe(complete.indexText); expect(a.manifest.topology).toEqual(complete.manifest.topology);
+    const reference = a.manifest.sourceReferences![0]!;
+    expect(reference).toMatchObject({ file: 'src/app.mjs', moduleSha256: sha(f.source['src/app.mjs']), moduleCharacters: f.source['src/app.mjs'].length, contractOrigin: 'caller-declared', sourceDelivered: false });
+    expect(a.packetText.slice(reference.packetStart, reference.packetEnd)).toBe(packetOptions.referenceSources[0]!.contract);
+    expect(a.packetText).toContain('body NOT supplied'); expect(a.packetText).toContain('hash does not verify the contract');
+    const facts = a.manifest.developmentFacts!;
+    expect(facts.regressionEntryImport).toBe('../app.mjs'); expect(facts.entry).toEqual(index.development.entry); expect(facts.commands).toEqual(index.development.commands);
+    expect(sha(a.packetText.slice(facts.packetStart, facts.packetEnd))).toBe(facts.textSha256);
+    expect(a.packetText).toContain('path fact, not execution verification');
+    expect((await writeApplicationDeveloperContext({ root: f.root, context: a })).changed).toHaveLength(4);
+    expect((await checkApplicationDeveloperContext({ root: f.root, context: a })).valid).toBe(true);
+    await fs.appendFile(path.join(f.root, 'src/app.mjs'), '// integration changed\n');
+    await expect(checkApplicationDeveloperContext({ root: f.root, context: a })).rejects.toMatchObject({ code: 'STALE_APPLICATION_CONTEXT' });
+  });
+  it('requires explicit protected admission and at least one real source body; never clips to fit', async () => {
+    const f = await fixture();
+    await expect(buildApplicationDeveloperContext({ root: f.root, index: f.index, goal, packetOptions })).rejects.toMatchObject({ code: 'UNPROTECTED_SOURCE_REFERENCE' });
+    const index = { ...f.index, development: { ...f.index.development, protectedFiles: ['src/'] } };
+    await expect(buildApplicationDeveloperContext({ root: f.root, index, goal, packetOptions: { ...packetOptions, referenceSources: [{ file: 'src/missing.mjs', contract: 'Missing' }] } })).rejects.toMatchObject({ code: 'SOURCE_NOT_ADMITTED' });
+    await expect(buildApplicationDeveloperContext({ root: f.root, index, goal, packetOptions: { ...packetOptions, referenceSources: [...packetOptions.referenceSources, { file: 'src/logic.mjs', contract: 'Also protected' }] } })).rejects.toMatchObject({ code: 'NO_DELIVERED_SOURCE' });
+    const a = await buildApplicationDeveloperContext({ root: f.root, index, goal, packetOptions });
+    await expect(buildApplicationDeveloperContext({ root: f.root, index, goal, packetOptions, characterBudget: a.packetText.length - 1 })).rejects.toMatchObject({ code: 'APPLICATION_CONTEXT_BUDGET_EXCEEDED' });
+    const malformed = { format: 'compact', referenceSources: [], silentlyClip: true } as unknown as typeof packetOptions;
+    await expect(buildApplicationDeveloperContext({ root: f.root, index, goal, packetOptions: malformed })).rejects.toMatchObject({ code: 'INVALID_PACKET_OPTIONS' });
+  });
+  it('physically supplies current approved public setup without executing it, and refuses stale/forged proofs', async () => {
+    const f = await fixture(); await fs.mkdir(path.join(f.root, 'scripts'));
+    const runner = "throw new Error('TEST_RUNNER_MUST_NOT_EXECUTE');\n// recursive public test discovery\n";
+    await fs.writeFile(path.join(f.root, 'scripts/test.mjs'), runner);
+    const index = { ...f.index, development: { ...f.index.development, supportFiles: [{ file: 'scripts/test.mjs', purpose: 'Current public test discovery setup' }] } };
+    const a = await buildApplicationDeveloperContext({ root: f.root, index, goal, packetOptions: { format: 'compact' } });
+    const proof = a.manifest.supportFiles![0]!;
+    expect(proof).toMatchObject({ file: 'scripts/test.mjs', sha256: sha(runner), characters: runner.length });
+    expect(a.packetText.slice(proof.packetStart, proof.packetEnd)).toBe(runner); expect(a.packetText.split(runner)).toHaveLength(2);
+    const forged = structuredClone(a); forged.manifest.supportFiles![0]!.packetStart++;
+    await expect(writeApplicationDeveloperContext({ root: f.root, context: forged })).rejects.toMatchObject({ code: 'INVALID_CONTEXT_PROOF' });
+    await expect(fs.access(path.join(f.root, 'docs'))).rejects.toMatchObject({ code: 'ENOENT' });
+    await fs.appendFile(path.join(f.root, 'scripts/test.mjs'), '// changed\n');
+    await expect(writeApplicationDeveloperContext({ root: f.root, context: a })).rejects.toMatchObject({ code: 'STALE_APPLICATION_CONTEXT' });
+    await expect(fs.access(path.join(f.root, 'docs'))).rejects.toMatchObject({ code: 'ENOENT' });
+  });
+  it('requires a trailing slash to treat a protected declaration as a directory prefix', async () => {
+    const f = await fixture(); await fs.mkdir(path.join(f.root, 'src/integration.mjs'));
+    await fs.writeFile(path.join(f.root, 'src/integration.mjs/child.mjs'), 'export const child = true;\n');
+    const index = { ...f.index, sourceFiles: [...f.index.sourceFiles, 'src/integration.mjs/child.mjs'], flows: [{ ...f.index.flows[0]!, sources: [...f.index.flows[0]!.sources, { file: 'src/integration.mjs/child.mjs' }] }], development: { ...f.index.development, protectedFiles: ['src/integration.mjs'] } };
+    const options = { format: 'compact' as const, referenceSources: [{ file: 'src/integration.mjs/child.mjs', contract: 'Explicit protected child' }] };
+    await expect(buildApplicationDeveloperContext({ root: f.root, index, goal, packetOptions: options })).rejects.toMatchObject({ code: 'UNPROTECTED_SOURCE_REFERENCE' });
+    const a = await buildApplicationDeveloperContext({ root: f.root, index: { ...index, development: { ...index.development, protectedFiles: ['src/integration.mjs/'] } }, goal, packetOptions: options });
+    expect(a.manifest.sourceReferences![0]!.file).toBe('src/integration.mjs/child.mjs');
+  });
+  it('rejects metadata declarations that disagree with the physically supplied development facts', async () => {
+    const f = await fixture(), a = await buildApplicationDeveloperContext({ root: f.root, index: f.index, goal, packetOptions: { format: 'compact' } });
+    const wrongImport = structuredClone(a); Object.assign(wrongImport.manifest.developmentFacts!, { regressionEntryImport: './wrong-entry.mjs' });
+    const wrongEntry = structuredClone(a); Object.assign(wrongEntry.manifest.developmentFacts!.entry, { file: 'src/logic.mjs', exportName: 'reserve' });
+    const wrongCommand = structuredClone(a); Object.assign(wrongCommand.manifest.developmentFacts!.commands, { test: 'node wrong-runner.mjs' });
+    const wrongDirectory = structuredClone(a); Object.assign(wrongDirectory.manifest.developmentFacts!, { regressionTestDirectory: 'other-tests' });
+    for (const context of [wrongImport, wrongEntry, wrongCommand, wrongDirectory]) {
+      await expect(writeApplicationDeveloperContext({ root: f.root, context })).rejects.toMatchObject({ code: 'INVALID_CONTEXT_PROOF' });
+      await expect(fs.access(path.join(f.root, 'docs'))).rejects.toMatchObject({ code: 'ENOENT' });
+    }
+  });
+  it('refuses dropped protected-reference inventories and forged whole-application coverage', async () => {
+    const f = await fixture();
+    const index = { ...f.index, development: { ...f.index.development, protectedFiles: ['src/app.mjs'] } };
+    const a = await buildApplicationDeveloperContext({ root: f.root, index, goal, packetOptions });
+    const dropped = structuredClone(a); delete (dropped.manifest as { sourceReferences?: unknown }).sourceReferences;
+    const empty = structuredClone(a); Object.assign(empty.manifest, { sourceReferences: [] });
+    const allDelivered = structuredClone(a); Object.assign(allDelivered.manifest.coverage, { allAdmittedSourceDelivered: true });
+    const complete = structuredClone(a); Object.assign(complete.manifest.coverage, { completeApplication: true });
+    for (const context of [dropped, empty, allDelivered, complete]) {
+      await expect(writeApplicationDeveloperContext({ root: f.root, context })).rejects.toMatchObject({ code: 'INVALID_CONTEXT_PROOF' });
+      await expect(fs.access(path.join(f.root, 'docs'))).rejects.toMatchObject({ code: 'ENOENT' });
+    }
+  });
+  it('keeps approved support input disjoint from managed Markdown output/instruction targets', async () => {
+    const f = await fixture(); await fs.writeFile(path.join(f.root, 'PUBLIC-SETUP.md'), 'Public setup notes.\n');
+    const index = { ...f.index, development: { ...f.index.development, supportFiles: [{ file: 'PUBLIC-SETUP.md', purpose: 'Explicit public setup' }] } };
+    const a = await buildApplicationDeveloperContext({ root: f.root, index, goal });
+    for (const file of ['PUBLIC-SETUP.md', 'public-setup.MD']) await expect(writeApplicationDeveloperContext({ root: f.root, context: a, readmeFile: file })).rejects.toMatchObject({ code: 'UNSAFE_INSTRUCTION_TARGET' });
+    expect(await fs.readFile(path.join(f.root, 'PUBLIC-SETUP.md'), 'utf8')).toBe('Public setup notes.\n');
+    await expect(fs.access(path.join(f.root, 'docs'))).rejects.toMatchObject({ code: 'ENOENT' });
+  });
+  it('refuses private, symlinked, duplicate and oversized public setup admission', async () => {
+    const f = await fixture();
+    for (const file of ['src/logic.mjs', 'src/__tests__/private.mjs', 'test/data.mjs', 'fixtures/private.json', 'private/key.txt', '.env', 'node_modules/tool.mjs', 'dist/tool.mjs']) {
+      const index = { ...f.index, development: { ...f.index.development, supportFiles: [{ file, purpose: 'Must not admit' }] } };
+      await expect(buildApplicationDeveloperContext({ root: f.root, index, goal })).rejects.toThrow();
+    }
+    await fs.mkdir(path.join(f.root, 'scripts')); await fs.writeFile(path.join(f.root, 'scripts/test.mjs'), 'tooling');
+    const supportFiles = [{ file: 'scripts/test.mjs', purpose: 'Public runner' }];
+    const index = { ...f.index, development: { ...f.index.development, supportFiles } };
+    await expect(buildApplicationDeveloperContext({ root: f.root, index: { ...index, development: { ...index.development, supportFiles: [...supportFiles, { file: 'SCRIPTS/TEST.MJS', purpose: 'Alias' }] } }, goal })).rejects.toMatchObject({ code: 'DUPLICATE_SUPPORT_SOURCE' });
+    await fs.symlink(path.join(f.root, 'scripts'), path.join(f.root, 'linked'));
+    await expect(buildApplicationDeveloperContext({ root: f.root, index: { ...index, development: { ...index.development, supportFiles: [{ file: 'linked/test.mjs', purpose: 'No symlink' }] } }, goal })).rejects.toMatchObject({ code: 'SYMLINK_NOT_ADMITTED' });
+    await fs.writeFile(path.join(f.root, 'scripts/test.mjs'), 'x'.repeat(32001));
+    await expect(buildApplicationDeveloperContext({ root: f.root, index, goal })).rejects.toMatchObject({ code: 'PUBLIC_SUPPORT_LIMIT' });
+  });
+  it('detects a trusted exporter changing approved setup during construction', async () => {
+    const f = await fixture(); await fs.mkdir(path.join(f.root, 'scripts')); await fs.writeFile(path.join(f.root, 'scripts/test.mjs'), 'original');
+    const { writeFileSync } = await import('node:fs');
+    const index = { ...f.index, flows: [{ ...f.index.flows[0]!, chart: { toMermaid() { writeFileSync(path.join(f.root, 'scripts/test.mjs'), 'changed'); return 'flowchart TD\nA'; } } }], development: { ...f.index.development, supportFiles: [{ file: 'scripts/test.mjs', purpose: 'Public test runner' }] } };
+    await expect(buildApplicationDeveloperContext({ root: f.root, index, goal })).rejects.toMatchObject({ code: 'SOURCE_CHANGED_DURING_CONTEXT_BUILD' });
+  });
+});
+
 describe('explicit application writer and read-only check', () => {
   it('preserves handwritten README/AGENTS content and writes the exact stable owned set', async () => {
     const f = await fixture(); await fs.writeFile(path.join(f.root, 'README.md'), '# Original\n\nUser text.\n'); await fs.writeFile(path.join(f.root, 'AGENTS.md'), '# Custom instructions\nKeep this.\n');

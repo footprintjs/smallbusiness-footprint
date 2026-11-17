@@ -40,6 +40,38 @@ For example, put this JSON in `application-context.json`, adapting every path an
 
 The first version packs **complete selected modules**, including their local imports/helpers. Optional canonical source manifests validate symbol/role selectors but do not change this into a clipped unit extractor. Imports into unselected files or packages are not automatically followed. Use `relatedSources`/`relatedFlowIds` for admitted dependencies and explicit opaque boundaries for anything unavailable. Goal selection uses public goal/index terms, not an evaluator or expected patch. With no matching terms, every configured flow is selected. Oversized complete packets fail clearly; narrow the index/goal or deliberately set a suitable budget. Nothing is silently truncated.
 
+## Optional compact edit packets
+
+The default packet format remains unchanged. An explicit `packetOptions` value selects a source-first compact format, retaining complete delivered modules and the full selected diagram exports. It places public development facts after the code, retains the full goal in the manifest and prints its SHA-256 instead of repeating the entire goal. Supply the full public task alongside this packet, or retrieve it from the manifest.
+
+```js
+const context = await buildApplicationDeveloperContext({
+  root, index, goal,
+  packetOptions: {
+    format: 'compact',
+    referenceSources: [{
+      file: 'src/app.mjs',
+      contract: 'Public run delegates to the app operation and returns its result. This integration is protected; inspect its source when needed.',
+    }],
+  },
+});
+```
+
+Every reference must name an admitted production file that the application also explicitly declares in `development.protectedFiles`. An exact protected file protects that file; a directory prefix must end in `/`. Editable code cannot be replaced automatically. The builder retains at least one complete source body, all admitted source hashes, the application index and the selected static topology. A reference is labeled **body not supplied** and retains its current module hash, size and caller-declared contract. The hash proves version correspondence; it does not derive or verify the contract's semantics. Read the original file when that implementation matters. Coverage remains incomplete when any admitted source body is absent, and `completeApplication` remains false.
+
+Applications can explicitly approve current public tooling/configuration through `development.supportFiles`:
+
+```js
+index.development.supportFiles = [{
+  file: 'scripts/test.mjs',
+  purpose: 'Current public recursive test-discovery setup',
+}];
+```
+
+These files are read without importing or executing them. Their complete bytes, purpose, hash and packet span are retained in `manifest.supportFiles`; duplicate input, private/test/fixture/production/dependency scopes, symlinks and excessive support bytes are refused. Approval is explicit; this does not scan for tests or certify a test command. The separately approved smoke example is unchanged. Writer/checker freshness and protected-input collision checks include these support files, so generation cannot overwrite them through a README/output alias.
+
+Compact `manifest.developmentFacts` binds the rendered entry, commands and regression directory to an exact text span. When a regression directory is declared, it also supplies the entry's relative import specifier for a test directly in that directory. This is a path calculation from caller-declared fields, not import resolution or execution proof. An agent integration can validate and deliver these facts once rather than repeat them alongside the packet. The writer refuses mismatched fact metadata, omitted protected-reference inventories and forged completeness claims. Existing default-format contexts remain supported.
+
 ## Build and check
 
 After installing the candidate in the application:
