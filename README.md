@@ -17,7 +17,7 @@ Commerce configuration, scoped actions and recorded workflows for applications t
 
 [Complete flow inventory](docs/flows/README.md). Run `npm run docs:flows` after source changes; `npm run check:flow-docs` fails on stale/missing views.
 
-Input SHA-256: `cad5181e473e3001f6b55752f12d9f9509786436f2743080765e0238b3e43dde`. Static build views, not execution or causal proof.
+Input SHA-256: `63cd739980109052a9bfa607a1cf3aff1566ff3bd6677ccf64dd974142ecb3e0`. Static build views, not execution or causal proof.
 <!-- END GENERATED FLOW INDEX -->
 
 For your own application, use [the application chart/build recipe](docs/APPLICATION-FLOW-BUILD.md): share its runtime factory with an explicit app index and wire a host-owned writer/checker into build and CI. The commands above cover this library's registries; they do not discover host workflows.

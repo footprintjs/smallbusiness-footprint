@@ -54,3 +54,7 @@ For a root-cause investigation, continue through the real operation/port impleme
 Repository paths `src/developer/{index,types}.ts` define the separate static catalog and `src/developer/node.ts` implements the explicit bounded Node reader. `scripts/developer/build-manifest.mjs` creates the source inventory/copy and rewrites emitted map paths after TypeScript compilation. The parser remains a development dependency. New exports are `/developer`, `/developer/node` and `/developer/source-manifest.json`; none is re-exported into the existing main/metadata runtime graph. See [the exact APIs and limits](DEVELOPER.md).
 
 Repository test paths are not installed APIs and must not become production descriptor/source-pack inputs. See [the agent guide](AGENT-GUIDE.md) for how to combine source facts with retained runtime evidence.
+
+## Application development context
+
+`src/developer/application.ts` owns the explicitly admitted application index, current complete-module/public-test packet, ownership-aware writer and read-only check. `application-cli.ts` is the opt-in JSON build/check executable. Precise method/property units originate in `scripts/developer/build-manifest.mjs`; `developer/node.ts` rechecks physical bytes for single/batch inspection and known-span reuse. These paths are development-only, not runtime ownership of host business policy.

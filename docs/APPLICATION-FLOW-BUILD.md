@@ -1,6 +1,6 @@
 # Generate charts for your own application
 
-The candidate library's `npm run docs:flows` and `npm run check:flow-docs` cover its built-in after-sales and default-service registries. They do not discover a consuming application's operations, custom builders or host callbacks. There is currently no exported, configurable SMB generator that accepts an application chart index. The optional SMB source reader also admits the library's manifest, not arbitrary application source.
+The candidate library's `npm run docs:flows` and `npm run check:flow-docs` cover its built-in after-sales and default-service registries. They do not discover a consuming application's operations, custom builders or host callbacks. The unreleased Node-only application context builder now accepts an explicit application index/admitted source list and writes/checks its source/test packet: see [Application source and test context](APPLICATION-CONTEXT.md). It does not automatically discover host modules or expand every native mount. The library-registry chart-page generator below remains separate; the optional source reader accepts an explicitly supplied compatible application manifest rather than automatically admitting arbitrary application files.
 
 An application can own the same build-time pattern: one runtime chart factory, an explicit construction-only index, and a deterministic documentation writer/checker. The example below uses the pinned FootPrintJS 12 API. It is a small wiring example, not an authorization, transaction or retry implementation.
 
@@ -49,7 +49,7 @@ export function buildChartIndex() {
 
 ## Implement a host-owned writer/checker
 
-`scripts/application-flow-docs.mjs` below is a **host-owned script to implement**, not an existing SMB command or import. Its contract should be:
+For a full hierarchy of application-owned chart pages, `scripts/application-flow-docs.mjs` remains a **host-owned integration**, rather than an existing SMB command. Use the exported application context builder/writer for the supported index/source/test packet and opt-in README/AGENTS links. A richer chart-page integration should follow this contract:
 
 1. Load the trusted application index in a fresh process after compilation, without running an executor or stage callbacks. Enumerate every actual indexed chart and retained mounted root. Refuse duplicate/missing registry membership.
 2. Obtain each real root topology with the SDK exporter. In FootPrintJS 12, `chart.toMermaid()` is a root overview: mounted internals are collapsed, and its raw renderer uses rectangles and unlabeled arrows. Link separate retained subflow views. If adding diamonds, branch labels, mount boxes or loop labels from native metadata, verify original node identities and the complete edge multiset; annotations must not invent execution edges. A native `next` after branches is continuation after branch completion, not an unconditional bypass.

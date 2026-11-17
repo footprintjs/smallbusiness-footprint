@@ -3,7 +3,7 @@
 
 ## Generated after-sales chart views
 
-Production/generator input SHA-256: `cad5181e473e3001f6b55752f12d9f9509786436f2743080765e0238b3e43dde`. Actual registered builders: FootPrintJS 12.0.0 `toMermaid()` topology plus native control metadata; callbacks/providers are not run.
+Production/generator input SHA-256: `63cd739980109052a9bfa607a1cf3aff1566ff3bd6677ccf64dd974142ecb3e0`. Actual registered builders: FootPrintJS 12.0.0 `toMermaid()` topology plus native control metadata; callbacks/providers are not run.
 
 ### [aftersales-action](../views/validate-action-3ca46934d91a/README.md)
 

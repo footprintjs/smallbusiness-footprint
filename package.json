@@ -101,6 +101,11 @@
       "types": "./dist/diagnostics/aftersalesCause.d.ts",
       "import": "./dist/diagnostics/aftersalesCause.js",
       "default": "./dist/diagnostics/aftersalesCause.js"
+    },
+    "./developer/application": {
+      "types": "./dist/developer/application.d.ts",
+      "import": "./dist/developer/application.js",
+      "default": "./dist/developer/application.js"
     }
   },
   "repository": {
@@ -124,5 +129,8 @@
     "shipping",
     "execution-provenance",
     "footprintjs"
-  ]
+  ],
+  "bin": {
+    "smallbusiness-context": "dist/developer/application-cli.js"
+  }
 }

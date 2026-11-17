@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "representation": "native-footprint-topology-with-verified-control-annotations",
-  "inputSha256": "cad5181e473e3001f6b55752f12d9f9509786436f2743080765e0238b3e43dde",
+  "inputSha256": "63cd739980109052a9bfa607a1cf3aff1566ff3bd6677ccf64dd974142ecb3e0",
   "inputs": {
     "productionSources": {
       "src/actions/businessActions.ts": "2e0fc4ba910c49f91d2c48013e6bf8aafe56bd9c0f66c32fcbf02003404e3300",
@@ -22,9 +22,11 @@
       "src/capabilities/index.ts": "0fec51caa5c08b21819488970fe72c30daac5de757e6ddaaa77c8d54b6032ab8",
       "src/checkoutPort.ts": "e2ddea605cc39eed9ce46688231643ba8dcfa536fea5e1c2bd2962e665742b5e",
       "src/commandValidation.ts": "f41696440c7fcbf9a373767d133f0f28fa42cdeaebca8b0bee265d746786b6b2",
+      "src/developer/application-cli.ts": "ac10c002b238bd159b89227033a0bf4699d4d14053bc7e5aaa428c917199f164",
+      "src/developer/application.ts": "a53a102b00ef20162292f467535d7223e055571bab24815c92f0397704ad7481",
       "src/developer/index.ts": "b4830f7ab8c8decc6e8c8d2328128b48bc65e7ec6a3741539e94c053a5296130",
-      "src/developer/node.ts": "b75d77f108a9b1d90947c7678e9c00b6f4879dae05794b206f0490992966ae7f",
-      "src/developer/types.ts": "6110f792a457e626f377ec4e464019110fd0dcfc977fe11b9c075548349dc44b",
+      "src/developer/node.ts": "4cd3417ca4a0279b96830b09911ec1c586612614cad47a1af1f7bcb72333017b",
+      "src/developer/types.ts": "0c112d3e8ed910e56f3852c5942bf52a8c66c89d0595c12341f866d930adbd57",
       "src/diagnostics/aftersalesCause.ts": "2f9652a483ca22b71c82a4e7646b8a17629f3f68bdb2f97d4487fbdbb111d311",
       "src/diagnostics/explanations/index.ts": "2b3e2284903238cfce02175f3bd82e3d0d59aab33edcb0e0511b4f77b63dfb80",
       "src/diagnostics/runtime.ts": "5e997a018950b9ca3338f4b522e347cea12b0af089b1321057052d3974d3c18d",
@@ -69,10 +71,10 @@
     "generatorFiles": {
       "scripts/developer/flow-docs.mjs": "629c034d7981881dde799ab11a74a8025872f56b9ee252d01abe490b267e4a5c",
       "scripts/developer/native-mermaid.mjs": "082135ff73574f8af8001e89f5d1f47368c5efb0d03d9910ffad443f1e7d0665",
-      "scripts/developer/build-manifest.mjs": "0e6a5786a0e067e3bb97ec2dd2e19e4b5b74707cc9c57672775e4073e3c55f50",
-      "scripts/developer/build.mjs": "987f4577bca23bec29ba3b7636bb01dfb42747807cb653e856884b05e68caa1e"
+      "scripts/developer/build-manifest.mjs": "24cde0ab9e6046dd36c1b6b8dcac68b9ba43d007c8a70dedffe9f9a7fde259c9",
+      "scripts/developer/build.mjs": "9424bf6db7ce5780579dd8e2fee3d6cc75845c318aaa110bd92bd1e5109e11c0"
     },
-    "packageSha256": "a825e7ef3d96dec202a292ec953b2cc4fb25898cbf88a9714bdff7f96e9c876f",
+    "packageSha256": "04a8d927aef9adc7a0231495490cfb9a3f0bc782bfdf86207161858abb37e4b5",
     "sdk": {
       "name": "footprintjs",
       "version": "12.0.0"

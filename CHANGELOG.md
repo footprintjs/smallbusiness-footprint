@@ -1,5 +1,12 @@
 # 1.1.0 — prepared 2026-11-14
 
+## Unreleased candidate — application development context
+
+- Add the opt-in Node application source/test packet builder, ownership-aware writer/read-only checker and JSON build/check command.
+- Add precise method/property source units and atomic batch inspection with explicit known-span reuse; preserve existing source identities and single-reader APIs.
+- Keep application source admission, host opacity and generated instruction changes explicit. No main-runtime/browser imports or business behavior are changed; no runtime or model-efficiency claim is made.
+
+
 - Add optional immutable `commerceFailureExplanationTemplates` wording for recorded access rejection, unknown write effects, observed retry recovery and unconfirmed troubleshooting storage. Blueprint owns matching, canonical observations and uncertainty; these presets add no causal findings, repair actions or permissions.
 - Require Blueprint 1.1.0 for its evidence-preserving explanation formatters. Release Blueprint before this package; preparation does not publish either package.
 

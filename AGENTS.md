@@ -1,6 +1,6 @@
 # Working on this library
 
-Start with [docs/AGENT-GUIDE.md](docs/AGENT-GUIDE.md) and [docs/SOURCE-MAP.md](docs/SOURCE-MAP.md). Choose the action/flow and a concrete source gap before broad reading. Use supplied current source when sufficient; inspect any additional source needed for correctness. No tool or read-avoidance rule is an acceptance gate.
+Start with [docs/AGENT-GUIDE.md](docs/AGENT-GUIDE.md) and [docs/SOURCE-MAP.md](docs/SOURCE-MAP.md). Choose the action/flow and a concrete source gap before broad reading. Use supplied current source when sufficient; inspect any additional source needed for correctness. No tool or read-avoidance rule is an acceptance gate. For a consuming application, use the explicit [application source/test context integration](docs/APPLICATION-CONTEXT.md); library-envelope charts do not automatically cover host implementations. A current supplied packet is an initial source read, so patch directly when sufficient and use follow-up only for concrete missing/changed details.
 
 - Keep public APIs aligned with `package.json` exports and actual installed/build artifacts. New candidate APIs are unreleased even while the compatibility version remains 1.1.0.
 - Trace actual guards, loops, input/output mappings and field writers to the owning callable. Static descriptions and possible writers are navigation facts, not observed runtime causes.

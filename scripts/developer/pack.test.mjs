@@ -42,6 +42,10 @@ test('actual packed source maps and manifest resolve to one exact production sou
    const metadata=await import('smallbusiness-footprint/metadata');
    const developer=await import('smallbusiness-footprint/developer');
    const source=await import('smallbusiness-footprint/developer/node');
+   const application=await import('smallbusiness-footprint/developer/application');
+   assert.equal(typeof application.buildApplicationDeveloperContext,'function');
+   assert.equal(typeof application.writeApplicationDeveloperContext,'function');
+   assert.equal(typeof application.checkApplicationDeveloperContext,'function');
    const cause=await import('smallbusiness-footprint/diagnostics/cause');
    const aftersales=await import('smallbusiness-footprint/aftersales/runtime');
    const manifest=await import('smallbusiness-footprint/developer/source-manifest.json',{with:{type:'json'}});
@@ -59,6 +63,17 @@ test('actual packed source maps and manifest resolve to one exact production sou
    assert.ok(body.text.includes('function createBusinessOperationFlow'));
    assert.ok(body.cumulativeChars<=4000);
   `],{cwd:pkgRoot,stdio:'pipe'});
+  // Exercise the installed executable through a real bin symlink, with no dev parser installed.
+  const app=path.join(temp,'consumer');await fs.mkdir(path.join(app,'src'),{recursive:true});await fs.mkdir(path.join(app,'test'));
+  await fs.writeFile(path.join(app,'src/app.mjs'),'throw new Error("source must not execute");\nexport function run(input){return input;}\n');
+  await fs.writeFile(path.join(app,'test/smoke.mjs'),'import {run} from "../src/app.mjs";\n');
+  const config={index:{applicationName:'Packed consumer',sourceFiles:['src/app.mjs'],flows:[{id:'run',sources:[{file:'src/app.mjs'}]}],development:{entry:{file:'src/app.mjs',exportName:'run'},commands:{test:'node --test test/*.mjs'},smokeTest:{file:'test/smoke.mjs'}}},goal:'run',agentFile:'AGENTS.md'};
+  await fs.writeFile(path.join(app,'context.json'),JSON.stringify(config));
+  const bin=path.join(app,'smallbusiness-context');await fs.symlink(path.join(pkgRoot,packedManifest.bin['smallbusiness-context']),bin);
+  assert.ok((await fs.stat(bin)).mode&0o111,'Packed bin must be executable');
+  const cli=mode=>JSON.parse(execFileSync(process.execPath,[bin,mode,'--root',app,'--config','context.json'],{encoding:'utf8'}));
+  assert.ok(cli('build').changed.length>0);assert.equal(cli('check').valid,true);assert.deepEqual(cli('build').changed,[]);
+  assert.ok((await fs.readFile(path.join(app,'docs/application-context/packet.md'),'utf8')).includes('export function run(input)'));
   const info={archiveBytes:(await fs.stat(archive)).size,installedBytes:packed.unpackedSize,sourceFiles:Object.keys(manifest.files).length,mapsValidated:maps.length,manifestBytes:(await fs.stat(path.join(pkgRoot,'dist/developer/source-manifest.json'))).size,sourceTreeSha256:manifest.sourceTreeSha256};
   console.log(JSON.stringify(info));
  }finally{await fs.rm(temp,{recursive:true,force:true});}

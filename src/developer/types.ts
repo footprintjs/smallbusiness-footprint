@@ -3,6 +3,8 @@ export type DeveloperSourceSelector = { readonly file: string; readonly symbol?:
 export type DeveloperSourceUnit = {
   readonly id: string; readonly kind: 'function' | 'binding' | 'callback' | 'expression' | 'state-access';
   readonly symbol: string; readonly owner?: string; readonly role?: string; readonly stageId?: string;
+  /** Complete embedded callable syntax; method/property text is not a standalone module. */
+  readonly sourceForm?: 'object-method' | 'object-property' | 'class-method';
   readonly field?: string; readonly access?: 'read' | 'write';
   /** Offsets are JavaScript UTF-16 string offsets, not UTF-8 byte offsets. End is exclusive. */
   readonly start: number; readonly end: number; readonly byteStart: number; readonly byteEnd: number; readonly startLine: number; readonly endLine: number;
@@ -53,4 +55,16 @@ export type DeveloperFlowDescription = {
   readonly fields: readonly (DeveloperFieldContract & { readonly verification: 'declared'; readonly location: DeveloperSourceReference })[];
   readonly stateAccesses: readonly { readonly field: string; readonly access: 'read' | 'write'; readonly owner: 'library'; readonly verification: 'syntactic-source'; readonly source: DeveloperSourceReference }[];
   readonly unknowns: readonly string[];
+};
+
+/** Caller-declared source already delivered elsewhere. Matching only proves current bytes, not model memory. */
+export type DeveloperKnownSourceSpan = {
+  readonly file: string; readonly moduleSha256: string;
+  readonly start: number; readonly end: number; readonly textSha256: string;
+};
+export type DeveloperInspectBatchOptions = {
+  readonly includeSource?: boolean;
+  readonly knownSpans?: readonly DeveloperKnownSourceSpan[];
+  /** Explicitly print selected current source even if covered by a verified known span. */
+  readonly reread?: boolean;
 };

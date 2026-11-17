@@ -10,6 +10,8 @@ const before=await buildDeveloperManifest(root),require=createRequire(path.join(
 const packagePath=require.resolve('typescript/package.json'),compiler=JSON.parse(await fs.readFile(packagePath,'utf8'));
 await fs.rm(path.join(root,'dist'),{recursive:true,force:true});
 execFileSync(process.execPath,[path.resolve(path.dirname(packagePath),compiler.bin.tsc)],{cwd:root,stdio:'inherit'});
+// TypeScript preserves the CLI shebang but not its executable mode.
+await fs.chmod(path.join(root,'dist/developer/application-cli.js'),0o755);
 const after=await buildDeveloperManifest(root);
 if(before.sourceTreeSha256!==after.sourceTreeSha256)throw new Error('Production source changed during compilation; rebuild before trusting source locators');
 const manifest=await writeDeveloperArtifacts(root);

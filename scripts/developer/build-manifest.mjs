@@ -9,12 +9,40 @@ const literal = node => node?.type === 'StringLiteral' ? node.value : null;
 const unwrap = node => ['TSAsExpression', 'TSSatisfiesExpression', 'TSNonNullExpression', 'ParenthesizedExpression'].includes(node?.type) ? unwrap(node.expression) : node;
 const method = node => { const c=unwrap(node?.callee); return c?.type==='MemberExpression'&&!c.computed&&c.property.type==='Identifier'?c.property.name:null; };
 function walk(node, visit, ancestors=[]) { if(!node||typeof node!=='object')return; if(typeof node.type==='string')visit(node,ancestors); for(const [key,value]of Object.entries(node)){if(['loc','start','end','comments','tokens','errors','extra'].includes(key))continue;if(Array.isArray(value))for(const item of value)walk(item,visit,[...ancestors,node]);else if(value&&typeof value==='object')walk(value,visit,[...ancestors,node]);} }
-function functionName(node,parent) { return node.id?.name??(parent?.type==='VariableDeclarator'&&parent.id.type==='Identifier'?parent.id.name:undefined); }
-const isFunction = node => ['FunctionDeclaration','FunctionExpression','ArrowFunctionExpression'].includes(node.type);
+const isFunction = node => Boolean(node&&['FunctionDeclaration','FunctionExpression','ArrowFunctionExpression','ObjectMethod','ClassMethod','ClassPrivateMethod'].includes(node.type));
+const propertyName = node => node?.type==='Identifier'?node.name:['StringLiteral','NumericLiteral'].includes(node?.type)?String(node.value):node?.type==='PrivateName'?'#'+node.id.name:undefined;
+const memberName = name => /^[A-Za-z_$][\w$]*$/.test(name)?'.'+name:'['+JSON.stringify(name)+']';
+function logicalParent(node,ancestors){
+ let at=ancestors.length-1;
+ while(at>=0&&['TSAsExpression','TSSatisfiesExpression','TSNonNullExpression','ParenthesizedExpression'].includes(ancestors[at].type)&&unwrap(ancestors[at])===node)at--;
+ return ancestors[at];
+}
+function objectName(object,ancestors){
+ const at=ancestors.lastIndexOf(object),parent=logicalParent(object,ancestors.slice(0,at));
+ if(parent?.type==='VariableDeclarator'&&parent.id.type==='Identifier')return parent.id.name;
+ if(parent?.type==='ObjectProperty'&&unwrap(parent.value)===object&&(!parent.computed||['StringLiteral','NumericLiteral'].includes(parent.key.type))){const name=propertyName(parent.key),outer=[...ancestors.slice(0,ancestors.indexOf(parent))].reverse().find(n=>n.type==='ObjectExpression'),base=outer?.type==='ObjectExpression'?objectName(outer,ancestors):undefined;return name===undefined?undefined:base?base+memberName(name):name;}
+ if(parent?.type==='AssignmentExpression'&&parent.right===object&&parent.left.type==='Identifier')return parent.left.name;
+ return undefined;
+}
+function functionName(node,parent,ancestors=[]){
+ parent=logicalParent(node,ancestors)??parent;
+ if(node.type==='ObjectMethod'||(parent?.type==='ObjectProperty'&&unwrap(parent.value)===node)){
+  const property=node.type==='ObjectMethod'?node:parent;
+  if(property.computed&&!['StringLiteral','NumericLiteral'].includes(property.key.type))return undefined;
+  const name=propertyName(property.key);if(name===undefined)return undefined;
+  const object=[...ancestors].reverse().find(n=>n.type==='ObjectExpression'),base=object&&objectName(object,ancestors);return (base??'<object>')+memberName(name);
+ }
+ if(['ClassMethod','ClassPrivateMethod'].includes(node.type)){
+  if(node.computed&&!['StringLiteral','NumericLiteral'].includes(node.key.type))return undefined;
+  const name=propertyName(node.key),owner=[...ancestors].reverse().find(n=>['ClassDeclaration','ClassExpression'].includes(n.type));
+  return name===undefined?undefined:owner?.id?.name?owner.id.name+memberName(name):'<class>'+memberName(name);
+ }
+ return node.id?.name??(parent?.type==='VariableDeclarator'&&parent.id.type==='Identifier'?parent.id.name:undefined);
+}
 export function analyzeDeveloperSource(file, buffer) {
   const text=buffer.toString('utf8'), module={sha256:sha(buffer),characters:text.length,lines:text.split('\n').length,packagePath:'dist/source/'+file.slice('src/'.length),parseStatus:'parsed',units:[]};
   if(!Buffer.from(text).equals(buffer)){module.parseStatus='unsupported';return module;}
-  let ast;try{ast=parse(text,{sourceType:'module',plugins:['typescript'],ranges:true,errorRecovery:false});}catch{module.parseStatus='unsupported';return module;}
+  let ast;try{ast=parse(text,{sourceType:'module',plugins:[...(/\.(?:ts|tsx|mts|cts)$/.test(file)?['typescript']:[]),...(/\.(?:jsx|tsx)$/.test(file)?['jsx']:[])],ranges:true,errorRecovery:false});}catch{module.parseStatus='unsupported';return module;}
   const scopes=new Map(),isScope=n=>n.type==='Program'||n.type==='BlockStatement'||n.type==='CatchClause'||isFunction(n);
   const bindingNames=n=>!n?[]:n.type==='Identifier'?[n.name]:n.type==='RestElement'?bindingNames(n.argument):n.type==='AssignmentPattern'?bindingNames(n.left):n.type==='ObjectPattern'?n.properties.flatMap(p=>bindingNames(p.value??p.argument)):n.type==='ArrayPattern'?n.elements.flatMap(bindingNames):[];
   const bind=(scope,name,kind='local')=>{if(!scope)return;const values=scopes.get(scope)??new Map();values.set(name,kind);scopes.set(scope,values);};
@@ -26,14 +54,29 @@ export function analyzeDeveloperSource(file, buffer) {
     if(node.type==='CatchClause')for(const name of bindingNames(node.param))bind(node,name);
     if(node.type==='VariableDeclarator'){const declaration=ancestors.at(-1),target=declaration?.kind==='var'?[...ancestors].reverse().find(n=>n.type==='Program'||isFunction(n)):scope;for(const name of bindingNames(node.id))bind(target,name);}
   });
+  walk(ast,(node,ancestors)=>{
+    const target=node.type==='AssignmentExpression'?node.left:node.type==='UpdateExpression'?node.argument:['ForInStatement','ForOfStatement'].includes(node.type)&&node.left.type!=='VariableDeclaration'?node.left:null;
+    for(const name of bindingNames(target))for(const scope of [...ancestors].reverse().filter(isScope)){const map=scopes.get(scope);if(map?.has(name)){map.set(name,'reassigned');break;}}
+  });
   const importedFactory=(name,ancestors)=>{for(const scope of [...ancestors].reverse().filter(isScope)){const binding=scopes.get(scope)?.get(name);if(binding)return binding==='footprint-factory';}return false;};
   const chartMethods=new Set(['addFunction','addDeciderFunction','addSelectorFunction','addFunctionBranch','addSubFlowChart','addSubFlowChartBranch','loopTo','end','build']);
   function chartCall(node,ancestors){node=unwrap(node);if(node?.type!=='CallExpression')return false;const callee=unwrap(node.callee);if(callee?.type==='Identifier')return importedFactory(callee.name,ancestors);return callee?.type==='MemberExpression'&&chartMethods.has(method(node))&&chartCall(callee.object,ancestors);}
-  function owner(ancestors){return ancestors.flatMap((n,i)=>isFunction(n)?[functionName(n,ancestors[i-1])].filter(Boolean):[]).join('/');}
+  const legacyFunction=n=>Boolean(n&&['FunctionDeclaration','FunctionExpression','ArrowFunctionExpression'].includes(n.type));
+  const legacyName=(node,parent)=>node.id?.name??(parent?.type==='VariableDeclarator'&&parent.id.type==='Identifier'?parent.id.name:undefined);
+  function owner(ancestors){return ancestors.flatMap((n,i)=>legacyFunction(n)?[legacyName(n,ancestors[i-1])].filter(Boolean):[]).join('/');}
+  function canonicalOwner(ancestors){return ancestors.flatMap((n,i)=>isFunction(n)?[functionName(n,ancestors[i-1],ancestors.slice(0,i))].filter(Boolean):[]).join('/');}
   function add(node,kind,symbol,extra={}){node=unwrap(node);if(!node||!Number.isInteger(node.start)||!Number.isInteger(node.end))return;const slice=text.slice(node.start,node.end);module.units.push({id:`${kind}:${node.start}:${node.end}`,kind,symbol: symbol||'<anonymous>',...extra,start:node.start,end:node.end,byteStart:Buffer.byteLength(text.slice(0,node.start)),byteEnd:Buffer.byteLength(text.slice(0,node.end)),startLine:node.loc.start.line,endLine:node.loc.end.line,textSha256:sha(slice)});}
   walk(ast,(node,ancestors)=>{
     const parent=ancestors.at(-1),own=owner(ancestors);
-    if(isFunction(node)){const name=functionName(node,parent);if(name)add(node,'function',[own,name].filter(Boolean).join('/'),{...(own?{owner:own}:{})});}
+    if(isFunction(node)){
+      // Preserve every existing non-method selector and unit ID. New method/property
+      // callables gain separate exact spans rather than renaming nested legacy units.
+      const oldName=legacyFunction(node)?legacyName(node,parent):undefined;
+      if(oldName)add(node,'function',[own,oldName].filter(Boolean).join('/'),{...(own?{owner:own}:{})});
+      const p=logicalParent(node,ancestors)??parent,property=p?.type==='ObjectProperty'&&unwrap(p.value)===node?p:undefined;
+      const sourceForm=node.type==='ObjectMethod'?'object-method':['ClassMethod','ClassPrivateMethod'].includes(node.type)?'class-method':property?'object-property':undefined;
+      if(sourceForm){const name=functionName(node,parent,ancestors),parentName=canonicalOwner(ancestors);if(name)add(property??node,'function',[parentName,name].filter(Boolean).join('/'),{...(parentName?{owner:parentName}:{}),sourceForm});}
+    }
     if(node.type==='VariableDeclarator'&&node.id.type==='Identifier'&&node.init&&!isFunction(unwrap(node.init)))add(node,'binding',[own,node.id.name].filter(Boolean).join('/'),{...(own?{owner:own}:{}),role:'binding'});
     if(node.type!=='CallExpression')return;
     const callee=unwrap(node.callee),m=method(node);
