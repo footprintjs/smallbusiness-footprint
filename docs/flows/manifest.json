@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "representation": "native-footprint-topology-with-verified-control-annotations",
-  "inputSha256": "d104c5c94cac5a9af6308d3376c02ec00be4922a34f0bc25d00e8b421368c8d5",
+  "inputSha256": "13517c9c684a32e0c2c721ce13e169b03e23eecc32e8fc99366938a759fd3439",
   "inputs": {
     "productionSources": {
       "src/actions/businessActions.ts": "2e0fc4ba910c49f91d2c48013e6bf8aafe56bd9c0f66c32fcbf02003404e3300",
@@ -23,7 +23,8 @@
       "src/checkoutPort.ts": "e2ddea605cc39eed9ce46688231643ba8dcfa536fea5e1c2bd2962e665742b5e",
       "src/commandValidation.ts": "f41696440c7fcbf9a373767d133f0f28fa42cdeaebca8b0bee265d746786b6b2",
       "src/developer/application-cli.ts": "9e79f2df6780693f0371f63f94009ae3bdfd87f1dfedb11d833b16cbf918803e",
-      "src/developer/application.ts": "74e3f228ae0ae63be10bb300bca91a7cc960a7540f4a567fa175c79d145e20a5",
+      "src/developer/application-flow-docs.ts": "813081d01970db976407d5b7687199dd20d4a07f9f08265a3b5bebc53a20896e",
+      "src/developer/application.ts": "9d2c95bd1e7b6a1574d13ef05fb269d64e3b670e865b68d628d86a72b2612c92",
       "src/developer/index.ts": "b4830f7ab8c8decc6e8c8d2328128b48bc65e7ec6a3741539e94c053a5296130",
       "src/developer/node.ts": "4cd3417ca4a0279b96830b09911ec1c586612614cad47a1af1f7bcb72333017b",
       "src/developer/types.ts": "0c112d3e8ed910e56f3852c5942bf52a8c66c89d0595c12341f866d930adbd57",
@@ -70,7 +71,7 @@
       "src/types.ts": "1aac7c0e21a1b460d5c3cdd0afe448c4dc7f4460835af87f53541e4f9bb60e65"
     },
     "generatorFiles": {
-      "scripts/developer/flow-docs.mjs": "629c034d7981881dde799ab11a74a8025872f56b9ee252d01abe490b267e4a5c",
+      "scripts/developer/flow-docs.mjs": "72dcbf87e68ba261c695af17e3ae13c2189e78d1692b01d5ec964e1b42f9b709",
       "scripts/developer/native-mermaid.mjs": "082135ff73574f8af8001e89f5d1f47368c5efb0d03d9910ffad443f1e7d0665",
       "scripts/developer/build-manifest.mjs": "24cde0ab9e6046dd36c1b6b8dcac68b9ba43d007c8a70dedffe9f9a7fde259c9",
       "scripts/developer/build.mjs": "9424bf6db7ce5780579dd8e2fee3d6cc75845c318aaa110bd92bd1e5109e11c0"
@@ -7728,6 +7729,20 @@
     "docs/flows/README.md",
     "docs/flows/aftersales/README.md",
     "docs/flows/manifest.json",
+    "docs/flows/registered/aftersales-action/README.md",
+    "docs/flows/registered/aftersales-request/README.md",
+    "docs/flows/registered/archive-product/README.md",
+    "docs/flows/registered/create-campaign/README.md",
+    "docs/flows/registered/create-order/README.md",
+    "docs/flows/registered/create-product/README.md",
+    "docs/flows/registered/create-subscriber/README.md",
+    "docs/flows/registered/process-payment/README.md",
+    "docs/flows/registered/publish-storefront/README.md",
+    "docs/flows/registered/schedule-campaign/README.md",
+    "docs/flows/registered/send-campaign-batch/README.md",
+    "docs/flows/registered/unsubscribe/README.md",
+    "docs/flows/registered/update-product/README.md",
+    "docs/flows/registered/update-stock/README.md",
     "docs/flows/services/README.md",
     "docs/flows/views/load-reconciliation-order-12227388301f/README.md",
     "docs/flows/views/load-request-order-3241bb124094/README.md",

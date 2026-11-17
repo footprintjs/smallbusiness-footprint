@@ -1,6 +1,6 @@
 # Generate charts for your own application
 
-The candidate library's `npm run docs:flows` and `npm run check:flow-docs` cover its built-in after-sales and default-service registries. They do not discover a consuming application's operations, custom builders or host callbacks. The unreleased Node-only application context builder now accepts an explicit application index/admitted source list and writes/checks its source/test packet: see [Application source and test context](APPLICATION-CONTEXT.md). It does not automatically discover host modules or expand every native mount. The library-registry chart-page generator below remains separate; the optional source reader accepts an explicitly supplied compatible application manifest rather than automatically admitting arbitrary application files.
+The candidate library's `npm run docs:flows` and `npm run check:flow-docs` cover its built-in after-sales and default-service registries. They do not discover a consuming application's operations, custom builders or host callbacks. The unreleased Node-only application context builder now accepts an explicit application index/admitted source list and writes/checks its source/test packet: see [Application source and test context](APPLICATION-CONTEXT.md). It does not automatically discover host modules or expand every native mount. The optional application flow-documentation API generates algorithm pages from explicitly registered runtime charts, independently of goal-scoped source packets. The optional source reader still requires an explicitly supplied compatible application manifest.
 
 An application can own the same build-time pattern: one runtime chart factory, an explicit construction-only index, and a deterministic documentation writer/checker. The example below uses the pinned FootPrintJS 12 API. It is a small wiring example, not an authorization, transaction or retry implementation.
 
@@ -47,21 +47,49 @@ export function buildChartIndex() {
 
 `buildChartIndex()` calls the exact factory used by `run()`. It constructs callbacks without invoking them. The undefined input and throwing ports expose accidental construction-time dependencies. Keep module imports free of business effects too. Add a test that index construction calls no provider and that every registered application workflow appears once. If a chart needs a resolver or a host value that cannot be obtained safely during construction, report that portion as unknown; do not execute it to complete the picture.
 
-## Implement a host-owned writer/checker
+## Generate application algorithm pages
 
-For a full hierarchy of application-owned chart pages, `scripts/application-flow-docs.mjs` remains a **host-owned integration**, rather than an existing SMB command. Use the exported application context builder/writer for the supported index/source/test packet and opt-in README/AGENTS links. A richer chart-page integration should follow this contract:
+The unreleased candidate exports `buildApplicationFlowDocumentation`, `writeApplicationFlowDocumentation` and `checkApplicationFlowDocumentation` from `smallbusiness-footprint/developer/application`. The application owns a small integration script that freshly constructs its exact runtime charts. The writer generates a compact root catalog, individual flow READMEs with parent/child links, and a hash-bound manifest. It is independent of the source/test packet and does not append every diagram to agent prompts.
 
-1. Load the trusted application index in a fresh process after compilation, without running an executor or stage callbacks. Enumerate every actual indexed chart and retained mounted root. Refuse duplicate/missing registry membership.
-2. Obtain each real root topology with the SDK exporter. In FootPrintJS 12, `chart.toMermaid()` is a root overview: mounted internals are collapsed, and its raw renderer uses rectangles and unlabeled arrows. Link separate retained subflow views. If adding diamonds, branch labels, mount boxes or loop labels from native metadata, verify original node identities and the complete edge multiset; annotations must not invent execution edges. A native `next` after branches is continuation after branch completion, not an unconditional bypass.
-3. Produce a small main README index, relevant folder overviews, and linked full root/subflow pages. Add exact checkout source links and module hashes. Keep helper bodies, dynamic resolvers, exceptions and host/provider semantics explicitly unknown unless separately supplied. Set budgets that fail clearly rather than silently omitting nodes.
-4. Hash production inputs, the index, generator code and relevant dependency versions. Exclude generated documents from their own input hash. Preserve handwritten README content outside uniquely marked generated regions. Declare and verify all owned output paths, including obsolete-page removal.
-5. Compute expected bytes before mutation. `--write` writes those exact managed outputs; `--check` compares bytes and membership without rewriting anything, and exits unsuccessfully for stale, missing or extra owned outputs. Test a real factory edit: check fails, write updates the correct view, and a second write changes no bytes.
+```js
+// scripts/application-flow-docs.mjs
+import {
+  buildApplicationFlowDocumentation,
+  writeApplicationFlowDocumentation,
+  checkApplicationFlowDocumentation,
+} from 'smallbusiness-footprint/developer/application';
+import { buildChartIndex } from '../src/workflow.mjs';
+
+const root = process.cwd();
+const documentation = await buildApplicationFlowDocumentation({
+  root,
+  index: {
+    applicationName: 'Request application',
+    sourceFiles: ['src/workflow.mjs'],
+    flows: buildChartIndex().map(({ id, chart, source }) => ({
+      id, chart, sources: [{ file: source.file, symbol: source.export }],
+    })),
+  },
+});
+const options = { root, documentation, readmeFile: 'README.md' };
+if (process.argv.includes('--write')) await writeApplicationFlowDocumentation(options);
+const checked = await checkApplicationFlowDocumentation(options);
+if (!checked.valid) throw new Error('Stale flow documentation: ' + checked.differences.join(', '));
+```
+
+The default output directory is `docs/application-flows`. Supply the same `outputDir` to the builder and writer/checker when choosing a different location. Register each retained child chart explicitly with `parentId` and `mountId`; the API does not discover hidden, dynamic or lazy builders. The relationships are caller-declared construction metadata. Each root diagram can collapse child internals, so child pages contain their own actual chart views.
+
+Algorithm text reuses `chart.description` / `toMCPTool().description`, with exact native node/control labels as a fallback. Declared stage descriptions and input/output schemas remain attributed metadata. Tool-schema export is formatting at build time; it requires no running MCP server or agent navigation. Business callbacks and providers are not executed. Chart exporters and module imports are trusted application code; keep construction free of business effects.
+
+Every admitted production source is read and hashed before and after export. Missing, extra, edited or obsolete managed pages fail the read-only check. Writes preserve prose outside the README marker block, refuse unowned files and symlinks, and preserve manually modified obsolete pages for review. Source links and current hashes support inspection; selectors are navigation declarations, not inferred predicates or proof of effects.
+
+Generation keeps documents synchronized with chart metadata and topology. If a callback changes while its manually supplied description remains unchanged, generation cannot prove that prose is still correct. Inspect exact predicates/mappers for that question; keep unsupported semantics unknown. A source hash is an identity check, not a semantic validator.
 
 For TypeScript, compile the application before loading its index; bind source links and hashes to the original source and the build that produced the loaded module. JavaScript applications can use syntax checks directly. Static chart construction proves neither a business effect nor an observed runtime cause.
 
 ## Wire the application build and CI
 
-Once the host-owned script exists, an application can use scripts like these; adapt `compile` to its actual build:
+With the integration above, an application can use scripts like these; adapt `compile` to its actual build:
 
 ```json
 {

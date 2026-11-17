@@ -21,6 +21,7 @@ const keyName=node=>node?.type==='Identifier'?node.name:literal(node);
 const unwrap=node=>['TSAsExpression','TSSatisfiesExpression','TSNonNullExpression','ParenthesizedExpression'].includes(node?.type)?unwrap(node.expression):node;
 const html=value=>String(value).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\|/g,'&#124;').replace(/\n/g,' ');
 const slug=value=>value.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'view';
+const fenced=(value,language)=>{const mark='`'.repeat(Math.max(3,...[...value.matchAll(/`+/g)].map(match=>match[0].length+1)));return `${mark}${language}\n${value}\n${mark}`;};
 export const DOC_LIMITS=Object.freeze({rootSection:2000,folderSection:4000,viewNodes:80,viewCharacters:24000,views:256});
 
 function walk(node,visit,ancestors=[]) {
@@ -105,6 +106,20 @@ function nodesOf(root) {
   while(queue.length){const node=queue.shift();if(!node||seen.has(node))continue;seen.add(node);nodes.push(node);if(!node.isLoopRef)queue.push(...node.children??[],node.next);}
   return nodes;
 }
+// An algorithm view of actual native control, rather than inferred callback semantics.
+export function algorithmForView(nodes) {
+  const destination=node=>node?.isLoopRef?'loop to '+node.id:node?.id??'end of this local path';
+  return nodes.filter(node=>!node.isLoopRef).map((node,index)=>{
+    const kind=node.deciderFn?'Decision':node.selectorFn?'Parallel selection':node.isSubflowRoot?'Subflow':node.children?.length?'Parallel fork':'Stage';
+    const branches=(node.children??[]).map(child=>`${child.branchId??child.id} → ${destination(child)}`);
+    return `${index+1}. ${kind} ${html(node.name)} [${html(node.id)}]${node.description?' — '+html(node.description):''}. ${branches.length?(kind==='Parallel fork'?'Parallel children: ':'Branches: ')+branches.map(html).join('; ')+'. ':''}${node.isSubflowRoot?'Open its linked child view; ':''}Continuation: ${html(destination(node.next))}.`;
+  });
+}
+function flowSummary(flow) {
+  if(flow.action)return flow.action.description;
+  const nodes=nodesOf(flow.chart.root),decisions=nodes.filter(node=>node.deciderFn||node.selectorFn);
+  return `Entry ${flow.chart.root.name}${decisions.length?'; routes at '+decisions.map(node=>node.name).join(', '):''}.`;
+}
 function relativeLink(from,to) {return slash(path.relative(path.dirname(from),to));}
 function sourceLink(from,span,label) {
   if(!span)return 'unknown source binding';
@@ -147,7 +162,7 @@ export async function generateChartDocs(root,{mode='check',compiledRoot}={}) {
     for(const[id,builder]of Object.entries(native.AFTER_SALES_CHARTS).sort(([a],[b])=>a.localeCompare(b)))flows.push({id,kind:'after-sales',chart:builder(hooks,(_id,handler)=>handler)});
     for(const id of serviceIds) {
       const builder=services.resolveFlowBuilder(id);if(typeof builder!=='function')throw new Error('Registered default builder is unavailable: '+id);
-      flows.push({id,kind:'library-envelope',chart:builder({requests:{get:sentinel('private request')},operation:sentinel('host operation')},key=>key)});
+      flows.push({id,kind:'library-envelope',action:actions.allBusinessActions.find(action=>action.id===id),chart:builder({requests:{get:sentinel('private request')},operation:sentinel('host operation')},key=>key)});
     }
     if(executedCallbacks)throw new Error('Chart construction invoked an execution callback');
     for(const id of requestedHooks)if(!facts.hooks[id])throw new Error('Chart hook has no source-backed runtime binding: '+id);
@@ -166,7 +181,7 @@ export async function generateChartDocs(root,{mode='check',compiledRoot}={}) {
     }
     if(views.size>DOC_LIMITS.views)throw new Error('Chart documentation view inventory exceeds its explicit limit');
     const outputs=new Map(),overviewRows=flows.map(flow=>{
-      const instance=instances.find(i=>i.flowId===flow.id&&!i.mountPath);return {flow,instance};
+      const instance=instances.find(i=>i.flowId===flow.id&&!i.mountPath);return {flow,instance,file:`docs/flows/registered/${flow.id}/README.md`,summary:flowSummary(flow)};
     });
     const stamp=`Production/generator input SHA-256: \`${inputSha256}\`. Actual registered builders: FootPrintJS ${sdkPackage.version} \`toMermaid()\` topology plus native control metadata; callbacks/providers are not run.`;
     const sourceNote='Chart links target checkout sources. In an installed package use developer/node with the logical `src/...` ID; its manifest resolves `dist/source/...`. Hashes/line spans bind views to source. Static diagrams are not runtime evidence or complete host semantics.';
@@ -187,6 +202,7 @@ export async function generateChartDocs(root,{mode='check',compiledRoot}={}) {
         }
       }
       let content=[OWNER,'# '+view.nodes[0].name,'',stamp,'',sourceNote,'','```mermaid',view.mermaid,'```','',SEMANTIC_CAPTION,'',`This native topology view is used by ${view.instances.length} registered mount instance(s). Stable local aliases remove only the actual mount prefix; the complete actual-ID mapping, raw SDK text and edge-multiset proof are in [the manifest](${relativeLink(file,'docs/flows/manifest.json')}). Shared diagrams assert matching topology only, not identical private helper semantics.`];
+      content.push('','## Algorithm','','Generated from actual native stage labels and edges. Branch callbacks and host effects are not inferred. Numbering is a node inventory, not an execution trace.','',...algorithmForView(view.nodes));
       if(branchRows.length)content.push('','## Decisions and loops','','| Stage | Branch / control | Destination |','| --- | --- | --- |',...branchRows);
       if(mountRows.length)content.push('','## Open a subflow','','| Mount | Native subflow view | Mapping declarations |','| --- | --- | --- |',...mountRows);
       if(sourceRows.length)content.push('','## Guard and hook source','','| Stage | Role | Source / boundary |','| --- | --- | --- |',...sourceRows);
@@ -194,6 +210,17 @@ export async function generateChartDocs(root,{mode='check',compiledRoot}={}) {
       content.push('','[All registered flows]('+relativeLink(file,'docs/flows/README.md')+')','');
       content=content.join('\n');if(content.length>DOC_LIMITS.viewCharacters)throw new Error('Complete generated view exceeds character budget: '+file);
       outputs.set(file,content);
+    }
+    for(const {flow,instance,file,summary}of overviewRows) {
+      // Rebuilds use fresh chart objects, so cached SDK MCP descriptions cannot outlive a build.
+      const tool=typeof flow.chart.toMCPTool==='function'?flow.chart.toMCPTool():undefined;
+      const description=tool?.description??flow.chart.description;
+      const content=[OWNER,'# '+flow.id,'',stamp,'',html(summary),'',`Scope: ${flow.kind}. [Actual root algorithm and diagram](${relativeLink(file,instance.file)}).`,'','## Builder-generated description','','This text comes from the freshly constructed chart metadata; it does not verify private callback semantics.','',fenced(description??'No chart description supplied. Use the exact topology view above.','text')];
+      if(flow.action)content.push('','## Registered action contract','','Declared by the same action registry used by the library. Required permissions are declarations, not a current caller authorization result.','',`Required permissions: ${flow.action.requiredPermissions.map(html).join(', ')}.`,'',fenced(JSON.stringify({name:flow.action.id,description:flow.action.description,inputSchema:flow.action.inputSchema},null,2),'json'));
+      if(flow.kind==='library-envelope')content.push('','The native root is a shared request envelope. Its generic MCP schema does not describe the configured host implementation; the registered action input contract is shown above.');
+      content.push('','[All registered flows]('+relativeLink(file,'docs/flows/README.md')+')','');
+      if(content.join('\n').length>DOC_LIMITS.viewCharacters)throw new Error('Complete registered flow page exceeds character budget: '+file);
+      outputs.set(file,content.join('\n'));
     }
     const rootBody=['## Generated flow index','',`**${flows.length} built-in registered flows · ${instances.length} root/mount instances · ${views.size} native topology views.**`,'','| Open | Scope |','| --- | --- |',...overviewRows.filter(({flow})=>flow.kind==='after-sales').map(({flow,instance})=>`| [${flow.id}](${instance.file}) | Actual decisions, loops and linked subflows |`),`| [${serviceIds.length} default service wrappers](docs/flows/services/README.md) | Library envelopes; host operations opaque |`,'','[Complete flow inventory](docs/flows/README.md). Run `npm run docs:flows` after source changes; `npm run check:flow-docs` fails on stale/missing views.','','Input SHA-256: `'+inputSha256+'`. Static build views, not execution or causal proof.'].join('\n');
     if(rootBody.length>DOC_LIMITS.rootSection)throw new Error('Root generated flow index exceeds its character budget');
@@ -209,7 +236,7 @@ export async function generateChartDocs(root,{mode='check',compiledRoot}={}) {
     }
     outputs.set('docs/flows/aftersales/README.md',OWNER+'\n# After-sales chart navigation\n\n'+afterSalesOverview('docs/flows/aftersales/README.md')+'\n');
     outputs.set('docs/flows/services/README.md',OWNER+'\n# Default service chart navigation\n\n'+serviceOverview('docs/flows/services/README.md')+'\n');
-    outputs.set('docs/flows/README.md',[OWNER,'# Registered chart index','',stamp,'',sourceNote,'',`All ${flows.length} current registry entries are below. ${instances.length} actual root/mount instances share ${views.size} complete native topology views. Identical topology may share a page; private helper semantics are not equated.`,'','| Registered flow | Actual root view | Scope |','| --- | --- | --- |',...overviewRows.map(({flow,instance})=>`| ${flow.id} | [Open](${relativeLink('docs/flows/README.md',instance.file)}) | ${flow.kind} |`),'','[After-sales overview](aftersales/README.md) · [Service wrappers](services/README.md) · [Exact manifest](manifest.json)','','Unknown/unexpanded dynamic sites: '+unknowns.length+'. No custom registry, lazy resolver or provider is invoked.','',`Generation limits: root section ${DOC_LIMITS.rootSection}, folder overview ${DOC_LIMITS.folderSection}, individual view ${DOC_LIMITS.viewNodes} nodes/${DOC_LIMITS.viewCharacters} characters, ${DOC_LIMITS.views} views. Exceeding a limit fails generation; no nodes are silently omitted.`,''].join('\n'));
+    outputs.set('docs/flows/README.md',[OWNER,'# Registered chart index','',stamp,'',sourceNote,'',`All ${flows.length} current registry entries are below. ${instances.length} actual root/mount instances share ${views.size} complete native topology views. Identical topology may share a page; private helper semantics are not equated.`,'','| Registered flow | Generated summary | Contract / description | Actual root view | Scope |','| --- | --- | --- | --- | --- |',...overviewRows.map(({flow,instance,file,summary})=>`| ${flow.id} | ${html(summary)} | [Open](${relativeLink('docs/flows/README.md',file)}) | [Chart](${relativeLink('docs/flows/README.md',instance.file)}) | ${flow.kind} |`),'','[After-sales overview](aftersales/README.md) · [Service wrappers](services/README.md) · [Exact manifest](manifest.json)','','Unknown/unexpanded dynamic sites: '+unknowns.length+'. No custom registry, lazy resolver or provider is invoked.','',`Generation limits: root section ${DOC_LIMITS.rootSection}, folder overview ${DOC_LIMITS.folderSection}, individual view ${DOC_LIMITS.viewNodes} nodes/${DOC_LIMITS.viewCharacters} characters, ${DOC_LIMITS.views} views. Exceeding a limit fails generation; no nodes are silently omitted.`,''].join('\n'));
     const manifest={schemaVersion:2,representation:'native-footprint-topology-with-verified-control-annotations',inputSha256,inputs,limits:DOC_LIMITS,coverage:{registeredFlows:flows.length,actualRootAndMountInstances:instances.length,topologyViews:views.size,completeApplication:false,executedCallbacks,customBuildersExecuted:false},registry:{afterSales:Object.keys(native.AFTER_SALES_CHARTS).sort(),defaultServices:serviceIds},views:[...views.values()].map(view=>({id:view.id,file:view.file,signature:view.signature,nodeCount:view.nodes.filter(n=>!n.isLoopRef).length,mermaidSha256:sha(view.mermaid),rawSdkMermaid:view.rawSdkMermaid,semanticProof:view.semanticProof})).sort((a,b)=>a.file.localeCompare(b.file)),instances,sourceFacts:facts,unknowns,generatedFiles:[...outputs.keys(),'docs/flows/manifest.json'].sort()};
     outputs.set('docs/flows/manifest.json',json(manifest));
     const stale=[];

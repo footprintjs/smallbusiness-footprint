@@ -4,6 +4,8 @@ The unreleased candidate exports `smallbusiness-footprint/developer/application`
 
 An application owns its index: explicitly admitted production files, configured workflow/source references and an approved public test example. The builder reads current source without importing application modules or executing test/build commands. It prepares a compact index and a goal-scoped packet containing complete selected modules, package facts, the public entry contract, commands and the approved smoke example. A complete small module often gives an agent more useful context than several fragment lookups.
 
+For generated algorithm READMEs and parent/child chart pages, use the separate [runtime-chart documentation integration](APPLICATION-FLOW-BUILD.md). Its build-time chart description/MCP schema formatting does not enable agent MCP navigation or change packet selection.
+
 ## Configure the application
 
 For example, put this JSON in `application-context.json`, adapting every path and contract to your application:

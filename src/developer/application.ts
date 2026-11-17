@@ -4,6 +4,8 @@ import { constants } from 'node:fs';
 import path from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
 import type { DeveloperSourceManifest, DeveloperSourceSelector, DeveloperSourceUnit } from './types.js';
+export { buildApplicationFlowDocumentation, checkApplicationFlowDocumentation, writeApplicationFlowDocumentation, ApplicationFlowDocumentationError } from './application-flow-docs.js';
+export type { ApplicationDocumentationChart, ApplicationDocumentationFlow, ApplicationFlowDocumentationIndex, ApplicationFlowDocumentation, ApplicationFlowDocumentationOutputOptions } from './application-flow-docs.js';
 
 export type ApplicationDeveloperFlow = {
   readonly id: string; readonly description?: string; readonly tags?: readonly string[];

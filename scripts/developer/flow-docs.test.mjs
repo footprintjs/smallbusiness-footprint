@@ -5,7 +5,7 @@ import path from 'node:path';
 import os from 'node:os';
 import {fileURLToPath} from 'node:url';
 import {createHash} from 'node:crypto';
-import {generateChartDocs,localGraph,renderNative,DOC_LIMITS} from './flow-docs.mjs';
+import {generateChartDocs,localGraph,renderNative,DOC_LIMITS,algorithmForView} from './flow-docs.mjs';
 import {annotateNativeMermaid,mermaidEdgeMultiset} from './native-mermaid.mjs';
 import {flowChart} from 'footprintjs';
 
@@ -59,7 +59,33 @@ test('fresh-source check detects a real loop-definition change without using sta
   const pages=await Promise.all(updated.manifest.views.map(view=>fs.readFile(path.join(root,view.file),'utf8')));
   assert.ok(pages.some(page=>page.includes('item -->|"loop"| request_order_eligible')));
   assert.ok(!pages.some(page=>page.includes('item -->|"loop"| request_item_loop')));
+  assert.ok(pages.some(page=>page.includes('Continuation: loop to request-order-eligible.')));
 }));
+
+test('registered summaries and declared contracts regenerate from the runtime action registry',async()=>fixture(async root=>{
+  await generateChartDocs(root,{mode:'write'});
+  const source=path.join(root,'src/actions/businessActions.ts'),text=await fs.readFile(source,'utf8');
+  await fs.writeFile(source,text.replace("'Create Product'","'Create Catalog ``` Item'"));
+  assert.equal((await generateChartDocs(root,{mode:'check'})).valid,false);
+  const updated=await generateChartDocs(root,{mode:'write'});
+  const catalog=await fs.readFile(path.join(root,'docs/flows/README.md'),'utf8');
+  const page=await fs.readFile(path.join(root,'docs/flows/registered/create-product/README.md'),'utf8');
+  assert.ok(catalog.includes('Create Catalog ``` Item'));assert.ok(page.includes('Create Catalog ``` Item'));
+  assert.ok(page.includes('````json'));
+  assert.ok(page.includes('"inputSchema"'));assert.ok(page.includes('"basePrice"'));
+  assert.ok(page.includes('Builder-generated description'));assert.equal(updated.manifest.coverage.executedCallbacks,0);
+  assert.equal((await generateChartDocs(root,{mode:'check'})).valid,true);
+}));
+
+test('algorithm text preserves selection, branch keys and loop target without invoking callbacks',()=>{
+  const loop={id:'check',name:'check',isLoopRef:true};
+  const branch={id:'work',name:'Work',branchId:'eligible',next:loop,fn(){throw Error('DO NOT EXECUTE');}};
+  const decision={id:'check',name:'Eligibility',deciderFn(){throw Error('DO NOT EXECUTE');},children:[branch]};
+  const text=algorithmForView([decision,branch,loop]).join('\n');
+  assert.ok(text.includes('Decision Eligibility [check]'));assert.ok(text.includes('eligible → work'));
+  assert.ok(text.includes('Continuation: loop to check.'));assert.equal(text.split('\n').length,2);
+  assert.ok(algorithmForView([{id:'read',name:'Read snapshots',children:[branch]}])[0].includes('Parallel fork Read snapshots'));
+});
 
 test('missing exported builder membership and default action membership fail generation',async()=>fixture(async root=>{
   const chart=path.join(root,'src/aftersales/flowCharts.ts'),original=await fs.readFile(chart,'utf8');

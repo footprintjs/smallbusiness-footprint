@@ -2,6 +2,8 @@
 
 ## Unreleased candidate — application development context
 
+- Generate application algorithm READMEs from explicitly registered runtime charts, existing builder/MCP descriptions and native topology, with parent/child links, declared schemas, current source hashes, ownership-aware writes and read-only freshness checks. Built-in catalogs now include registered action summaries/contracts and exact local control algorithms.
+
 - Add the opt-in Node application source/test packet builder, ownership-aware writer/read-only checker and JSON build/check command.
 - Add optional `/native` composition for application-owned decision, loop, parallel and subflow stages in the existing service registry, with request-local authoritative acknowledgements and safe stage-error wrapping. Existing service builders and default imports are unchanged.
 - Add an optional compact packet with complete editable modules, explicit protected-source contracts/references, current approved test tooling and relative test-entry facts. Keep the original default packet format and runtime imports unchanged.
