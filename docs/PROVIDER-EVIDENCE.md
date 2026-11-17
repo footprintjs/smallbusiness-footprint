@@ -1,5 +1,7 @@
 # Commerce provider evidence
 
+Use this guide to attach evidence to an existing real call, not to replace the host's business implementation. For the owning call site, start with [the source map](SOURCE-MAP.md). For backward investigation and missing-work distinctions, use [the agent guide](AGENT-GUIDE.md) and [expected evidence](EXPECTED-EVIDENCE.md). Public 1.1 APIs below remain separate from the unreleased developer/source-pack tools in the working candidate.
+
 Use `smallbusiness-footprint/diagnostics/runtime` only where the host already owns a real database, payment or shipping call. It is a thin wrapper over `footprint-blueprint/diagnostics/runtime`; the existing normalization entry and browser metadata entry do not import it.
 
 ```js
@@ -75,6 +77,8 @@ This library uses FootPrint 12.0.0 and Foottrace 1.15.0 through Blueprint's diag
 The library returns the snapshot shape the native executor supplies. Foottrace's support for list-form execution records does not imply that every native runtime snapshot uses that form, and this library does not convert one form into another.
 
 This adoption does not turn on exact read-source capture, capture extents, closed failed-prefix capture or durable storage acknowledgements. No new public capture policy is added. The existing native sink and manual flush remain optional observation ports; an attached sink or successful flush is not a durable receipt. A missing capture, an unrecorded failed invocation, a partial record or an unsupported record stays uncertain. An upgrade cannot add evidence to an older saved run.
+
+The unreleased after-sales control refactor records actual native decisions with full read/write/commit capture of safe boolean/tag/counter producers from private predicates. This is an after-sales safe-state surface; composed `executeServiceFlow` summary retention and the existing optional provider/sink capture contracts stay separate. It does not make a static possible-writer link into runtime lineage. Preserve the real decision record, its scope and any unresolved source/record requirement when walking backward. See [the concrete producer map](AFTERSALES.md#decisions-and-backward-investigation).
 
 ## Local validation
 

@@ -1,5 +1,7 @@
 # Migration to 1.0.0
 
+**Historical migration record.** Current 1.1 installation and examples are in [QUICKSTART.md](QUICKSTART.md); its manifest requires Blueprint 1.1.0. The exact 1.0 dependency/release statements below describe that older release, not the current working candidate or a new publication approval.
+
 Version 1.0.0 adopts the runtime contracts below. Source verification and publication approval are separate: the release workflow accepts only the exact archive selected by its reviewed approval record.
 
 ## Runtime requirements

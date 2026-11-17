@@ -5,13 +5,17 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "node scripts/developer/build.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "prepack": "npm run build",
     "quickstart:booking": "node examples/shared-evidence/booking.mjs",
-    "quickstart:publication": "node examples/shared-evidence/publication.mjs"
+    "quickstart:publication": "node examples/shared-evidence/publication.mjs",
+    "test:developer-package": "node --test scripts/developer/pack.test.mjs",
+    "docs:flows": "node scripts/developer/flow-docs.mjs --write",
+    "check:flow-docs": "node scripts/developer/flow-docs.mjs --check",
+    "test:flow-docs": "node --test scripts/developer/flow-docs.test.mjs scripts/developer/application-catalog.test.mjs"
   },
   "dependencies": {
     "footprint-blueprint": "1.1.0",
@@ -23,7 +27,8 @@
     "@types/node": "24.19.2",
     "fast-check": "4.10.2",
     "typescript": "7.0.2",
-    "vitest": "5.0.3"
+    "vitest": "5.0.3",
+    "@babel/parser": "8.1.2"
   },
   "license": "MIT",
   "type": "module",
@@ -37,7 +42,8 @@
     "LICENSE",
     "docs",
     "CHANGELOG.md",
-    "examples/shared-evidence/*.mjs"
+    "examples/shared-evidence/*.mjs",
+    "examples/developer/*.mjs"
   ],
   "sideEffects": false,
   "exports": {
@@ -80,6 +86,32 @@
       "types": "./dist/testing.d.ts",
       "import": "./dist/testing.js",
       "default": "./dist/testing.js"
+    },
+    "./developer": {
+      "types": "./dist/developer/index.d.ts",
+      "import": "./dist/developer/index.js",
+      "default": "./dist/developer/index.js"
+    },
+    "./developer/node": {
+      "types": "./dist/developer/node.d.ts",
+      "import": "./dist/developer/node.js",
+      "default": "./dist/developer/node.js"
+    },
+    "./developer/source-manifest.json": "./dist/developer/source-manifest.json",
+    "./diagnostics/cause": {
+      "types": "./dist/diagnostics/aftersalesCause.d.ts",
+      "import": "./dist/diagnostics/aftersalesCause.js",
+      "default": "./dist/diagnostics/aftersalesCause.js"
+    },
+    "./native": {
+      "types": "./dist/native.d.ts",
+      "import": "./dist/native.js",
+      "default": "./dist/native.js"
+    },
+    "./developer/application": {
+      "types": "./dist/developer/application.d.ts",
+      "import": "./dist/developer/application.js",
+      "default": "./dist/developer/application.js"
     }
   },
   "repository": {
@@ -103,5 +135,8 @@
     "shipping",
     "execution-provenance",
     "footprintjs"
-  ]
+  ],
+  "bin": {
+    "smallbusiness-context": "dist/developer/application-cli.js"
+  }
 }

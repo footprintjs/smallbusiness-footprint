@@ -1,8 +1,10 @@
-# Integrating smallbusiness-footprint 1.0.0
+# Integrating smallbusiness-footprint 1.1
+
+Start with [the current quickstart](QUICKSTART.md) for installation and working examples, or [the source map](SOURCE-MAP.md) for implementation navigation. This guide describes the current public integration boundary. New developer/source-pack APIs and native after-sales representation changes in the working candidate are unreleased; use their specific guide and current source rather than assuming registry 1.1.0 contains them.
 
 ## Package migration
 
-Version 1.0.0 requires the portable `footprint-blueprint@1.0.0` dependency instead of the former six `@footprint/*` packages. Replace modern framework imports with `footprint-blueprint/features`, `/tenancy`, `/adapters`, `/seed`, `/actions` or `/platform`; use `/evidence` for the pure receipt collector. The root convenience entry loads Platform's framework graph. Static subpaths select entry graphs, while dynamic imports defer loading until called. Installation still downloads all declared dependencies.
+Version 1.1.0 requires the portable `footprint-blueprint@1.1.0` dependency instead of the former six `@footprint/*` packages. Replace modern framework imports with `footprint-blueprint/features`, `/tenancy`, `/adapters`, `/seed`, `/actions` or `/platform`; use `/evidence` for the pure receipt collector. The root convenience entry loads Platform's framework graph. Static subpaths select entry graphs, while dynamic imports defer loading until called. Installation still downloads all declared dependencies. Optional developer tooling affects its own import graph; source files in a tarball still contribute to installation bytes even when an application never imports them.
 
 The commerce main entry remains backend-oriented. The `/metadata` entry supplies browser declarations without loading the execution runtime. `footprintjs@12.0.0` and `foottrace@1.15.0` remain separate and pinned. Use Node 24.15–24.x. Install the reviewed tarballs using [the quickstart](QUICKSTART.md), or use the matching npm versions after registry publication has been verified. These import changes do not automatically migrate the older Node 22 school/booking APIs.
 
@@ -13,6 +15,32 @@ A `BusinessPlatform` instance binds its repository and providers to one immutabl
 Profile bindings require a nonnegative monotonic `revision` and full scope. ProfileStore strongly reads the binding on each resolution; only derived configuration is cached. Independent unit overrides also require a monotonic revision. The platform composes binding and override revisions by addition and removes transitive dependents when a module is explicitly disabled. Keep a higher-revision tombstone when deleting overrides; revision regression or changed modules under an unchanged revision fails closed.
 
 `getUnitBusinessConfig(ctx)` applies effective module flags and theme metadata overrides. These are configuration defaults, not publication: they must not mutate an application's immutable published storefront snapshot. `getBusinessTypeConfig(type)` returns a copied profile default. Profiles are examples, not hardcoded deployments; a host can use profile/module metadata with its own brand presentation layer.
+
+To add a configured profile while keeping the defaults:
+
+```js
+import { defineModule, defineProfile } from 'footprint-blueprint/features';
+import { createMemoryProfileStore } from 'footprint-blueprint/platform';
+import { createBusinessPlatform, allBusinessModules, allBusinessProfiles }
+  from 'smallbusiness-footprint';
+
+const flowers = defineModule({ id: 'flowers', name: 'Flowers',
+  domain: 'catalog', requires: ['catalog'],
+  terminology: { vase: { default: 'Vase' } } });
+const florist = defineProfile({ type: 'flower-shop', displayName: 'Flower Shop',
+  modules: ['flowers', 'orders', 'inventory'],
+  schedulingPattern: 'same-day-delivery' });
+const scope = { tenantId: 'demo-florist', unitId: 'demo-florist' };
+const platform = createBusinessPlatform({ scope,
+  modules: [...allBusinessModules, flowers],
+  profiles: [...allBusinessProfiles, florist],
+  profileStore: createMemoryProfileStore([{ ...scope,
+    profileType: florist.type, revision: 1, createdAt: '2030-01-01T00:00:00Z' }]),
+});
+console.log(await platform.getUnitBusinessConfig(scope));
+```
+
+This example reads configuration only; it installs no delivery provider or authorized operation. To replace a built-in definition, retain its stable ID/dependencies and replace it in the supplied array. Module-owned terminology uses Blueprint's `{ term: { default: 'Product', 'flower-shop': 'Bouquet' } }` form. Duplicate terms resolve in dependency order with the first definition taking precedence. Supplied arrays replace defaults rather than being appended implicitly.
 
 ## Execution boundary
 
@@ -48,7 +76,7 @@ For raw database/payment/shipping boundary evidence, opt into [the commerce runt
 
 ## Breaking changes from 0.1
 
-- FootprintJS10, ESM/NodeNext and Node24 replace the old SDK4 demo runtime.
+- FootPrintJS 12, ESM/NodeNext and Node 24 replace the old SDK4 demo runtime in the current compatibility line; intermediate versions remain historical migration records.
 - Profile/override stores require full scope and monotonic revisions. Overrides are `{scope, overrides}` records, not unit-ID-only dictionaries.
 - Execution requires a bound scope, explicit authorizer and actual operation implementation. Default authorization is denied.
 - Individual chart factories receive `BusinessFlowDependencies` (private request store and operation), not a repository. Public runtime execution goes through `executeServiceFlow`. `buildServiceFlow` and dispatch exports expose topology for review; raw input cannot execute an unregistered private request.
@@ -58,3 +86,5 @@ For raw database/payment/shipping boundary evidence, opt into [the commerce runt
 All library tests use local fixtures and real SDK execution. They perform no real payment, email, cloud deployment or database migration. Atomicity and crash/retry guarantees require the host adapter's own integration tests.
 
 For declared expected execution and honest missing-evidence handling, see [Expected commerce evidence](EXPECTED-EVIDENCE.md).
+
+For owner-approved cancellations, returns, refund uncertainty and host transaction requirements, see [After-sales](AFTERSALES.md). To investigate a failure, use the [agent guide](AGENT-GUIDE.md): a recorded wrapper does not expose the internals of its configured authoritative operation.

@@ -42,8 +42,11 @@ jobs:
       - name: Typecheck, build and test
         run: |
           npm run typecheck
+          npm run check:flow-docs
           npm run build
+          npm run test:flow-docs
           npm test -- --maxWorkers=4
+          npm run test:developer-package
       - name: Run all seven synthetic quickstart scenarios
         run: |
           npm run quickstart:booking

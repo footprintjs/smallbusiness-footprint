@@ -1,140 +1,121 @@
 # smallbusiness-footprint
 
-For backend developers connecting configurable commerce workflows to their own storage and authoritative providers.
+Commerce configuration, scoped actions and recorded workflows for applications that supply their own storage, authorization and providers. Built on Blueprint and FootPrintJS, with seven modules, two example profiles, typed checkout/inventory/publication ports, shipping contracts, owner-approved after-sales and optional diagnostics.
 
-[Release-kit quickstart](docs/QUICKSTART.md) · [Integration contracts](docs/INTEGRATION.md) · [Guarantees and ownership](#guarantees-and-ownership)
+**Start with [the quickstart](docs/QUICKSTART.md)** or choose a task in [the documentation index](docs/README.md). For source navigation and root-cause investigation, read [the agent guide](docs/AGENT-GUIDE.md) and [source map](docs/SOURCE-MAP.md).
 
-**Version 1.1.0:** requires `footprint-blueprint@1.1.0`, `footprintjs@12.0.0`, `foottrace@1.15.0` and Zod on Node 24.15–24.x. Published 0.9.0 workflows and optional evidence features are retained. Missing capture stays unknown and never reverses an acknowledged operation. See the [migration notes](docs/MIGRATION-1.0.md). The release order is Blueprint first, then this package; source checks and immutable release approval remain separate.
+**Coding agents:** repository entry instructions are in `AGENTS.md` and `CLAUDE.md`, with one [shared workflow guide](docs/AGENT-GUIDE.md). Use the [generated flow index](docs/flows/README.md) and relevant child/source links. For consuming projects, add the [application instruction templates](docs/APPLICATION-FLOW-BUILD.md#tell-coding-agents-where-to-start) explicitly.
 
-SMB is optional. Framework-only applications use Blueprint directly; commerce consumers can install SMB and its declared dependencies are installed automatically. Within Blueprint, focused subpaths select runtime entry graphs and dynamic `import()` provides loading on demand. Ordinary dependency downloads still occur at package installation.
+<!-- BEGIN GENERATED FLOW INDEX -->
+## Generated flow index
 
-Use the [release-kit quickstart](docs/QUICKSTART.md) to run reduced booking and publication examples from included tarballs. See the [changelog](CHANGELOG.md) for the packaging migration.
+**14 built-in registered flows · 71 root/mount instances · 23 native topology views.**
 
-A commerce configuration and operation library built on footprint-blueprint and FootPrint 12. It supplies seven modules, two example business profiles, terminology, strict action schemas, scoped execution and recorded operation charts. Applications supply storage and authoritative business implementations.
+| Open | Scope |
+| --- | --- |
+| [aftersales-action](docs/flows/views/validate-action-3ca46934d91a/README.md) | Actual decisions, loops and linked subflows |
+| [aftersales-request](docs/flows/views/validate-request-07c1344f12e1/README.md) | Actual decisions, loops and linked subflows |
+| [12 default service wrappers](docs/flows/services/README.md) | Library envelopes; host operations opaque |
 
-Use `smallbusiness-footprint/metadata` in a browser to consume profiles, modules, capabilities and action declarations without importing the Node runtime or Footprint executor. Use the main entry point for backend execution.
+[Complete flow inventory](docs/flows/README.md). Run `npm run docs:flows` after source changes; `npm run check:flow-docs` fails on stale/missing views.
 
-## Safe execution
+Input SHA-256: `54ba490387d9ff380883910fbc0d35f5972f48e24193d35e980959ef15ed7649`. Static build views, not execution or causal proof.
+<!-- END GENERATED FLOW INDEX -->
 
-```ts
+For your own application, use [the application chart/build recipe](docs/APPLICATION-FLOW-BUILD.md): share its runtime factory with an explicit app index and wire a host-owned writer/checker into build and CI. The commands above cover this library's registries; they do not discover host workflows.
+
+## Install the current published API
+
+```sh
+npm install smallbusiness-footprint@1.1.0
+```
+
+Use Node **24.15–24.x**. The 1.1.0 manifest installs `footprint-blueprint@1.1.0`, `footprintjs@12.0.0`, `foottrace@1.15.0` and `zod@4.6.5`. Applications do not need the former six-package Blueprint layout. Registry 1.1.0 and this working source candidate are distinct: newly added developer/source-navigation APIs are checkout-only until separately released.
+
+From a source checkout, the current local examples run with the declared pnpm version and included reviewed development dependency archive:
+
+```sh
+pnpm install
+pnpm build
+pnpm quickstart:booking
+pnpm quickstart:publication
+```
+
+They execute real workflows with local sample data and in-memory storage; no model, payment vendor or cloud service is called. The [quickstart](docs/QUICKSTART.md) separates current execution from the archived 0.7.0 kit. A local build does not publish a release or deploy an application.
+
+## Choose an entry point
+
+| Need | Public entry | Boundary |
+| --- | --- | --- |
+| Profiles, modules, capabilities and actions | `/metadata` | Browser-safe declarations; no executor/provider |
+| Scoped actions and composed services | Main package | Backend runtime; trusted scope, authorization and operations required |
+| Shipping contracts and registry | `/shipping` | Browser-safe; host supplies provider implementations |
+| After-sales policy and contracts | `/aftersales` | Browser-safe policy/types |
+| Execute cancellation, return and refund flows | `/aftersales/runtime` | Backend; host owns atomic repository/payment ports |
+| Safe failure normalization and wording | `/diagnostics` | No provider SDK or automatic repair |
+| Record actual provider-boundary calls | `/diagnostics/runtime` | Explicit runtime opt-in at the real call site |
+| Exercise local failure scenarios | `/testing` | Developer fixtures; do not expose as a public route |
+
+Subpaths are prefixed with `smallbusiness-footprint`, for example `smallbusiness-footprint/shipping`. Static imports select entry graphs; dynamic `import()` defers loading. Neither changes dependency downloads during installation.
+
+## Read configuration first
+
+```js
 import { createMemoryProfileStore } from 'footprint-blueprint/platform';
-import { createBusinessPlatform, createPublicationOperation } from 'smallbusiness-footprint';
+import { createBusinessPlatform } from 'smallbusiness-footprint';
 
-const scope = { tenantId: 'brand-a', unitId: 'brand-a' };
+const scope = { tenantId: 'demo-shop', unitId: 'demo-shop' };
 const profileStore = createMemoryProfileStore([
-  { ...scope, profileType: 'kids-boutique', revision: 1, createdAt: '2030-01-01T00:00:00Z' },
+  { ...scope, profileType: 'kids-boutique', revision: 1,
+    createdAt: '2030-01-01T00:00:00Z' },
 ]);
-const platform = createBusinessPlatform({
-  scope,
-  profileStore,
-  authorizer: ({ action, context }) => authorizeTrustedActor(context, action.requiredPermissions),
-  providers: {
-    publication: { publish: createPublicationOperation({
-      publish: (command, context) => existingAtomicPublisher(command, context),
-    }) },
-  },
-});
-const result = await platform.executeServiceFlow(
-  { ...scope, userId: authenticatedActorId },
-  'publish-storefront',
-  { kind: 'activate', source: { kind: 'theme', id: 'theme-1' }, expectedVersion: 4, expectedRevision: 2 },
-);
+const platform = createBusinessPlatform({ scope, profileStore });
+console.log(await platform.getUnitBusinessConfig(scope));
 ```
 
-The example's authorization and publisher functions are application ports, not library implementations. An omitted authorizer denies all actions. An absent provider is unavailable, rather than reporting a successful payment, send, schedule or stock change. The publication bridge preserves captured guards and verifies the actual committed receipt; it does not replace the application's atomic publication flow.
+This reads configuration; it does not authorize an operation. Execution defaults to deny without an authorizer. Missing providers remain unavailable. For a complete executable publication fixture with a trusted session and actual commit, use [the quickstart](docs/QUICKSTART.md).
 
-Customer input, shipping, email, unsubscribe/payment tokens and private response values stay in request-local storage. Recorded charts contain an opaque request reference and whitelisted outcome summaries. HTTP hosts may explicitly opt into `includeResponse: true`; that private response must not be persisted as telemetry. Application authorizers are responsible for authentication, ownership and permission checks using trusted context.
+## Integrate an authoritative operation
 
-Checkout accepts an optional `emailVerificationToken` (at most 4096 characters) and an optional uppercase two-letter `shipping.country`. The proof reaches `BusinessCheckoutPort.reserve` unchanged through schema validation and dispatch. The application port must enforce required verification, proof binding and expiry before reserving stock. The library deliberately accepts generic cart variants/quantities and does not replace a brand's stricter cart, phone or address policies.
+`executeAction(context, actionId, input)` uses Blueprint action preparation and can return shared execution evidence. `executeServiceFlow(context, actionId, input)` prepares the same action, then runs a native chart and returns its snapshot, manifest and narrative. These are separate recording paths; an option for one does not automatically instrument the other.
 
-## Additional business profiles and modules
+Applications can put their own business decisions and loops inside that registry using the unreleased optional [`/native` composition entry](docs/NATIVE-FLOWS.md). It mounts actual native stages, keeps request data private, and requires an explicit authoritative receipt. Existing host-operation builders remain available.
 
-`createBusinessPlatform({ modules, profiles, ... })` accepts Blueprint definitions. Omitted arrays retain the two existing profiles and seven modules; supplied arrays replace the defaults. Extend with `[...allBusinessModules, customModule]` and `[...allBusinessProfiles, customProfile]`. Definitions are copied into an immutable registry, dependencies are validated, and unregistered profiles fail closed. Profile `meta.services` and `meta.theme` can supply commerce metadata; otherwise services follow its modules and the theme uses a neutral accent. A custom fulfillment hint is allowed in `schedulingPattern`.
+Supply a bound scope, trusted request context, profile store, authorizer and real operation. Exact `operations[actionId]` override default CRUD. Typed checkout, inventory and publication ports validate commands and receipts; the application implements the transaction behind each port. `pending` is not payment completion, and `accepted` is not delivery.
 
-Put custom terminology on the module that owns the term using Blueprint's `{ term: { default: 'Product', 'flower-shop': 'Bouquet' } }` format. To customize a built-in module, replace its definition in the supplied array while retaining its ID and dependencies. Blueprint resolves duplicate terms in module dependency order, with the first definition taking precedence. Config resolution, service charts and action dispatch use the configured registry. Custom modules also participate in unit overrides and transitive disabling. Registry helpers accept the same definitions/profile arrays; their no-argument forms still return the built-in defaults.
+Omitted profile/module arrays use the built-ins; supplied arrays replace them. Spread `allBusinessModules` or `allBusinessProfiles` to extend. Registry configuration resolves dependencies, revisions, terminology and effective flags; it does not publish a storefront or migrate storage. See [integration contracts](docs/INTEGRATION.md), [shipping](docs/SHIPPING_ADAPTERS.md) and [after-sales](docs/AFTERSALES.md).
 
-Adapter factories accept a fourth `{ profiles }` argument to admit configured profiles without admitting arbitrary profile strings. Default payment metadata uses `checkout-payment`, delegating to the configured `process-payment` operation without choosing a provider. The exported `stripeCheckoutAdapter` keeps its legacy explicit ID; migrate persisted mappings to `checkout-payment`, or register that legacy export explicitly.
+## Trace a failure backward
 
-A supplied repository is low-level, already bound to the declared store. `createOrder` and `updateStock` CRUD methods are not payment or stock-lock implementations and are never used as checkout/inventory fallbacks. Repositories without a store binding cannot execute through the platform.
+Start from the saved run and first failing or uncertain stage. Follow its native stage/attempt identity, recorded decisions and retained read/write links to the owning wrapper and operation. A wrapper calling a host function does not expose that function's transaction or provider internals.
 
-## Guarantees and ownership
+- [Agent guide](docs/AGENT-GUIDE.md): find the edit surface and concrete source/evidence gaps.
+- [Source map](docs/SOURCE-MAP.md): locate composition, after-sales, ports, adapters and readers.
+- [Provider evidence](docs/PROVIDER-EVIDENCE.md): retain real observations and unknown effects.
+- [Expected evidence](docs/EXPECTED-EVIDENCE.md): distinguish not observed from proved skipped or failed.
 
-- Both direct actions and recorded service flows check configured implementation, profile modules, authorization and JSON schema before calling a port.
-- Full tenant/campus/unit scope is captured at construction and checked at every context entry point. Explicit module disabling removes dependent modules.
-- Typed checkout, inventory and publication bridges validate command and receipt contracts. Their adapters own transactions, idempotency, reservations, recovery, immutable snapshots and durable concurrency.
-- A real provider acknowledgement is required for success. A later observational failure preserves that acknowledgement, so it cannot be mistaken for an unperformed operation.
-- Footprint records the execution. The library does not provision distributed locks, payment providers, queues, durable checkpoints, scheduler jobs or email delivery.
+Descriptions and possible producer links help navigation. They do not prove runtime lineage, a provider outage or a root cause. Missing/partial capture stays unknown; an upgrade cannot fill an older record's gaps.
 
-For migration and provider contracts, see [docs/INTEGRATION.md](docs/INTEGRATION.md). Build the sibling Blueprint root first, then run `pnpm build`, `pnpm typecheck` and `pnpm test` from the SMB repository root on Node 24.15–24.x. Tests use local fixtures; the exact-head hosted checks and release validation record capture the actual results.
+The working candidate adds separate optional `/developer` and `/developer/node` tooling, documented in [developer context](docs/DEVELOPER.md). It does not join the core runtime/metadata import graph. Its production source pack still occupies installation bytes; optional loading is not zero package cost. These new exports are unreleased, even while the compatibility version remains 1.1.0.
 
-## Shared receipt boundary
+For actual saved after-sales mounted scopes and bounded item loops, the candidate also provides [the scoped cause reader](docs/AFTERSALES-CAUSE.md) at `/diagnostics/cause`. It preserves native histories and known read/control evidence without fabricating a flattened snapshot; missing evidence stays incomplete.
 
-Direct `executeAction` calls use Blueprint and can return shared execution evidence. Recorded `executeServiceFlow` calls retain their own SDK snapshot/manifest/narrative path and do not automatically supply common observation/effect receipts. A host may report explicit shared facts at its application `createPlatform` publication boundary while keeping its original publication workflow recording. Applications choose safe reported fields and remain responsible for authoritative transactions and receipt storage.
+## Guarantees and host responsibilities
 
-## Shipping adapter extension
+The library checks configured implementation, scope, profile modules, authorization and schema before invoking an operation. Authorizers use trusted identity and permissions; command bodies cannot choose them. Checkout email proof reaches the host port, which must validate its binding/expiry and business rules before reservation.
 
-Version 0.4.0 adds a browser-safe `smallbusiness-footprint/shipping` API. See [bring-your-own shipping adapters](docs/SHIPPING_ADAPTERS.md).
+The host owns transactions, conditional writes, idempotency, reservations, reconciliation, durable scheduling, notifications and record storage. CRUD order/stock methods are not checkout or locking fallbacks. Shipping registration supplies no carrier or exactly-once label purchase. After-sales requires owner approval; return receipt and accepted inspection precede refund. An unknown write needs reconciliation with the original operation identity, not a new write key.
 
-## Owner-approved after-sales
+Private inputs, addresses, tokens, reasons and provider payloads stay request-local. Recorded state contains an opaque request reference and safe summaries. `includeResponse: true` is a private HTTP-response option; exclude that response from telemetry. Diagnostic failure cannot reverse an acknowledged business operation. An attached sink or completed drain alone is not a durable-storage receipt.
 
-`smallbusiness-footprint/aftersales` is a browser-safe contract/policy entry. `smallbusiness-footprint/aftersales/runtime` exports `createAfterSalesService` for backend execution. It uses real FootPrint 12 charts, without a payment vendor or application import.
+## Validate a change
 
-The default policy allows cancellation before a shipping/label claim wins, and returns within 30 days of recorded delivery with unworn condition and tags confirmed. `validateAfterSalesPolicy()` validates configurable per-store windows, requirements and enabled flags. Every case snapshots its policy; changing shop settings does not rewrite existing cases. Owner approval is always required. Return approval authorizes return shipment only: receipt and accepted inspection must precede a refund.
-
-Inject `repository`, `payments`, a trusted `authorizer`, `storeId`, optional `policy`, `now`, `generateId`, and `onTrace`. Call `request(command, context)` or `action(command, context)`. Customer identity/order ownership and owner authentication come from the HTTP host, never the request body. Amounts are positive integer cents; selection uses stable saved-order line IDs and quantities.
-
-The repository adapter must atomically deduplicate requests, allocate quantities, race cancellation holds against shipping claims, CAS case/order versions, and reserve refund amounts against captured money minus previous refunds and every pending reservation. A durable refund intent and stable key are saved **before** a provider call. An unknown result retains its reservation and reconciles by the same provider key or refund ID; absence is not permission to create another refund. Provider adapters must refuse replay after their idempotency-retention window. Confirmed failure is separate from pending/unknown; no fresh key is automatically generated.
-
-Restock is a separate, exactly-once host transaction after confirmed refund and accepted return inspection. A full cancellation may mark the order cancelled. A partial cancellation retains a fulfillment hold for owner review: existing shipping snapshots must never send cancelled quantities. No hold is automatically released after cancellation refund/restock. Already-created labels require manual carrier review; the library does not claim it can atomically void one.
-
-`onTrace` receives real native snapshot, chart structure, narrative, fixed stage/decision metadata and safe errors. Customer reasons, owner notes, identity, addresses, tokens, provider payloads and payment IDs stay in request-local closures. Diagnostic failures cannot reverse a saved case or provider acknowledgement. Hosts own private trace persistence, retention, notifications, payment credentials and any return-label cost policy. No emails, network calls or cloud services are installed by the library.
-
-## Caller execution controls
-
-`BusinessPlatformConfig.executionOptions` forwards the trusted Blueprint callback for direct actions. `createAfterSalesService` accepts `executionOptions: ({flowId}) => controls` with the same payload-free engine options. A caller may supply a signal, timeout or absolute deadline and trace correlation; omitting the callback preserves existing behavior. The engine owns their validation and enforcement. This does not add retry rules or authorize refunds, restocking, labels or background work. After-sales native traces retain the caller correlation and report the actual running engine version. Recorded service-flow execution remains a separate API.
-
-### Local commerce failure testing
-
-Use the explicit `smallbusiness-footprint/testing` entry in developer tooling to exercise 27 local commerce scenarios. It runs real FootprintJS attempts with local database, payment and shipping doubles: request rejection, authorization, throttling, retry recovery/exhaustion, timeout/cancellation, circuit admission, budget admission, idempotency protection, unknown payment effects, independent reconciliation reads and separate trace-storage/observer failures. It has no vendor SDK, cloud, model, email or filesystem dependency.
-
-```js
-import { listFailureScenarios, runFailureScenario } from 'smallbusiness-footprint/testing';
-import { diagnoseFailureRecording } from 'footprint-blueprint/diagnostics';
-
-const { record, observed } = await runFailureScenario('payment-timeout-unknown');
-const diagnosis = diagnoseFailureRecording(record);
-// The recorded payment outcome is unknown. Reconcile; do not blindly resend a charge.
+```sh
+pnpm typecheck
+pnpm test
+pnpm build
 ```
 
-`record` is the stored/reloaded evidence envelope. `observed` contains separate test counters; it is never an input to diagnosis. The scenario plan and simulated provider ledger stay private. No scenario name or expected answer appears in the record. The catalog is immutable.
+Use targeted tests while changing a component, then appropriate broader checks. Local fixtures do not establish live provider behavior. Historical changes remain in [CHANGELOG.md](CHANGELOG.md) and [the 1.0 migration record](docs/MIGRATION-1.0.md); they do not override the current manifest. Local verification does not publish a package.
 
-The default recording store is private in-memory JSON. Hosts can provide **both** `persist(record)` and `load({storeId, runId, flowId})`; exact read-back identity/content is checked. Storage failure returns a visibly missing native record and no unsaved sidecar evidence. Host storage implementations own tenant isolation, durable writes and retention. Importing this entry does not enable fault injection anywhere: do not mount it as a production or public HTTP route.
-
-`smallbusiness-footprint/diagnostics` exports `normalizeCommerceBoundaryError`. It recognizes AWS-shaped **database** auth/throttle names with actual numeric HTTP metadata without importing an AWS SDK or changing the status. Other vendor classifications can use Blueprint's bounded `classify(fields)` callback. An explicit valid host classification takes priority over the optional database compatibility map; undefined, invalid or throwing classifiers retain safe built-in/default behavior. Classification is evidence, not a retry policy or proof that a provider is down. Public findings never expose provider messages or private payloads. Hosts own custom wording, translations and admin previews; the optional presets below supply reusable commerce wording without changing the diagnosis.
-
-#### Optional problem and next-step wording
-
-`commerceFailureExplanationTemplates` is immutable, optional data for Blueprint's evidence-preserving explanation formatter. It supplies short commerce problem text and suggested checks for actual recorded finding codes. Without these presets, the formatter uses its generic defaults. A host may supply its own reviewed template catalog instead.
-
-```js
-import { commerceFailureExplanationTemplates } from 'smallbusiness-footprint/diagnostics';
-
-// Pass as { templates: commerceFailureExplanationTemplates } to
-// Blueprint's formatFailureExplanation or createFailureExplanation.
-```
-
-Keep the formatter's canonical **Problem → Recorded cause → Suggested next step**, evidence references and unknowns visible. Configured wording is authored business guidance; it is not a new finding or a verified solution. No preset provides cause text, executes a repair or grants permission. An unknown write effect uses Blueprint's mandatory check of the original operation before another write. A generic service failure does not select a shipping or inventory explanation without an admitted business finding code.
-
-These are reusable test workflows, not a generic production circuit breaker, payment reconciler or shipping provider implementation. Runtime commerce continues to use the existing provider interfaces and authoritative receipts.
-
-The commerce normalizer is opt-in. A host that uses a different provider can import Blueprint's `normalizeBoundaryError` directly and supply its own classifier; choosing this testing entry does not register or replace any production provider adapter.
-
-### Native provider-boundary recording
-
-`smallbusiness-footprint/diagnostics/runtime` exports `createCommerceBoundaryRecorder`. It delegates to Blueprint's recorder and supplies commerce normalization by default; custom vendors can pass their own `normalizeError`. It does not load a provider SDK, create a retry loop, persist a record or decide whether a payment succeeded. The existing `/diagnostics` normalization entry stays separate from this runtime entry.
-
-Attach `recorder.flowRecorder` to the request's actual executor and wrap the raw provider call with `recorder.run(scope, operation, work)`. Pass the supplied abort signal/deadline to the provider adapter. Where the adapter can observe each real transport attempt, report it with `context.observePhysical`; those observations bind actual native records to their logical SDK call. A single SDK call with three SDK-internal attempts is one logical call and three reported transport attempts, never four sends. Missing transport reports leave that count unknown. A native observed-record retry interpretation does not establish the SDK's own retry decision.
-
-The explicit testing entry also exports `BOUNDARY_EVIDENCE_SCENARIOS` and `runBoundaryEvidenceScenario` for 12 local SDK-double scenarios using this public recorder. They supplement the original 27 scenarios. Faults, timing and dispatch counters stay outside diagnosis; provider SDK and cloud/model calls remain absent. See [provider evidence](docs/PROVIDER-EVIDENCE.md) for storage assembly, classification precedence, reconciliation and partial evidence.
-
-The separate test counters distinguish `admittedCalls` (all local-port admission attempts, including circuit refusals and authoritative reconciliation reads), `physicalCalls` (local sends that reached the provider double), and `physicalWriteAttempts` (attempted write sends, never proof of commitment). Host-loaded records undergo Blueprint's bounded getter-safe validation before identity checks or serialization.
+Separate research lives in the [private draft development-benchmark repository](https://github.com/footprintjs/flow-development-benchmarks). It is optional, not needed for installation, and is not bundled in this library or evidence of a performance gain from these unreleased changes.

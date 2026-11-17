@@ -1,0 +1,21 @@
+import path from 'node:path';
+import fs from 'node:fs/promises';
+import {fileURLToPath} from 'node:url';
+import {createRequire} from 'node:module';
+import {execFileSync} from 'node:child_process';
+import {buildDeveloperManifest, writeDeveloperArtifacts} from './build-manifest.mjs';
+import {generateChartDocs} from './flow-docs.mjs';
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..');
+const before=await buildDeveloperManifest(root),require=createRequire(path.join(root,'package.json'));
+const packagePath=require.resolve('typescript/package.json'),compiler=JSON.parse(await fs.readFile(packagePath,'utf8'));
+await fs.rm(path.join(root,'dist'),{recursive:true,force:true});
+execFileSync(process.execPath,[path.resolve(path.dirname(packagePath),compiler.bin.tsc)],{cwd:root,stdio:'inherit'});
+// TypeScript preserves the CLI shebang but not its executable mode.
+await fs.chmod(path.join(root,'dist/developer/application-cli.js'),0o755);
+const after=await buildDeveloperManifest(root);
+if(before.sourceTreeSha256!==after.sourceTreeSha256)throw new Error('Production source changed during compilation; rebuild before trusting source locators');
+const manifest=await writeDeveloperArtifacts(root);
+if(after.sourceTreeSha256!==manifest.sourceTreeSha256)throw new Error('Production source changed while writing source artifacts; rebuild required');
+const charts=await generateChartDocs(root,{mode:'write',compiledRoot:path.join(root,'dist')});
+console.log(`Chart docs: ${charts.manifest.coverage.registeredFlows} registered flows, ${charts.manifest.coverage.actualRootAndMountInstances} root/mount instances, ${charts.manifest.coverage.topologyViews} native topology views.`);
+console.log(`Developer source: ${Object.keys(manifest.files).length} files; tree ${manifest.sourceTreeSha256}; unsupported ${Object.values(manifest.files).filter(f=>f.parseStatus!=='parsed').length}.`);

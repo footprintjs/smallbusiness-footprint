@@ -1,4 +1,5 @@
-import { flowChart, FlowChartExecutor, decide, type TypedScope, type RecordFlushResult } from 'footprintjs';
+import { FlowChartExecutor, type TypedScope, type RecordFlushResult } from 'footprintjs';
+import { AFTER_SALES_CHARTS, type AfterSalesFacts, type AfterSalesHooks, type AfterSalesStage } from './flowCharts.js';
 import type { RecordSink } from 'foottrace/write';
 import { createCauseCapture } from 'footprint-blueprint/diagnostics/cause';
 import { footprintRuntimeVersion } from '../runtimeVersion.js';
@@ -67,9 +68,9 @@ function payment(value: AfterSalesPayment): AfterSalesPayment {
     || value.refundedCents > value.capturedCents) ineligible();
   return value;
 }
-function matchingPayment(a: AfterSalesPayment, b: AfterSalesPayment) {
+function matchingPayment(a: AfterSalesPayment, b: AfterSalesPayment): boolean {
   payment(a); payment(b);
-  if (['provider', 'paymentId', 'currency', 'mode', 'capturedCents'].some(key => a[key as keyof AfterSalesPayment] !== b[key as keyof AfterSalesPayment])) ineligible();
+  return ['provider', 'paymentId', 'currency', 'mode', 'capturedCents'].every(key => a[key as keyof AfterSalesPayment] === b[key as keyof AfterSalesPayment]);
 }
 const sameRequest = (record: AfterSalesCase, command: AfterSalesRequest) => record.orderId === command.orderId && record.requestId === command.requestId && record.kind === command.kind
   && JSON.stringify([...record.items].sort((a, b) => a.lineId.localeCompare(b.lineId))) === JSON.stringify(command.items)
@@ -135,34 +136,23 @@ export function createAfterSalesService(deps: AfterSalesDependencies) {
     if (!value) fail('AFTERSALES_NOT_FOUND', 'The order or case was not found');
     return checkedCase(value, caseId);
   };
-  async function execute(flowId: AfterSalesTrace['flowId'], handlers: { name: string; run: () => Promise<void> }[], decisions: string[], route?: () => AfterSalesAction['action']) {
+  async function execute(flowId: AfterSalesTrace['flowId'], hooks: AfterSalesHooks, decisions: string[]) {
     const stages: string[] = [];
     const boundaries = deps.withBoundaryScope ? createCommerceBoundaryRecorder() : undefined;
-    type SafeTraceState = { phase: string; decisions: string[]; action?: string };
-    const wrap = (name: string, handler: () => Promise<void>) => async (scope: TypedScope<SafeTraceState>) => {
+    const wrap = (name: string, handler: AfterSalesStage) => async (scope: TypedScope<AfterSalesFacts>) => {
       scope.phase = name;
       try {
         if (boundaries && deps.withBoundaryScope) {
           const port: AfterSalesBoundaryPort = Object.freeze({
             run: <T>(operation: BoundaryOperation, work: (context: BoundaryCallContext) => Promise<T>) => boundaries.run(scope, operation, work),
           });
-          await deps.withBoundaryScope(port, handler);
-        } else await handler();
+          await deps.withBoundaryScope(port, async () => { await handler(scope); });
+        } else await handler(scope);
       } catch (error) { throw safeFailure(error); }
       finally { scope.decisions = [...decisions]; }
     };
-    let builder = flowChart<SafeTraceState>(handlers[0].name, wrap(handlers[0].name, handlers[0].run), handlers[0].name);
-    const sequential = route ? handlers.slice(1, -1) : handlers.slice(1);
-    sequential.forEach(handler => { builder = builder.addFunction(handler.name, wrap(handler.name, handler.run), handler.name); });
-    if (route) {
-      const branch = builder.addDeciderFunction('route-owner-action', scope => {
-        scope.action = route();
-        return decide(scope, ['approve', 'reject', 'receive', 'refund'].map(name => ({ when: { action: { eq: name } }, then: name, label: `Owner action: ${name}` })), 'reconcile');
-      }, 'route-owner-action');
-      for (const which of ['approve', 'reject', 'receive', 'refund', 'reconcile']) branch.addFunctionBranch(which, `owner-${which}`, wrap(`owner-${which}`, handlers[handlers.length - 1].run));
-      builder = branch.end();
-    }
-    const chart = builder.build();
+    const chart = AFTER_SALES_CHARTS[flowId](hooks, wrap);
+    const capture = { readTracking: 'full', writeTracking: 'full', commitValues: 'full', writeProvenance: 'reads-prefix' } as const;
     const causeCapture = createCauseCapture();
     // A diagnostic factory gets no command, case, payment or customer data. A separate UUID also prevents
     // retries of the same business command from accidentally overwriting an earlier execution's prefix.
@@ -173,16 +163,16 @@ export function createAfterSalesService(deps: AfterSalesDependencies) {
       try {
         const adapter = recordSink(Object.freeze({ flowId, recordId }));
         if (consumeNativePromise(adapter)) throw new TypeError('recordSink must return a native sink synchronously');
-        executor = new FlowChartExecutor(chart, { writeProvenance: 'reads-prefix',
+        executor = new FlowChartExecutor(chart, { ...capture,
           ...(adapter === undefined ? {} : { sink: { adapter, onFailure: 'report', flush: 'manual' } as const }),
         });
         if (adapter !== undefined) recording = { recordId, status: 'attached' };
       } catch {
         // Optional observability must not turn a durable refund acknowledgement into a retryable failure.
-        executor = new FlowChartExecutor(chart, { writeProvenance: 'reads-prefix' });
+        executor = new FlowChartExecutor(chart, capture);
         recording = { recordId, status: 'unavailable' };
       }
-    } else executor = new FlowChartExecutor(chart, { writeProvenance: 'reads-prefix' });
+    } else executor = new FlowChartExecutor(chart, capture);
     executor.setRedactionPolicy({ keys: ['idempotencyKey', 'authorization', 'token', 'secret', 'password', 'recordSinkError'],
       diagnostics: { keys: ['errors.recordSinkError'] } });
     executor.enableNarrative();
@@ -210,145 +200,195 @@ export function createAfterSalesService(deps: AfterSalesDependencies) {
     try { await deps.onTrace?.(trace); } catch { /* A diagnostic failure cannot reverse a refund or durable case. */ }
     if (failure) throw failure;
   }
-  function eligible(record: AfterSalesOrder, command: AfterSalesRequest) {
-    if (!['paid', 'preparing', 'shipped', 'delivered'].includes(record.status)) ineligible();
-    for (const selected of command.items) {
-      const line = record.items.find(line => line.lineId === selected.lineId);
-      const allocated = record.allocatedQuantities[selected.lineId] ?? 0;
-      if (!line || !integer(line.quantity) || !integer(allocated) || selected.quantity > line.quantity - allocated) ineligible();
-    }
-    if (command.kind === 'cancellation') {
-      if (!policy.cancellationEnabled) ineligible();
-      if (!['paid', 'preparing'].includes(record.status) || record.shippedAt || record.fulfillmentLocked) ineligible();
-    } else {
-      if (!policy.returnsEnabled) ineligible();
-      if (record.status !== 'delivered' || !record.deliveredAt || !Number.isFinite(Date.parse(record.deliveredAt))) ineligible();
-      const age = Date.parse(now()) - Date.parse(record.deliveredAt);
-      if (age < 0 || age > policy.returnWindowDays * 86_400_000 || policy.requireUnworn && command.unworn !== true || policy.requireTags && command.tagsAttached !== true) ineligible();
-    }
-  }
+  const failures: AfterSalesHooks = {
+    ineligible: () => ineligible(), conflict: () => conflict(), invalid: () => invalid(),
+    'provider-unknown': () => fail('AFTERSALES_PROVIDER_UNKNOWN', 'The provider outcome requires reconciliation'),
+  };
   function next(record: AfterSalesCase, update: Partial<AfterSalesCase>): AfterSalesCase {
     if (!Number.isSafeInteger(record.version + 1)) conflict();
     return { ...record, ...update, version: record.version + 1, updatedAt: now() };
   }
-  async function restock(record: AfterSalesCase) {
-    if (!record.restock?.requested || record.restock.completedAt) return record;
-    if (record.state !== 'REFUNDED' || record.refund?.status !== 'SUCCEEDED' || record.kind === 'return' && !record.inspection?.accepted) ineligible();
-    const snapshot = await order(record.orderId);
-    const selected = record.items.map(item => {
-      const line = snapshot.items.find(line => line.lineId === item.lineId);
-      if (!line || item.quantity > line.quantity) ineligible();
-      return { ...line, quantity: item.quantity };
-    });
-    return checkedCase(await repository.restock({ record: next(record, { restock: { requested: true, completedAt: now() } }), expectedVersion: record.version, items: selected }), record.caseId);
-  }
-  async function settle(record: AfterSalesCase, evidence: AfterSalesRefundEvidence, snapshot: AfterSalesOrder) {
-    const intent = record.refund!;
-    if (!evidence || evidence.provider !== intent.payment.provider || evidence.paymentId !== intent.payment.paymentId
-      || evidence.idempotencyKey !== intent.idempotencyKey || evidence.amountCents !== intent.amountCents
-      || evidence.currency !== intent.payment.currency || evidence.mode !== intent.payment.mode || !identifier(evidence.refundId)
-      || !['pending', 'succeeded', 'failed'].includes(evidence.status)) fail('AFTERSALES_PROVIDER_UNKNOWN', 'The provider outcome requires reconciliation');
-    if (intent.providerRefundId && intent.providerRefundId !== evidence.refundId) fail('AFTERSALES_PROVIDER_UNKNOWN', 'The provider outcome requires reconciliation');
-    if (intent.status === 'FAILED') return record; // A terminal failed refund never reopens automatically.
-    if (intent.status === 'SUCCEEDED' && evidence.status === 'succeeded') return restock(record);
-    if (intent.status === 'SUCCEEDED' && evidence.status === 'pending') fail('AFTERSALES_PROVIDER_UNKNOWN', 'The provider outcome requires reconciliation');
-    const succeeded = evidence.status === 'succeeded';
-    const full = record.items.length === snapshot.items.length && snapshot.items.every(line => record.items.some(item => item.lineId === line.lineId && item.quantity === line.quantity));
-    const saved = checkedCase(await repository.completeRefund({ expectedVersion: record.version,
-      record: next(record, { state: succeeded ? 'REFUNDED' : evidence.status === 'failed' ? 'REFUND_FAILED' : 'REFUND_PENDING',
-        refund: { ...intent, status: succeeded ? 'SUCCEEDED' : evidence.status === 'failed' ? 'FAILED' : 'PENDING', providerRefundId: evidence.refundId } }),
-      orderDisposition: succeeded && record.kind === 'cancellation' ? full ? 'cancelled' : 'hold-for-review' : 'unchanged' }), record.caseId);
-    return succeeded ? restock(saved) : saved;
-  }
-  async function reconcile(record: AfterSalesCase, decisions: string[]) {
-    if (!record.refund || !['REFUND_PENDING', 'REFUND_UNKNOWN', 'REFUND_FAILED', 'REFUNDED'].includes(record.state)) ineligible();
-    if (record.refund.status === 'FAILED') { decisions.push('refund.confirmed-failure-manual-review'); return record; }
-    const snapshot = await order(record.orderId), intent = record.refund;
-    let evidence: AfterSalesRefundEvidence | undefined;
-    try {
-      evidence = intent.providerRefundId
-        ? await payments.retrieveRefund({ orderId: record.orderId, paymentId: intent.payment.paymentId, refundId: intent.providerRefundId, idempotencyKey: intent.idempotencyKey })
-        : await payments.findRefund({ orderId: record.orderId, paymentId: intent.payment.paymentId, idempotencyKey: intent.idempotencyKey });
-    } catch { decisions.push('refund.reconciliation-unavailable'); return record; }
-    if (!evidence) { decisions.push('refund.outcome-still-unknown'); return record; }
-    decisions.push('refund.authoritative-reconciliation'); return settle(record, evidence, snapshot);
-  }
   return Object.freeze({
     async request(input: AfterSalesRequest, context: AfterSalesContext): Promise<AfterSalesCase> {
-      let command: AfterSalesRequest, snapshot: AfterSalesOrder, result: AfterSalesCase | undefined;
+      let command!: AfterSalesRequest, snapshot!: AfterSalesOrder;
+      let existing: AfterSalesCase | undefined, result: AfterSalesCase | undefined;
       const decisions: string[] = [];
-      await execute('aftersales-request', [
-        { name: 'validate-request', async run() { command = request(input); } },
-        { name: 'authorize-request', async run() { await authorize('request', context, { orderId: command.orderId }); } },
-        { name: 'deduplicate-request', async run() {
-          const existing = await repository.findCase(command.orderId, command.requestId);
-          if (existing) { checkedCase(existing); if (!sameRequest(existing, command)) conflict(); result = existing; decisions.push('request.idempotent-replay'); }
-        } },
-        { name: 'check-eligibility', async run() { if (!result) { snapshot = await order(command.orderId); eligible(snapshot, command); decisions.push(command.kind === 'return' ? 'return.policy-satisfied' : 'cancellation.before-shipping-claim'); } } },
-        { name: 'persist-request', async run() {
-          if (result) return;
+      const hooks: AfterSalesHooks = {
+        ...failures,
+        'validate-request'(scope) { command = request(input); scope.requestKind = command.kind; },
+        async 'authorize-request'() { await authorize('request', context, { orderId: command.orderId }); },
+        async 'deduplicate-request'(scope) {
+          existing = await repository.findCase(command.orderId, command.requestId);
+          scope.existingCase = Boolean(existing);
+        },
+        'read-replay-match'(scope) { checkedCase(existing!); scope.replayMatches = sameRequest(existing!, command); },
+        'reuse-request'(scope) { result = existing; scope.outcome = 'REPLAY'; decisions.push('request.idempotent-replay'); },
+        async 'load-request-order'(scope) {
+          snapshot = await order(command.orderId); scope.requestKind = command.kind;
+          scope.orderStateEligible = ['paid', 'preparing', 'shipped', 'delivered'].includes(snapshot.status);
+        },
+        'initialize-request-items'(scope) { scope.itemIndex = 0; scope.itemCount = command.items.length; },
+        'inspect-request-item'(scope) {
+          const selected = command.items[scope.itemIndex!], line = snapshot.items.find(line => line.lineId === selected.lineId);
+          const allocated = snapshot.allocatedQuantities[selected.lineId] ?? 0;
+          scope.lineEligible = Boolean(line && integer(line.quantity) && integer(allocated) && selected.quantity <= line.quantity - allocated);
+          scope.lineCheck = { position: scope.itemIndex!, eligible: scope.lineEligible };
+          scope.itemIndex = scope.itemIndex! + 1;
+        },
+        'read-cancellation-policy'(scope) {
+          scope.cancellationEligible = Boolean(policy.cancellationEnabled && ['paid', 'preparing'].includes(snapshot.status) && !snapshot.shippedAt && !snapshot.fulfillmentLocked);
+          scope.policySatisfied = scope.cancellationEligible;
+        },
+        'read-return-policy'(scope) {
+          const delivered = policy.returnsEnabled && snapshot.status === 'delivered' && snapshot.deliveredAt && Number.isFinite(Date.parse(snapshot.deliveredAt));
+          const age = delivered ? Date.parse(now()) - Date.parse(snapshot.deliveredAt!) : NaN;
+          scope.returnEligible = Boolean(delivered && age >= 0 && age <= policy.returnWindowDays * 86_400_000 && (!policy.requireUnworn || command.unworn === true) && (!policy.requireTags || command.tagsAttached === true));
+          scope.policySatisfied = scope.returnEligible;
+        },
+        async 'persist-request'(scope) {
+          decisions.push(command.kind === 'return' ? 'return.policy-satisfied' : 'cancellation.before-shipping-claim');
           const caseId = generateId(); if (!identifier(caseId)) invalid(); const at = now();
           const record: AfterSalesCase = { caseId, storeId: deps.storeId, orderId: command.orderId, requestId: command.requestId,
             kind: command.kind, state: 'REQUESTED', version: 1, items: command.items, policy: structuredClone(policy), createdAt: at, updatedAt: at,
             ...(command.reason ? { reason: command.reason } : {}), ...(command.kind === 'return' ? { condition: { unworn: !!command.unworn, tagsAttached: !!command.tagsAttached } } : {}) };
           result = checkedCase(await repository.createCase({ record, expectedOrderVersion: snapshot.version }));
-          if (!sameRequest(result, command)) conflict(); decisions.push('request.persisted-owner-approval-required');
-        } },
-      ], decisions);
+          scope.persistedRequestMatches = sameRequest(result, command);
+        },
+        'request-persisted'(scope) { scope.outcome = 'REQUESTED'; decisions.push('request.persisted-owner-approval-required'); },
+      };
+      await execute('aftersales-request', hooks, decisions);
       return structuredClone(result!);
     },
     async action(input: AfterSalesAction, context: AfterSalesContext): Promise<AfterSalesCase> {
-      let command: AfterSalesAction, record: AfterSalesCase, result: AfterSalesCase;
+      let command!: AfterSalesAction, record!: AfterSalesCase, snapshot!: AfterSalesOrder;
+      let result: AfterSalesCase | undefined, currentPayment!: AfterSalesPayment, prepared!: AfterSalesCase;
+      let settling!: AfterSalesCase, evidence: AfterSalesRefundEvidence | undefined;
+      let restocking!: AfterSalesCase, restockOrder!: AfterSalesOrder;
+      let selectedRestock: AfterSalesOrder['items'][number][] = [];
       const decisions: string[] = [];
-      await execute('aftersales-action', [
-        { name: 'validate-action', async run() { command = action(input); } },
-        { name: 'authorize-owner', async run() { await authorize(command.action, context, { caseId: command.caseId }); } },
-        { name: 'load-current-case', async run() { record = await getCase(command.caseId); if (record.version !== command.expectedVersion) conflict(); } },
-        { name: 'apply-owner-action', async run() {
-          if (command.action === 'approve' || command.action === 'reject') {
-            if (record.state !== 'REQUESTED') ineligible();
-            result = checkedCase(await repository.saveCase({ expectedVersion: record.version, record: next(record,
-              command.action === 'approve' ? { state: 'APPROVED', approvedAt: now(), approvedBy: context.actorId, ...(text(command.reason) ? { ownerReason: text(command.reason) } : {}) }
-                : { state: 'REJECTED', ...(text(command.reason) ? { ownerReason: text(command.reason) } : {}) }) }));
-            decisions.push(command.action === 'approve' ? 'owner.approved' : 'owner.rejected'); return;
-          }
-          if (command.action === 'receive') {
-            if (record.kind !== 'return' || record.state !== 'APPROVED' || !record.approvedAt) ineligible();
-            result = checkedCase(await repository.saveCase({ expectedVersion: record.version, record: next(record, {
-              state: command.accepted ? 'RETURN_RECEIVED' : 'INSPECTION_FAILED', inspection: { accepted: command.accepted, receivedAt: now(), receivedBy: context.actorId },
-              ...(text(command.reason) ? { ownerReason: text(command.reason) } : {}) }) }));
-            decisions.push(command.accepted ? 'return.inspection-accepted' : 'return.inspection-rejected'); return;
-          }
-          if (command.action === 'reconcile') { result = await reconcile(record, decisions); return; }
-          if (command.action !== 'refund') invalid();
-          if (record.refund) {
-            if (record.refund.amountCents !== command.amountCents || record.restock?.requested !== !!command.restock) conflict();
-            decisions.push('refund.existing-intent-reconcile-only'); result = await reconcile(record, decisions); return;
-          }
-          if (!record.approvedAt || record.kind === 'cancellation' && record.state !== 'APPROVED'
-            || record.kind === 'return' && (record.state !== 'RETURN_RECEIVED' || !record.inspection?.accepted)) ineligible();
-          const snapshot = await order(record.orderId);
-          if (record.kind === 'cancellation' && (snapshot.shippedAt || !['paid', 'preparing'].includes(snapshot.status))) ineligible();
-          let currentPayment: AfterSalesPayment;
-          try { currentPayment = await payments.getPayment({ orderId: record.orderId, paymentId: snapshot.payment.paymentId }); }
-          catch { fail('AFTERSALES_PROVIDER_UNKNOWN', 'The provider outcome requires reconciliation'); }
-          matchingPayment(snapshot.payment, currentPayment!);
-          if (command.amountCents > currentPayment!.capturedCents - Math.max(currentPayment!.refundedCents, snapshot.payment.refundedCents) - snapshot.refundReservedCents) ineligible();
+      const saveInspection = async (scope: TypedScope<AfterSalesFacts>, accepted: boolean) => {
+        const reason = command as Extract<AfterSalesAction, { action: 'receive' }>;
+        result = checkedCase(await repository.saveCase({ expectedVersion: record.version, record: next(record, {
+          state: accepted ? 'RETURN_RECEIVED' : 'INSPECTION_FAILED', inspection: { accepted, receivedAt: now(), receivedBy: context.actorId },
+          ...(text(reason.reason) ? { ownerReason: text(reason.reason) } : {}) }) }));
+        scope.outcome = accepted ? 'RETURN_RECEIVED' : 'INSPECTION_FAILED';
+        decisions.push(accepted ? 'return.inspection-accepted' : 'return.inspection-rejected');
+      };
+      const saveSettlement = async (scope: TypedScope<AfterSalesFacts>, status: AfterSalesRefundEvidence['status'], disposition: 'cancelled' | 'hold-for-review' | 'unchanged') => {
+        const state = { succeeded: 'REFUNDED', failed: 'REFUND_FAILED', pending: 'REFUND_PENDING' } as const;
+        const refundStatus = { succeeded: 'SUCCEEDED', failed: 'FAILED', pending: 'PENDING' } as const;
+        result = checkedCase(await repository.completeRefund({ expectedVersion: settling.version,
+          record: next(settling, { state: state[status], refund: { ...settling.refund!, status: refundStatus[status], providerRefundId: evidence!.refundId } }),
+          orderDisposition: disposition }), settling.caseId);
+        scope.outcome = state[status]; decisions.push('refund.provider-result-recorded');
+      };
+      const hooks: AfterSalesHooks = {
+        ...failures,
+        'validate-action'(scope) { command = action(input); scope.action = command.action; },
+        async 'authorize-owner'() { await authorize(command.action, context, { caseId: command.caseId }); },
+        async 'load-current-case'(scope) { record = await getCase(command.caseId); scope.versionCurrent = record.version === command.expectedVersion; },
+        'owner-approve'(scope) { scope.ownerActionEligible = record.state === 'REQUESTED'; },
+        async 'save-owner-approval'(scope) {
+          const reason = command as Extract<AfterSalesAction, { action: 'approve' | 'reject' }>;
+          result = checkedCase(await repository.saveCase({ expectedVersion: record.version, record: next(record, { state: 'APPROVED', approvedAt: now(), approvedBy: context.actorId,
+            ...(text(reason.reason) ? { ownerReason: text(reason.reason) } : {}) }) }));
+          scope.outcome = 'APPROVED'; decisions.push('owner.approved');
+        },
+        'owner-reject'(scope) { scope.ownerActionEligible = record.state === 'REQUESTED'; },
+        async 'save-owner-rejection'(scope) {
+          const reason = command as Extract<AfterSalesAction, { action: 'approve' | 'reject' }>;
+          result = checkedCase(await repository.saveCase({ expectedVersion: record.version, record: next(record, { state: 'REJECTED', ...(text(reason.reason) ? { ownerReason: text(reason.reason) } : {}) }) }));
+          scope.outcome = 'REJECTED'; decisions.push('owner.rejected');
+        },
+        'owner-receive'(scope) { scope.ownerActionEligible = Boolean(record.kind === 'return' && record.state === 'APPROVED' && record.approvedAt); },
+        'read-inspection-result'(scope) { scope.inspectionAccepted = (command as Extract<AfterSalesAction, { action: 'receive' }>).accepted; },
+        'save-accepted-inspection': scope => saveInspection(scope, true),
+        'save-rejected-inspection': scope => saveInspection(scope, false),
+        'owner-refund'(scope) { scope.hasExistingRefund = Boolean(record.refund); },
+        'owner-reconcile'() {},
+        'read-existing-refund-command'(scope) {
+          const refund = command as Extract<AfterSalesAction, { action: 'refund' }>;
+          scope.refundCommandMatches = record.refund!.amountCents === refund.amountCents && record.restock?.requested === !!refund.restock;
+        },
+        'existing-refund-matched'() { decisions.push('refund.existing-intent-reconcile-only'); },
+        'read-refund-eligibility'(scope) {
+          scope.refundEligible = Boolean(record.approvedAt && (record.kind === 'cancellation' && record.state === 'APPROVED' || record.kind === 'return' && record.state === 'RETURN_RECEIVED' && record.inspection?.accepted));
+        },
+        async 'load-refund-order'(scope) { snapshot = await order(record.orderId); scope.cancellationStillEligible = record.kind !== 'cancellation' || !snapshot.shippedAt && ['paid', 'preparing'].includes(snapshot.status); },
+        async 'get-current-payment'(scope) {
+          try { currentPayment = structuredClone(await payments.getPayment({ orderId: record.orderId, paymentId: snapshot.payment.paymentId })); scope.paymentAvailable = true; }
+          catch { scope.paymentAvailable = false; }
+        },
+        'read-payment-identity'(scope) { scope.paymentMatchesOrder = matchingPayment(snapshot.payment, currentPayment); },
+        'read-refund-budget'(scope) {
+          scope.refundBudgetAvailable = (command as Extract<AfterSalesAction, { action: 'refund' }>).amountCents <= currentPayment.capturedCents - Math.max(currentPayment.refundedCents, snapshot.payment.refundedCents) - snapshot.refundReservedCents;
+        },
+        async 'prepare-refund-intent'(scope) {
+          const refund = command as Extract<AfterSalesAction, { action: 'refund' }>;
           const intentId = generateId(); if (!identifier(intentId)) invalid();
-          const prepared = checkedCase(await repository.prepareRefund({ expectedVersion: record.version, expectedOrderVersion: snapshot.version,
-            record: next(record, { state: 'REFUND_PENDING', restock: { requested: !!command.restock }, refund: { intentId,
-              idempotencyKey: `aftersales:${record.caseId}:refund-v1`, payment: structuredClone(currentPayment!), amountCents: command.amountCents, status: 'PREPARED', preparedAt: now() } }) }));
-          decisions.push('refund.intent-persisted-and-budget-reserved');
-          let evidence: AfterSalesRefundEvidence;
-          try { evidence = await payments.refund({ orderId: record.orderId, caseId: record.caseId, paymentId: currentPayment!.paymentId,
-            amountCents: command.amountCents, currency: currentPayment!.currency, idempotencyKey: prepared.refund!.idempotencyKey, preparedAt: prepared.refund!.preparedAt }); }
-          catch {
-            decisions.push('refund.provider-outcome-unknown');
-            result = checkedCase(await repository.completeRefund({ expectedVersion: prepared.version, orderDisposition: 'unchanged', record: next(prepared, { state: 'REFUND_UNKNOWN', refund: { ...prepared.refund!, status: 'UNKNOWN' } }) })); return;
-          }
-          result = await settle(prepared, evidence!, snapshot); decisions.push('refund.provider-result-recorded');
-        } },
-      ], decisions, () => command.action);
+          prepared = checkedCase(await repository.prepareRefund({ expectedVersion: record.version, expectedOrderVersion: snapshot.version,
+            record: next(record, { state: 'REFUND_PENDING', restock: { requested: !!refund.restock }, refund: { intentId,
+              idempotencyKey: `aftersales:${record.caseId}:refund-v1`, payment: structuredClone(currentPayment), amountCents: refund.amountCents, status: 'PREPARED', preparedAt: now() } }) }));
+          settling = prepared; scope.refundPrepared = true; decisions.push('refund.intent-persisted-and-budget-reserved');
+        },
+        async 'send-refund'(scope) {
+          const refund = command as Extract<AfterSalesAction, { action: 'refund' }>;
+          try { evidence = structuredClone(await payments.refund({ orderId: record.orderId, caseId: record.caseId, paymentId: currentPayment.paymentId,
+            amountCents: refund.amountCents, currency: currentPayment.currency, idempotencyKey: prepared.refund!.idempotencyKey, preparedAt: prepared.refund!.preparedAt })); scope.refundCallReturned = true; }
+          catch { scope.refundCallReturned = false; }
+        },
+        async 'record-unknown-refund'(scope) {
+          decisions.push('refund.provider-outcome-unknown');
+          result = checkedCase(await repository.completeRefund({ expectedVersion: prepared.version, orderDisposition: 'unchanged', record: next(prepared, { state: 'REFUND_UNKNOWN', refund: { ...prepared.refund!, status: 'UNKNOWN' } }) }));
+          scope.outcome = 'REFUND_UNKNOWN';
+        },
+        'read-reconciliation-eligibility'(scope) { scope.reconciliationEligible = Boolean(record.refund && ['REFUND_PENDING', 'REFUND_UNKNOWN', 'REFUND_FAILED', 'REFUNDED'].includes(record.state)); },
+        'read-terminal-refund-status'(scope) { scope.terminalRefundFailure = record.refund!.status === 'FAILED'; },
+        'manual-review-terminal-refund'(scope) { result = record; scope.outcome = 'UNCHANGED'; decisions.push('refund.confirmed-failure-manual-review'); },
+        async 'load-reconciliation-order'(scope) { snapshot = await order(record.orderId); settling = record; scope.hasProviderRefundId = Boolean(record.refund!.providerRefundId); },
+        async 'retrieve-existing-refund'(scope) {
+          const intent = record.refund!;
+          try { evidence = structuredClone(await payments.retrieveRefund({ orderId: record.orderId, paymentId: intent.payment.paymentId, refundId: intent.providerRefundId!, idempotencyKey: intent.idempotencyKey })); scope.reconciliationAvailable = true; }
+          catch { scope.reconciliationAvailable = false; }
+        },
+        async 'find-existing-refund'(scope) {
+          const intent = record.refund!;
+          try { evidence = structuredClone(await payments.findRefund({ orderId: record.orderId, paymentId: intent.payment.paymentId, idempotencyKey: intent.idempotencyKey })); scope.reconciliationAvailable = true; }
+          catch { scope.reconciliationAvailable = false; }
+        },
+        'read-refund-evidence-presence'(scope) { scope.evidencePresent = Boolean(evidence); },
+        'record-authoritative-reconciliation'() { decisions.push('refund.authoritative-reconciliation'); },
+        'keep-unknown-refund'(scope) { result = record; scope.outcome = 'UNCHANGED'; decisions.push('refund.outcome-still-unknown'); },
+        'keep-unavailable-reconciliation'(scope) { result = record; scope.outcome = 'UNCHANGED'; decisions.push('refund.reconciliation-unavailable'); },
+        'validate-refund-evidence'(scope) {
+          const intent = settling.refund!;
+          scope.evidenceMatches = Boolean(evidence && evidence.provider === intent.payment.provider && evidence.paymentId === intent.payment.paymentId
+            && evidence.idempotencyKey === intent.idempotencyKey && evidence.amountCents === intent.amountCents && evidence.currency === intent.payment.currency
+            && evidence.mode === intent.payment.mode && identifier(evidence.refundId) && ['pending', 'succeeded', 'failed'].includes(evidence.status)
+            && (!intent.providerRefundId || intent.providerRefundId === evidence.refundId));
+        },
+        'read-prior-refund-status'(scope) { scope.priorRefundStatus = settling.refund!.status === 'FAILED' ? 'FAILED' : settling.refund!.status === 'SUCCEEDED' ? 'SUCCEEDED' : 'unsettled'; },
+        'read-settlement-status'(scope) { scope.evidenceStatus = evidence!.status; },
+        'read-cancellation-disposition'(scope) { scope.cancellationRefund = settling.kind === 'cancellation'; },
+        'read-full-cancellation'(scope) { scope.fullCancellation = settling.items.length === snapshot.items.length && snapshot.items.every(line => settling.items.some(item => item.lineId === line.lineId && item.quantity === line.quantity)); },
+        'settle-cancelled': scope => saveSettlement(scope, 'succeeded', 'cancelled'),
+        'settle-partial-cancellation': scope => saveSettlement(scope, 'succeeded', 'hold-for-review'),
+        'settle-return': scope => saveSettlement(scope, 'succeeded', 'unchanged'),
+        'settle-pending-refund': scope => saveSettlement(scope, 'pending', 'unchanged'),
+        'settle-failed-refund': scope => saveSettlement(scope, 'failed', 'unchanged'),
+        'read-restock-status'(scope) { restocking = result ?? settling; scope.restockPending = Boolean(restocking.restock?.requested && !restocking.restock.completedAt); },
+        'keep-settled-result'(scope) { result = result ?? settling; scope.outcome = 'UNCHANGED'; },
+        'read-restock-eligibility'(scope) { scope.restockEligible = Boolean(restocking.state === 'REFUNDED' && restocking.refund?.status === 'SUCCEEDED' && (restocking.kind !== 'return' || restocking.inspection?.accepted)); },
+        async 'initialize-restock-items'(scope) { restockOrder = await order(restocking.orderId); selectedRestock = []; scope.restockIndex = 0; scope.restockCount = restocking.items.length; },
+        'inspect-restock-item'(scope) {
+          const item = restocking.items[scope.restockIndex!], line = restockOrder.items.find(line => line.lineId === item.lineId);
+          scope.restockLineEligible = Boolean(line && item.quantity <= line.quantity);
+          scope.restockLineCheck = { position: scope.restockIndex!, eligible: scope.restockLineEligible };
+          selectedRestock.push({ ...line!, quantity: item.quantity }); scope.restockIndex = scope.restockIndex! + 1;
+        },
+        async 'commit-restock'(scope) { result = checkedCase(await repository.restock({ record: next(restocking, { restock: { requested: true, completedAt: now() } }), expectedVersion: restocking.version, items: selectedRestock }), restocking.caseId); scope.outcome = 'RESTOCKED'; },
+      };
+      await execute('aftersales-action', hooks, decisions);
       return structuredClone(result!);
     },
   });

@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import type { DeveloperFlowRegistrations } from '../developer/types.js';
 import { createTenantContext } from 'footprint-blueprint/tenancy';
 import { immutableValue } from 'footprint-blueprint/features';
 import { createCauseCapture, type CauseCapture } from 'footprint-blueprint/diagnostics/cause';
@@ -19,7 +20,7 @@ import { createCampaignCreateFlow } from './campaigns/campaignCreateFlow.js';
 import { createCampaignScheduleFlow } from './campaigns/campaignScheduleFlow.js';
 import { createCampaignSendBatchFlow } from './campaigns/campaignSendBatchFlow.js';
 export type FlowBuilder = (dependencies: BusinessFlowDependencies, terms?: (key: string) => string) => BusinessFlowChart;
-export type ActionFlowEntry = { readonly default: FlowBuilder; readonly variants?: Partial<Readonly<Record<BusinessType, FlowBuilder>>> };
+export type ActionFlowEntry = { readonly default: FlowBuilder; readonly variants?: Partial<Readonly<Record<BusinessType, FlowBuilder>>>; readonly developer?: DeveloperFlowRegistrations };
 export type ActionFlowRegistry = Readonly<Record<string, ActionFlowEntry>>;
 const extra = (actionId: string): FlowBuilder => (dependencies, terms) => createBusinessOperationFlow(actionId, dependencies, `${actionId}: ${terms?.('storefront') ?? 'business operation'}`);
 const DEFAULT_FLOWS: ActionFlowRegistry = {
