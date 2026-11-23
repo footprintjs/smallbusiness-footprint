@@ -68,7 +68,7 @@ A write timeout, cancellation or ambiguous provider failure remains `unknown`; d
 
 ## Native engine and backward-reader adoption
 
-This library uses FootPrint 12.0.0 and Foottrace 1.15.0 through Blueprint's diagnostic readers. It keeps the engine's native run, stage and attempt identities; it does not rename an attempt reason or reconstruct a missing event. A successful business acknowledgement and the completeness of its diagnostic record remain separate facts.
+The 2.0.0 source candidate uses FootPrint 14.1.0 and Foottrace 2.3.2 through Blueprint 2.0.0’s diagnostic readers. It keeps the engine's native run, stage and attempt identities; it does not rename an attempt reason or reconstruct a missing event. A successful business acknowledgement and the completeness of its diagnostic record remain separate facts.
 
 `executeServiceFlow` keeps summary read/write retention and full commit encoding. Summary retention records keys with value summaries; it does not become full-value capture after a dependency upgrade. The existing per-write read prefixes describe reads that occurred before a write, not proof that a JavaScript expression used them. Foottrace can also follow a value built on an earlier write, such as a merge that adds a field without replacing the existing fields. That link describes the recorded write's construction, not a read by the stage's code.
 

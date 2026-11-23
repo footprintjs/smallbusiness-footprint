@@ -1,3 +1,8 @@
+# 2.0.0 — source candidate
+
+- Migration: align the commerce package with Blueprint 2.0.0, FootPrint 14.1.0 and Foottrace 2.3.2. Consumers that supply the engine or reader directly must use this same version set.
+- The source workspace uses the upstream Blueprint candidate archive. Public installation requires the matching Blueprint release on npm. See the [verification steps](docs/QUICKSTART.md#version-200-source-candidate).
+
 # 1.1.0 — prepared 2026-11-14
 
 - Add optional immutable `commerceFailureExplanationTemplates` wording for recorded access rejection, unknown write effects, observed retry recovery and unconfirmed troubleshooting storage. Blueprint owns matching, canonical observations and uncertainty; these presets add no causal findings, repair actions or permissions.

@@ -2,6 +2,22 @@
 
 The release kit includes a small booking example and a publication example. They teach the application integration patterns with local fixtures, rather than requiring the full applications or their hosting infrastructure.
 
+## Version 2.0.0 source candidate
+
+The checkout declares Blueprint 2.0.0, FootPrint 14.1.0 and Foottrace 2.3.2. Its pnpm workspace uses the upstream checked Blueprint candidate in `vendor/`. The lock pins the archive produced from [Blueprint commit 003faa30](https://github.com/footprintjs/footprint-blueprint/commit/003faa305f596bf8eb61f6508da2d6ad3fc47fd5) in [its checked-source run](https://github.com/footprintjs/footprint-blueprint/actions/runs/45289913018). The npm package declares exact numeric versions and excludes the development archive.
+
+Run these commands from the checkout with Node 24.15–24.x and pnpm 12.11.2.
+
+```sh
+pnpm install --frozen-lockfile --ignore-scripts
+pnpm run typecheck
+pnpm exec vitest run src/__tests__/scenario/runtimeCohort.test.ts src/__tests__/scenario/nativeBackwalkAdoption.test.ts
+```
+
+Before a commerce release, verify that the published Blueprint 2.0.0 matches the tested candidate, install the packed commerce archive in a clean consumer using ordinary registry resolution, and rerun its integration checks. A different Blueprint archive requires a new candidate check. Keep the existing release approval in place until the release review.
+
+## Historical 1.0.0 kit
+
 Version 1.0.0 requires `footprint-blueprint@1.0.0`, `smallbusiness-footprint@1.0.0`, `footprintjs@12.0.0` and `foottrace@1.15.0` on Node 24.15–24.x. Publication approval remains separate from a source check. The source workflow produces checked package artifacts; it does not yet produce a combined 1.0.0 quickstart kit. See [migration notes](MIGRATION-1.0.md) for dependency order.
 
 ### Existing archived kit
