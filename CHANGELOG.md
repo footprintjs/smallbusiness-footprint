@@ -1,7 +1,7 @@
-# 2.0.0 — source candidate
+# 2.0.0 — 2026-11-26
 
-- Migration: align the commerce package with Blueprint 2.0.0, FootPrint 14.1.0 and Foottrace 2.3.2. Consumers that supply the engine or reader directly must use this same version set.
-- The source workspace uses the upstream Blueprint candidate archive. Public installation requires the matching Blueprint release on npm. See the [verification steps](docs/QUICKSTART.md#version-200-source-candidate).
+- Migration: align the commerce package with Blueprint 2.0.0, FootPrint 14.3.0 and Foottrace 2.3.2. Consumers that supply the engine or reader directly must use this same version set.
+- The source workspace uses the published Blueprint 2.0.0 archive. See the [verification steps](docs/QUICKSTART.md#version-200).
 
 # 1.1.0 — prepared 2026-11-14
 

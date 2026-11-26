@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "footprint-blueprint": "2.0.0",
-    "footprintjs": "14.1.0",
+    "footprintjs": "14.3.0",
     "zod": "4.6.5",
     "foottrace": "2.3.2"
   },

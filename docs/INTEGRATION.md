@@ -4,7 +4,7 @@
 
 Version 1.0.0 requires the portable `footprint-blueprint@1.0.0` dependency instead of the former six `@footprint/*` packages. Replace modern framework imports with `footprint-blueprint/features`, `/tenancy`, `/adapters`, `/seed`, `/actions` or `/platform`; use `/evidence` for the pure receipt collector. The root convenience entry loads Platform's framework graph. Static subpaths select entry graphs, while dynamic imports defer loading until called. Installation still downloads all declared dependencies.
 
-The commerce main entry remains backend-oriented. The `/metadata` entry supplies browser declarations without loading the execution runtime. The 2.0.0 source candidate pins Blueprint 2.0.0, FootPrint 14.1.0 and Foottrace 2.3.2. Use Node 24.15–24.x. Follow [the candidate quickstart](QUICKSTART.md#version-200-source-candidate) for the source checkout and registry release gate. These import changes do not automatically migrate the older Node 22 school/booking APIs.
+The commerce main entry remains backend-oriented. The `/metadata` entry supplies browser declarations without loading the execution runtime. Version 2.0.0 pins Blueprint 2.0.0, FootPrint 14.3.0 and Foottrace 2.3.2. Use Node 24.15–24.x. Follow [the quickstart](QUICKSTART.md#version-200) for the source checkout and registry release gate. These import changes do not automatically migrate the older Node 22 school/booking APIs.
 
 ## Configuration and brands
 

@@ -1,8 +1,8 @@
 packages:
   - .
-# Source CI uses the upstream checked archive while the numeric Blueprint dependency awaits publication.
+# Development-only reviewed archive. Published package.json keeps the reviewed portable dependency declarations.
 minimumReleaseAgeExclude:
-  - footprintjs@14.1.0
+  - footprintjs@14.3.0
   - foottrace@2.3.2
 overrides:
-  footprint-blueprint: file:vendor/footprint-blueprint-2.0.0-candidate.tgz
+  footprint-blueprint: file:vendor/footprint-blueprint-2.0.0-release.tgz

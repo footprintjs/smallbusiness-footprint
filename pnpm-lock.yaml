@@ -163,18 +163,18 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  footprint-blueprint: file:vendor/footprint-blueprint-2.0.0-candidate.tgz
+  footprint-blueprint: file:vendor/footprint-blueprint-2.0.0-release.tgz
 
 importers:
 
   .:
     dependencies:
       footprint-blueprint:
-        specifier: file:vendor/footprint-blueprint-2.0.0-candidate.tgz
-        version: file:vendor/footprint-blueprint-2.0.0-candidate.tgz(zod@4.6.5)
+        specifier: file:vendor/footprint-blueprint-2.0.0-release.tgz
+        version: file:vendor/footprint-blueprint-2.0.0-release.tgz(zod@4.6.5)
       footprintjs:
-        specifier: 14.1.0
-        version: 14.1.0(foottrace@2.3.2)(zod@4.6.5)
+        specifier: 14.3.0
+        version: 14.3.0(foottrace@2.3.2)(zod@4.6.5)
       foottrace:
         specifier: 2.3.2
         version: 2.3.2
@@ -502,16 +502,16 @@ packages:
       picomatch:
         optional: true
 
-  footprint-blueprint@file:vendor/footprint-blueprint-2.0.0-candidate.tgz:
-    resolution: {integrity: sha512-FlRiOhC2hfZnmC9FdKkiBsxXS8fyqLw4826sh+wuZFhfHhbH55ezFdwK+gPNC4n4VtjKKmQ2enxjM86JYYCTfg==, tarball: file:vendor/footprint-blueprint-2.0.0-candidate.tgz}
+  footprint-blueprint@file:vendor/footprint-blueprint-2.0.0-release.tgz:
+    resolution: {integrity: sha512-qMHhFZNYkdXd7KHhrIpAwZU9RjriF/uWOorlKypg1dwKkon3CfNwS7ER2u0h+98eA+HWpY/ZY6z2SkP3jlI5qQ==, tarball: file:vendor/footprint-blueprint-2.0.0-release.tgz}
     version: 2.0.0
     engines: {node: '>=24.15.0 <25'}
 
-  footprintjs@14.1.0:
-    resolution: {integrity: sha512-PwTAUH0GTZYnCRUFRwug1u1L03Y4NdLZ2c3PhEDX8wJ7aJJu1/rHn1KRXaPnqpbCTfVoA/0gWoDsuSOlgv4UvQ==}
+  footprintjs@14.3.0:
+    resolution: {integrity: sha512-pekliA0XwBZfBI2AF9Ce5YfgmC6p+CwqpERqCJvSjxFvFoBwgy5E9OoDWUs87uUdR9xb4BNxvhMIpe+NTfZYXA==}
     engines: {node: '>=22'}
     peerDependencies:
-      foottrace: ^2.1.0
+      foottrace: ^2.3.1
       zod: ^3.0.0 || ^4.0.0
     peerDependenciesMeta:
       zod:
@@ -938,16 +938,16 @@ snapshots:
     optionalDependencies:
       picomatch: 4.0.7
 
-  footprint-blueprint@file:vendor/footprint-blueprint-2.0.0-candidate.tgz(zod@4.6.5):
+  footprint-blueprint@file:vendor/footprint-blueprint-2.0.0-release.tgz(zod@4.6.5):
     dependencies:
       ajv: 8.20.0
       ajv-formats: 3.0.1
-      footprintjs: 14.1.0(foottrace@2.3.2)(zod@4.6.5)
+      footprintjs: 14.3.0(foottrace@2.3.2)(zod@4.6.5)
       foottrace: 2.3.2
     transitivePeerDependencies:
       - zod
 
-  footprintjs@14.1.0(foottrace@2.3.2)(zod@4.6.5):
+  footprintjs@14.3.0(foottrace@2.3.2)(zod@4.6.5):
     dependencies:
       foottrace: 2.3.2
     optionalDependencies:

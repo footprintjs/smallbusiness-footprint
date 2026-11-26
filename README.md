@@ -4,7 +4,7 @@ For backend developers connecting configurable commerce workflows to their own s
 
 [Release-kit quickstart](docs/QUICKSTART.md) · [Integration contracts](docs/INTEGRATION.md) · [Guarantees and ownership](#guarantees-and-ownership)
 
-**Version 2.0.0 is a source candidate.** It requires `footprint-blueprint@2.0.0`, `footprintjs@14.1.0`, `foottrace@2.3.2` and Zod on Node 24.15–24.x. The checkout uses a development copy of the upstream Blueprint candidate. Registry installation requires Blueprint 2.0.0 to publish first. See the [migration and verification steps](docs/QUICKSTART.md#version-200-source-candidate).
+**Version 2.0.0** requires `footprint-blueprint@2.0.0`, `footprintjs@14.3.0`, `foottrace@2.3.2` and Zod on Node 24.15–24.x. The checkout uses a development copy of the published Blueprint 2.0.0 archive. See the [migration and verification steps](docs/QUICKSTART.md#version-200).
 
 SMB is optional. Framework-only applications use Blueprint directly; commerce consumers can install SMB and its declared dependencies are installed automatically. Within Blueprint, focused subpaths select runtime entry graphs and dynamic `import()` provides loading on demand. Ordinary dependency downloads still occur at package installation.
 
