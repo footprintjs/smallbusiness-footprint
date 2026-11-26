@@ -4,13 +4,13 @@ For backend developers connecting configurable commerce workflows to their own s
 
 [Release-kit quickstart](docs/QUICKSTART.md) · [Integration contracts](docs/INTEGRATION.md) · [Guarantees and ownership](#guarantees-and-ownership)
 
-**Version 1.1.0:** requires `footprint-blueprint@1.1.0`, `footprintjs@12.0.0`, `foottrace@1.15.0` and Zod on Node 24.15–24.x. Published 0.9.0 workflows and optional evidence features are retained. Missing capture stays unknown and never reverses an acknowledged operation. See the [migration notes](docs/MIGRATION-1.0.md). The release order is Blueprint first, then this package; source checks and immutable release approval remain separate.
+**Version 2.0.0** requires `footprint-blueprint@2.0.0`, `footprintjs@14.3.0`, `foottrace@2.3.2` and Zod on Node 24.15–24.x. The checkout uses a development copy of the published Blueprint 2.0.0 archive. See the [migration and verification steps](docs/QUICKSTART.md#version-200).
 
 SMB is optional. Framework-only applications use Blueprint directly; commerce consumers can install SMB and its declared dependencies are installed automatically. Within Blueprint, focused subpaths select runtime entry graphs and dynamic `import()` provides loading on demand. Ordinary dependency downloads still occur at package installation.
 
 Use the [release-kit quickstart](docs/QUICKSTART.md) to run reduced booking and publication examples from included tarballs. See the [changelog](CHANGELOG.md) for the packaging migration.
 
-A commerce configuration and operation library built on footprint-blueprint and FootPrint 12. It supplies seven modules, two example business profiles, terminology, strict action schemas, scoped execution and recorded operation charts. Applications supply storage and authoritative business implementations.
+A commerce configuration and operation library built on footprint-blueprint and FootPrint 14. It supplies seven modules, two example business profiles, terminology, strict action schemas, scoped execution and recorded operation charts. Applications supply storage and authoritative business implementations.
 
 Use `smallbusiness-footprint/metadata` in a browser to consume profiles, modules, capabilities and action declarations without importing the Node runtime or Footprint executor. Use the main entry point for backend execution.
 
@@ -77,7 +77,7 @@ Version 0.4.0 adds a browser-safe `smallbusiness-footprint/shipping` API. See [b
 
 ## Owner-approved after-sales
 
-`smallbusiness-footprint/aftersales` is a browser-safe contract/policy entry. `smallbusiness-footprint/aftersales/runtime` exports `createAfterSalesService` for backend execution. It uses real FootPrint 12 charts, without a payment vendor or application import.
+`smallbusiness-footprint/aftersales` is a browser-safe contract/policy entry. `smallbusiness-footprint/aftersales/runtime` exports `createAfterSalesService` for backend execution. It uses real FootPrint charts, without a payment vendor or application import.
 
 The default policy allows cancellation before a shipping/label claim wins, and returns within 30 days of recorded delivery with unworn condition and tags confirmed. `validateAfterSalesPolicy()` validates configurable per-store windows, requirements and enabled flags. Every case snapshots its policy; changing shop settings does not rewrite existing cases. Owner approval is always required. Return approval authorizes return shipment only: receipt and accepted inspection must precede a refund.
 
