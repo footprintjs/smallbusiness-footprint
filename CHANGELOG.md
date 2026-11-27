@@ -1,4 +1,4 @@
-# 2.1.0 — proposed
+# 2.1.0 — 2026-11-27
 
 - Add owner runbooks with a recorded read-only finding, a native approval checkpoint, and one scoped, idempotent action port.
 
