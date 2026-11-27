@@ -75,6 +75,10 @@ Direct `executeAction` calls use Blueprint and can return shared execution evide
 
 Version 0.4.0 adds a browser-safe `smallbusiness-footprint/shipping` API. See [bring-your-own shipping adapters](docs/SHIPPING_ADAPTERS.md).
 
+## Owner-approved runbooks
+
+A runbook names the checks to read, the owner guidance to display, and the scoped action an owner can approve. The backend chart pauses with a native FootPrint checkpoint. [Define a runbook, resume it, and handle a retry](docs/RUNBOOKS.md).
+
 ## Owner-approved after-sales
 
 `smallbusiness-footprint/aftersales` is a browser-safe contract/policy entry. `smallbusiness-footprint/aftersales/runtime` exports `createAfterSalesService` for backend execution. It uses real FootPrint charts, without a payment vendor or application import.

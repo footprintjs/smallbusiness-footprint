@@ -1,3 +1,7 @@
+# 2.1.0 — prepared
+
+- Add the `smallbusiness-footprint/runbooks` entry for read-only eligibility checks, native owner approval, and one scoped action with a stable idempotency key. Hosts supply runbook data and the authoritative action adapter.
+
 # 2.0.0 — 2026-11-26
 
 - Migration: align the commerce package with Blueprint 2.0.0, FootPrint 14.3.0 and Foottrace 2.3.2. Consumers that supply the engine or reader directly must use this same version set.
