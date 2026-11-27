@@ -1,6 +1,6 @@
 import { expect, vi } from 'vitest';
 import { FlowChartExecutor } from 'footprintjs';
-import { ownerRunbookChart, type RunbookPorts } from '../../runbooks.js';
+import { ownerRunbookChart, type RunbookDecision, type RunbookPorts } from '../../runbooks.js';
 
 export const subject = {
   tenant: 'shop-a',
@@ -12,6 +12,13 @@ export const book = {
   version: '1',
   actions: { unpaid: 'release-stock', paid: 'confirm-order' },
 };
+
+export function answer(
+  decision: RunbookDecision['decision'] = 'approve',
+  action = 'release-stock'
+): RunbookDecision {
+  return { decision, incident: subject.incident, action };
+}
 
 export function fixture() {
   let finding: string | undefined = 'unpaid';
@@ -27,7 +34,7 @@ export function fixture() {
     ]);
     const previous = committed.get(command.operationKey);
     if (previous !== undefined)
-      return previous === claim ? 'already-applied' : 'stale';
+      return previous === claim ? 'already-applied' : 'conflict';
     if (finding !== command.finding) return 'stale';
     committed.set(command.operationKey, claim);
     effects++;

@@ -14,7 +14,8 @@ export function applyApproved(book: BoundRunbook, ports: RunbookPorts) {
       scope.outcome =
         result === 'applied' ||
         result === 'already-applied' ||
-        result === 'stale'
+        result === 'stale' ||
+        result === 'conflict'
           ? result
           : 'unknown';
     } catch {

@@ -6,5 +6,7 @@ export type {
   RunbookCommand,
   RunbookPorts,
   RunbookOutcome,
+  RunbookDecision,
+  RunbookInspection,
   ActionResult,
 } from './runbooks/contract.js';

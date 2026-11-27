@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { fixture, subject } from './fixture.js';
+import { answer, fixture, subject } from './fixture.js';
 
 describe('saved owner approval', () => {
   it('keeps the bound action adapter when the registry changes during approval', async () => {
@@ -10,7 +10,7 @@ describe('saved owner approval', () => {
     f.ports.applyOnce = replacement;
 
     const run = f.runner();
-    await run.resume(cp, 'approve');
+    await run.resume(cp, answer());
     expect(original).toHaveBeenCalledOnce();
     expect(replacement).not.toHaveBeenCalled();
     expect(f.effects()).toBe(1);
@@ -21,7 +21,7 @@ describe('saved owner approval', () => {
       cp = await f.pause();
     const resume = async () => {
       const run = f.runner();
-      await run.resume(structuredClone(cp), 'approve');
+      await run.resume(structuredClone(cp), answer());
       return run.getSnapshot().sharedState?.outcome;
     };
     expect((await Promise.all([resume(), resume()])).sort()).toEqual([

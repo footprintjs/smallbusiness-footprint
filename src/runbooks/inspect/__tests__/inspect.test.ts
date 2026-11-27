@@ -10,7 +10,10 @@ describe('inspect', () => {
       const run = f.runner();
       await run.run();
       expect(run.isPaused()).toBe(false);
-      expect(run.getSnapshot().sharedState?.outcome).toBe('unresolved');
+      expect(run.getSnapshot().sharedState).toMatchObject({
+        outcome: 'unresolved',
+        inspection: finding ? 'found' : 'none',
+      });
       expect(f.ports.applyOnce).not.toHaveBeenCalled();
     }
   );
@@ -20,7 +23,7 @@ describe('inspect', () => {
     const run = f.runner();
     await run.run();
     expect(run.isPaused()).toBe(false);
-    expect(run.getSnapshot().sharedState?.outcome).toBe('unresolved');
+    expect(run.getSnapshot().sharedState).toMatchObject({ outcome: 'unresolved', inspection: 'failed' });
     expect(JSON.stringify(run.getSnapshot())).not.toContain(
       'private provider reply'
     );

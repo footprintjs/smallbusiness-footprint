@@ -20,7 +20,16 @@ export interface RunbookCommand extends RunbookTarget {
   readonly operationKey: string;
 }
 
-export type ActionResult = 'applied' | 'already-applied' | 'stale' | 'unknown';
+export type ActionResult = 'applied' | 'already-applied' | 'stale' | 'conflict' | 'unknown';
+
+/** The trusted host supplies the identifiers from the proposal shown to the owner. */
+export interface RunbookDecision {
+  readonly decision: 'approve' | 'decline';
+  readonly incident: string;
+  readonly action: string;
+}
+
+export type RunbookInspection = 'found' | 'none' | 'failed';
 export type RunbookOutcome =
   | ActionResult
   | 'unresolved'
@@ -33,13 +42,14 @@ export interface RunbookPorts {
   inspect(target: Readonly<RunbookTarget>): Promise<string | null>;
   /** At the authoritative store, atomically check scope and finding and deduplicate the
    * effect by operationKey. Replay the stored outcome for an identical command. A
-   * different command for the same key must never execute a second action.
+   * different command for the same key returns conflict and never executes another action.
    */
   applyOnce(command: Readonly<RunbookCommand>): Promise<ActionResult>;
 }
 
 export interface State {
   proposal: RunbookCommand | null;
+  inspection: RunbookInspection;
   ready: boolean;
   approved: boolean;
   outcome?: RunbookOutcome;
