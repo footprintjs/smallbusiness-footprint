@@ -7,7 +7,7 @@ import type {
 } from './contract.js';
 import { routeProposal } from './select-proposal/stage.js';
 import { routeApproval } from './check-decision/stage.js';
-import { bindRunbook } from './definition.js';
+import { bindRunbook, bindRunbookPorts } from './definition.js';
 import { inspect } from './inspect/stage.js';
 import { askOwner } from './approval/stage.js';
 import { applyApproved } from './apply/stage.js';
@@ -19,9 +19,10 @@ export function ownerRunbookChart(
   ports: RunbookPorts
 ) {
   const binding = bindRunbook(book, target);
+  const boundPorts = bindRunbookPorts(ports);
   return flowChart<State>(
     'Inspect incident',
-    inspect(binding, ports),
+    inspect(binding, boundPorts),
     'inspect-incident',
     { description: 'Read authoritative facts for the bound subject' }
   )
@@ -43,7 +44,7 @@ export function ownerRunbookChart(
     .addFunctionBranch(
       'apply',
       'Apply approved action',
-      applyApproved(binding, ports),
+      applyApproved(binding, boundPorts),
       'Apply once while the recorded condition holds'
     )
     .addFunctionBranch('stop', 'Finish without action', () => {})

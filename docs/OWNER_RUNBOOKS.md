@@ -20,7 +20,7 @@ async function start(ports: RunbookPorts) {
 }
 ```
 
-Persist the checkpoint on the server. On the owner’s response, authenticate the owner, check their authority over this incident and consume their single-use approval link. Load the saved checkpoint, target and versioned runbook from trusted storage. Rebuild the same chart in a fresh executor, call `await run.resume(checkpoint, decision)` with `'approve'` or `'decline'`, and read the outcome from the snapshot.
+Persist the checkpoint on the server. On the owner’s response, authenticate the owner, check their authority over this incident and consume their single-use approval link. Load the saved checkpoint, target and versioned runbook from trusted storage. Rebuild the same chart with the trusted adapters in a fresh executor, call `await run.resume(checkpoint, decision)` with `'approve'` or `'decline'`, and read the outcome from the snapshot.
 
 The inspection port returns a configured finding or `null`. An unrecognized finding or failed read records `unresolved` and finishes before approval. A decline records `declined`. An unrecognized response records `invalid-decision`. A changed binding records `scope-mismatch`.
 

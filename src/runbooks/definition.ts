@@ -1,4 +1,11 @@
-import type { Runbook, RunbookCommand, RunbookTarget } from './contract.js';
+import type { Runbook, RunbookCommand, RunbookPorts, RunbookTarget } from './contract.js';
+
+export function bindRunbookPorts(ports: RunbookPorts): RunbookPorts {
+  return {
+    inspect: ports.inspect.bind(ports),
+    applyOnce: ports.applyOnce.bind(ports),
+  };
+}
 
 function reference(value: string): string {
   if (
