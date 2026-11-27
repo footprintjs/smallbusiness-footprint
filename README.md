@@ -14,6 +14,8 @@ A commerce configuration and operation library built on footprint-blueprint and 
 
 Use `smallbusiness-footprint/metadata` in a browser to consume profiles, modules, capabilities and action declarations without importing the Node runtime or Footprint executor. Use the main entry point for backend execution.
 
+[Owner-approved runbooks](docs/OWNER_RUNBOOKS.md) shows how to pause for approval and resume a scoped action with durable repeat protection.
+
 ## Safe execution
 
 ```ts

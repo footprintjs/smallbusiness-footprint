@@ -1,3 +1,7 @@
+# 2.1.0 — proposed
+
+- Add owner runbooks with a recorded read-only finding, a native approval checkpoint, and one scoped, idempotent action port.
+
 # 2.0.0 — 2026-11-26
 
 - Migration: align the commerce package with Blueprint 2.0.0, FootPrint 14.3.0 and Foottrace 2.3.2. Consumers that supply the engine or reader directly must use this same version set.

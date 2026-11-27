@@ -1,6 +1,6 @@
 {
   "name": "smallbusiness-footprint",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "TypeScript commerce workflows and business profiles on Blueprint: scoped actions, shipping, after-sales and retained operation evidence.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -80,6 +80,11 @@
       "types": "./dist/testing.d.ts",
       "import": "./dist/testing.js",
       "default": "./dist/testing.js"
+    },
+    "./runbooks": {
+      "types": "./dist/runbooks.d.ts",
+      "import": "./dist/runbooks.js",
+      "default": "./dist/runbooks.js"
     }
   },
   "repository": {
