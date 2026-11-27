@@ -1,8 +1,8 @@
 {
   "name": "smallbusiness-footprint",
-  "version": "2.0.0",
-  "sha256": "8b7dc6cd16670d4967790e354cae8a32930175e647d481576c76311c819a0ff4",
-  "integrity": "sha512-poVroY+1UTsOQIDpJDOBuppsdVXN79YG5uyJICmHImOwAePGoGC6zTFxQjNn6YbprbY9UByyrN70c8m5drHaGg==",
+  "version": "2.1.0",
+  "sha256": "05f1cfea713ef550bedb301d430fa3a7db20cf56d79c62636d1f5ed544af77c8",
+  "integrity": "sha512-msIwt86AyaKRKfWjkJZ2rNXGEHTBiTy5jeBQvXU1dDhpBit/Mifz+0C5l4BSCC7xFktcvKw7nZGzVCJJVXHNCQ==",
   "dependencies": {
     "footprint-blueprint": "2.0.0",
     "footprintjs": "14.3.0",
